@@ -12,7 +12,15 @@
     "specialRequests": "Specijalni zahtevi",
     "tenants": "Firme",
     "shifts": "Smene",
-    "reports": "Vremena procesa"
+    "reports": "Vremena procesa",
+    "notifications": "Obaveštenja",
+    "profile": "Profil"
+  },
+  "profile": {
+    "theme": "Tema",
+    "themeLight": "Svetla",
+    "themeDark": "Tamna",
+    "language": "Jezik"
   },
   "login": {
     "title": "Alblue MES",

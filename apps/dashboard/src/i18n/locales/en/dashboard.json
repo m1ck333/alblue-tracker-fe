@@ -12,7 +12,15 @@
     "specialRequests": "Special Requests",
     "tenants": "Tenants",
     "shifts": "Shifts",
-    "reports": "Process Times"
+    "reports": "Process Times",
+    "notifications": "Notifications",
+    "profile": "Profile"
+  },
+  "profile": {
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "language": "Language"
   },
   "login": {
     "title": "Alblue MES",
