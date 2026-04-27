@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
   Typography, Table, Button, Space, Select, Tag, Drawer, Form, Input,
   InputNumber, DatePicker, App, Row, Col, Spin, Popconfirm, Divider,
-  Tooltip, Progress, Statistic, Upload, List, Modal, Card, Dropdown, Popover, Checkbox,
+  Tooltip, Progress, Statistic, Upload, List, Modal, Card, Dropdown, Popover, Checkbox, theme,
 } from 'antd';
 import { PlusOutlined, DeleteOutlined, CheckOutlined, PaperClipOutlined, UndoOutlined, UploadOutlined, CloseCircleOutlined, FilePdfOutlined, EyeOutlined, CopyOutlined, FullscreenOutlined, FullscreenExitOutlined, QuestionCircleOutlined, EditOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -507,6 +507,7 @@ function ItemProcessBar({
 export function OrderListPage() {
   const user = useAuthStore((s) => s.user);
   const tenantId = useAuthStore((s) => s.tenantId);
+  const { token } = theme.useToken();
   const [statusFilter, setStatusFilter] = useState<OrderStatus | undefined>(undefined);
   const [orderTypeFilter, setOrderTypeFilter] = useState<OrderType | undefined>(undefined);
   const [search, setSearch] = useState('');
@@ -1838,7 +1839,7 @@ export function OrderListPage() {
               </Col>
               <Col span={8}>
                 <div>
-                  <div style={{ color: '#00000073', fontSize: 14, marginBottom: 4 }}>{t('common:labels.deliveryDate')}</div>
+                  <div style={{ color: token.colorTextSecondary, fontSize: 14, marginBottom: 4 }}>{t('common:labels.deliveryDate')}</div>
                   {editingDeliveryDate ? (
                     <Space size={4}>
                       <DatePicker
@@ -2239,7 +2240,7 @@ export function OrderListPage() {
                     </Text>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {detailBlockRequests.map((br) => (
-                        <div key={br.id} style={{ padding: 8, background: '#fff1f0', border: '1px solid #ffa39e', borderRadius: 4, fontSize: 12 }}>
+                        <div key={br.id} style={{ padding: 8, background: token.colorErrorBg, border: `1px solid ${token.colorErrorBorder}`, borderRadius: 4, fontSize: 12 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
                             <span><Tag color={br.status === 'Pending' ? 'orange' : br.status === 'Approved' ? 'red' : 'default'}>{tEnum('RequestStatus', br.status)}</Tag>{br.processName && <Text type="secondary" style={{ marginLeft: 4 }}>· {br.processName}</Text>}</span>
                             <Text type="secondary" style={{ fontSize: 11 }}>{dayjs(br.createdAt).format('DD.MM.YYYY. HH:mm')}</Text>
@@ -2259,7 +2260,7 @@ export function OrderListPage() {
                     </Text>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {detailChangeRequests.map((cr) => (
-                        <div key={cr.id} style={{ padding: 8, background: '#fffbe6', border: '1px solid #ffe58f', borderRadius: 4, fontSize: 12 }}>
+                        <div key={cr.id} style={{ padding: 8, background: token.colorWarningBg, border: `1px solid ${token.colorWarningBorder}`, borderRadius: 4, fontSize: 12 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
                             <span><Tag color={cr.status === 'Pending' ? 'orange' : cr.status === 'Approved' ? 'green' : 'default'}>{tEnum('RequestStatus', cr.status)}</Tag></span>
                             <Text type="secondary" style={{ fontSize: 11 }}>{dayjs(cr.createdAt).format('DD.MM.YYYY. HH:mm')}</Text>

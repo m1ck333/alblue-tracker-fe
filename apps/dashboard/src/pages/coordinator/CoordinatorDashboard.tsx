@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Row, Col, Card, Typography, Table, Alert, Statistic, List, Tag, Badge, Tooltip, Button, Drawer } from 'antd';
+import { Row, Col, Card, Typography, Table, Alert, Statistic, List, Tag, Badge, Tooltip, Button, Drawer, theme } from 'antd';
 import {
   WarningOutlined,
   ClockCircleOutlined,
@@ -55,6 +55,7 @@ export function CoordinatorDashboard() {
   const changeRequests = usePendingChangeRequests();
   const { t } = useTranslation('dashboard');
   const { tEnum } = useEnumTranslation();
+  const { token } = theme.useToken();
 
   return (
     <div>
@@ -79,7 +80,7 @@ export function CoordinatorDashboard() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px 16px' }}>
                   {items.map((item) => (
                     <div key={item.title} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 64 }}>
-                      <div style={{ fontSize: 13, color: 'rgba(0,0,0,0.45)', lineHeight: 1.3, marginBottom: 4 }}>{item.title}</div>
+                      <div style={{ fontSize: 13, color: token.colorTextSecondary, lineHeight: 1.3, marginBottom: 4 }}>{item.title}</div>
                       <Statistic
                         value={item.value}
                         suffix={item.suffix}
@@ -227,7 +228,7 @@ export function CoordinatorDashboard() {
                 renderItem={(item: PendingBlockRequestDto) => (
                   <List.Item
                     extra={
-                      <div style={{ textAlign: 'right', fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
+                      <div style={{ textAlign: 'right', fontSize: 12, color: token.colorTextSecondary }}>
                         <div>{item.requestedBy}</div>
                         <div>{formatDateTime(item.requestedAt)}</div>
                       </div>
