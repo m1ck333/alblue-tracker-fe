@@ -1,0 +1,33 @@
+import type { UserDto, PagedResult } from '@alblue/shared-types';
+import type { CreateUserRequest, UpdateUserRequest, ChangePasswordRequest } from '@alblue/shared-types';
+import { apiClient } from '../axios-instance';
+
+export const usersApi = {
+  getAll(params: { tenantId: string; role?: string; isActive?: boolean; search?: string; page?: number; pageSize?: number; createdFrom?: string; createdTo?: string; sortBy?: string; sortDirection?: string }) {
+    return apiClient.get<PagedResult<UserDto>>('/users', { params });
+  },
+
+  getById(id: string) {
+    return apiClient.get<UserDto>(`/users/${id}`);
+  },
+
+  create(data: CreateUserRequest) {
+    return apiClient.post<UserDto>('/users', data);
+  },
+
+  update(id: string, data: UpdateUserRequest) {
+    return apiClient.put<UserDto>(`/users/${id}`, data);
+  },
+
+  changePassword(id: string, data: ChangePasswordRequest) {
+    return apiClient.post(`/users/${id}/change-password`, data);
+  },
+
+  resetPassword(id: string, newPassword: string) {
+    return apiClient.post(`/users/${id}/reset-password`, { newPassword });
+  },
+
+  delete(id: string) {
+    return apiClient.delete(`/users/${id}`);
+  },
+};

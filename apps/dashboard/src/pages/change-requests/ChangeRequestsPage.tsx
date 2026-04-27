@@ -1,0 +1,266 @@
+import { useState, useEffect } from 'react';
+import { useTableHeight } from '../../hooks/useTableHeight';
+import { Typography, Table, Space, Button, App, Popconfirm, Tag, Input, Select, DatePicker } from 'antd';
+import { useNavigate } from 'react-router-dom';
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { changeRequestsApi } from '@alblue/api-client';
+import { useAuthStore } from '@alblue/auth';
+import { RequestStatus, ChangeRequestType } from '@alblue/shared-types';
+import type { ChangeRequestDto } from '@alblue/shared-types';
+import { StatusBadge } from '../../components/StatusBadge';
+import { useTranslation, useEnumTranslation } from '@alblue/i18n';
+import dayjs from 'dayjs';
+
+const { Title } = Typography;
+
+function getApiErrorCode(error: unknown): string | undefined {
+  return (error as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
+}
+
+function getTranslatedError(error: unknown, t: (key: string, opts?: Record<string, string>) => string, fallback: string): string {
+  const resp = (error as { response?: { data?: { error?: { code?: string; message?: string } } } })?.response?.data?.error;
+  if (resp?.code) {
+    const translated = t(`common:errors.${resp.code}`, { defaultValue: '' });
+    if (translated) return translated;
+  }
+  return resp?.message || fallback;
+}
+
+export function ChangeRequestsPage() {
+  const tenantId = useAuthStore((s) => s.tenantId);
+  const userId = useAuthStore((s) => s.user?.id);
+  const [statusFilter, setStatusFilter] = useState<RequestStatus | undefined>(undefined);
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
+  const [dateFrom, setDateFrom] = useState<dayjs.Dayjs | null>(null);
+  const [dateTo, setDateTo] = useState<dayjs.Dayjs | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sortBy, setSortBy] = useState<string | undefined>('createdAt');
+  const [sortDirection, setSortDirection] = useState<string | undefined>('desc');
+  const queryClient = useQueryClient();
+  const { message } = App.useApp();
+  const { t } = useTranslation('dashboard');
+  const { tEnum } = useEnumTranslation();
+  const navigate = useNavigate();
+
+  const { ref: tableWrapperRef, height: tableBodyHeight } = useTableHeight();
+
+  useEffect(() => { setPage(1); }, [debouncedSearch, statusFilter, dateFrom, dateTo]);
+
+  const { data: pagedResult, isLoading } = useQuery({
+    queryKey: ['change-requests', tenantId, statusFilter, debouncedSearch, dateFrom?.format('YYYY-MM-DD'), dateTo?.format('YYYY-MM-DD'), page, pageSize, sortBy, sortDirection],
+    queryFn: () => changeRequestsApi.getAll({
+      tenantId: tenantId!,
+      status: statusFilter,
+      search: debouncedSearch || undefined,
+      createdFrom: dateFrom?.format('YYYY-MM-DD'),
+      createdTo: dateTo?.format('YYYY-MM-DD'),
+      page,
+      pageSize,
+      sortBy,
+      sortDirection,
+    }).then((r) => r.data),
+    enabled: !!tenantId,
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: (id: string) =>
+      changeRequestsApi.approve(id, { handledByUserId: userId! }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['change-requests'] });
+      message.success(t('changeRequests.approved'));
+    },
+    onError: (err) => message.error(getTranslatedError(err, t, t('changeRequests.approveFailed'))),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: (id: string) =>
+      changeRequestsApi.reject(id, { handledByUserId: userId! }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['change-requests'] });
+      message.success(t('changeRequests.rejected'));
+    },
+    onError: (err) => message.error(getTranslatedError(err, t, t('changeRequests.rejectFailed'))),
+  });
+
+  const columns = [
+    {
+      title: t('common:labels.status'),
+      dataIndex: 'status',
+      width: 110,
+      render: (s: RequestStatus) => <StatusBadge status={s} />,
+    },
+    {
+      title: t('common:labels.orderNumber'),
+      dataIndex: 'orderNumber',
+      width: 140,
+      render: (orderNumber: string | null, record: ChangeRequestDto) =>
+        orderNumber ? (
+          <Button type="link" size="small" style={{ padding: 0 }} onClick={(e) => { e.stopPropagation(); navigate(`/orders?detail=${record.orderId}`); }}>
+            {orderNumber}
+          </Button>
+        ) : '—',
+    },
+    {
+      title: t('common:labels.type'),
+      dataIndex: 'requestType',
+      width: 140,
+      render: (rt: string) => <Tag color="blue">{tEnum('ChangeRequestType', rt)}</Tag>,
+    },
+    {
+      title: t('common:labels.description'),
+      dataIndex: 'description',
+      ellipsis: true,
+      sorter: true,
+      sortOrder: sortBy === 'description' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
+    },
+    {
+      title: t('changeRequests.responseNote'),
+      dataIndex: 'responseNote',
+      ellipsis: true,
+      render: (note: string | null, record: ChangeRequestDto) => {
+        if (!note) return '—';
+        const color = record.status === RequestStatus.Approved ? 'success' : record.status === RequestStatus.Rejected ? 'danger' : undefined;
+        return <Typography.Text type={color}>{note}</Typography.Text>;
+      },
+    },
+    {
+      title: t('common:labels.created'),
+      dataIndex: 'createdAt',
+      width: 150,
+      sorter: true,
+      sortOrder: sortBy === 'createdAt' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
+      render: (d: string) => dayjs(d).format('DD.MM.YYYY.'),
+    },
+    {
+      title: t('common:labels.handledAt'),
+      dataIndex: 'updatedAt',
+      width: 150,
+      render: (d: string | null) => d ? dayjs(d).format('DD.MM.YYYY.') : '—',
+      sorter: true,
+      sortOrder: sortBy === 'updatedAt' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
+    },
+    {
+      title: t('common:labels.actions'),
+      width: 180,
+      render: (_: unknown, record: ChangeRequestDto) => {
+        if (record.status === RequestStatus.Pending) {
+          return (
+            <Space>
+              <Popconfirm
+                title={t('changeRequests.approveConfirm')}
+                okText={t('common:actions.confirm')}
+                cancelText={t('common:actions.no')}
+                onConfirm={() => approveMutation.mutate(record.id)}
+              >
+                <Button
+                  type="primary"
+                  size="small"
+                  loading={approveMutation.isPending}
+                >
+                  {t('common:actions.approve')}
+                </Button>
+              </Popconfirm>
+              <Popconfirm
+                title={t('changeRequests.rejectConfirm')}
+                okText={t('common:actions.confirm')}
+                cancelText={t('common:actions.no')}
+                onConfirm={() => rejectMutation.mutate(record.id)}
+              >
+                <Button
+                  danger
+                  size="small"
+                  loading={rejectMutation.isPending}
+                >
+                  {t('common:actions.reject')}
+                </Button>
+              </Popconfirm>
+            </Space>
+          );
+        }
+        return null;
+      },
+    },
+  ];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <Title level={4} style={{ marginBottom: 16 }}>{t('changeRequests.title')}</Title>
+
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+        <Input.Search
+          placeholder={t('common:actions.search')}
+          allowClear
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ width: 260 }}
+        />
+        <Select
+          placeholder={t('common:labels.status')}
+          allowClear
+          value={statusFilter}
+          onChange={(v) => setStatusFilter(v)}
+          style={{ width: 160 }}
+          options={Object.values(RequestStatus).map((s) => ({ label: tEnum('RequestStatus', s), value: s }))}
+        />
+        <DatePicker
+          value={dateFrom}
+          onChange={setDateFrom}
+          format="DD.MM.YYYY"
+          allowClear
+          placeholder={t('common:labels.dateFrom')}
+        />
+        <DatePicker
+          value={dateTo}
+          onChange={setDateTo}
+          format="DD.MM.YYYY"
+          allowClear
+          placeholder={t('common:labels.dateTo')}
+        />
+      </div>
+
+      <div ref={tableWrapperRef} style={{ flex: 1, minHeight: 0 }}>
+        <Table
+          columns={columns}
+          dataSource={pagedResult?.items}
+          rowKey="id"
+          loading={isLoading}
+          scroll={{ x: 'max-content', y: tableBodyHeight }}
+          pagination={{
+            current: page,
+            pageSize,
+            total: pagedResult?.totalCount,
+            showSizeChanger: true,
+          }}
+          onChange={(pagination, _filters, sorter) => {
+            if (pagination.pageSize !== pageSize) {
+              setPageSize(pagination.pageSize ?? 20);
+              setPage(1);
+              return;
+            }
+            const s = Array.isArray(sorter) ? sorter[0] : sorter;
+            const newField = (s?.order ? (s.field as string) : undefined) ?? 'createdAt';
+            const newDir = (s?.order === 'descend' ? 'desc' : s?.order === 'ascend' ? 'asc' : undefined) ?? 'desc';
+            if (newField !== sortBy || newDir !== sortDirection) {
+              setSortBy(newField);
+              setSortDirection(newDir);
+              setPage(1);
+              return;
+            }
+            if (pagination.current !== page) setPage(pagination.current ?? 1);
+          }}
+        />
+      </div>
+    </div>
+  );
+}

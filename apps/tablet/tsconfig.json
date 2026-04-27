@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "noEmit": false,
+    "outDir": "./node_modules/.tmp/tsc-out",
+    "declarationDir": "./node_modules/.tmp/tsc-out",
+    "rootDir": "."
+  },
+  "include": ["src", "src/**/*.json", "vite-env.d.ts"]
+}

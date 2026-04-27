@@ -1,0 +1,94 @@
+import { useState, useEffect } from 'react';
+import { Outlet } from 'react-router-dom';
+import { Layout, theme } from 'antd';
+import { useAuthStore } from '@alblue/auth';
+import {
+  createConnection,
+  startConnection,
+  joinTenantGroup,
+} from '@alblue/signalr-client';
+import { tokenManager } from '@alblue/api-client';
+import { SidebarMenu } from '../components/SidebarMenu';
+import { AppHeader } from '../components/AppHeader';
+import { ConnectionAlert } from '../components/ConnectionAlert';
+import { useSignalRQueryInvalidation } from '../hooks/useSignalRQueryInvalidation';
+import { useLayoutStore } from '../stores/layout-store';
+
+const { Sider, Content } = Layout;
+
+export function MainLayout() {
+  const [collapsed, setCollapsed] = useState(false);
+  const tenantId = useAuthStore((s) => s.tenantId);
+  const { token: themeToken } = theme.useToken();
+  const fullscreen = useLayoutStore((s) => s.fullscreen);
+
+  useSignalRQueryInvalidation();
+
+  useEffect(() => {
+    const jwt = tokenManager.getToken();
+    if (!jwt || !tenantId) return;
+
+    let cancelled = false;
+
+    createConnection(jwt);
+    startConnection()
+      .then(() => {
+        if (!cancelled) return joinTenantGroup(tenantId);
+      })
+      .catch(console.error);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tenantId]);
+
+  return (
+    <Layout style={{ height: '100vh', overflow: 'hidden' }}>
+      {!fullscreen && (
+        <Sider
+          collapsible
+          collapsed={collapsed}
+          onCollapse={setCollapsed}
+          breakpoint="lg"
+          theme="dark"
+          style={{ overflow: 'auto', height: '100vh', position: 'sticky', top: 0, left: 0 }}
+        >
+          <div
+            style={{
+              height: 48,
+              margin: 16,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+            }}
+          >
+            <img
+              src={collapsed ? '/alblue-logo.png' : '/alblue-logo-text.png'}
+              alt="Alblue"
+              style={{ height: collapsed ? 32 : 28, objectFit: 'contain' }}
+            />
+          </div>
+          <SidebarMenu collapsed={collapsed} />
+        </Sider>
+      )}
+      <Layout style={{ overflow: 'hidden' }}>
+        {!fullscreen && <AppHeader />}
+        <Content
+          style={{
+            margin: fullscreen ? 0 : 24,
+            padding: fullscreen ? 12 : 24,
+            background: themeToken.colorBgContainer,
+            borderRadius: fullscreen ? 0 : themeToken.borderRadius,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'auto',
+          }}
+        >
+          {!fullscreen && <ConnectionAlert />}
+          <Outlet />
+        </Content>
+      </Layout>
+    </Layout>
+  );
+}

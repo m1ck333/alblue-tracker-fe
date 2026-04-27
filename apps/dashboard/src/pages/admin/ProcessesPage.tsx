@@ -1,0 +1,716 @@
+import { useState, useEffect, useMemo } from 'react';
+import { useTableHeight } from '../../hooks/useTableHeight';
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
+import {
+  Typography, Table, Button, Drawer, Form, Input, InputNumber, Tag, App,
+  Popconfirm, Divider, Select, DatePicker,
+} from 'antd';
+import { PlusOutlined, DeleteOutlined, HolderOutlined } from '@ant-design/icons';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { processesApi } from '@alblue/api-client';
+import { useAuthStore } from '@alblue/auth';
+import type { ProcessDto, SubProcessDto } from '@alblue/shared-types';
+import { useTranslation } from '@alblue/i18n';
+import dayjs from 'dayjs';
+import {
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext, verticalListSortingStrategy, useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import React from 'react';
+
+const { Title, Text } = Typography;
+
+function getTranslatedError(error: unknown, t: (key: string, opts?: Record<string, string>) => string, fallback: string): string {
+  const resp = (error as { response?: { data?: { error?: { code?: string; message?: string } } } })?.response?.data?.error;
+  if (resp?.code) {
+    const translated = t(`common:errors.${resp.code}`, { defaultValue: '' });
+    if (translated) return translated;
+  }
+  return resp?.message || fallback;
+}
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
+// ─── Sortable table row ──────────────────────────────────────
+
+const DragHandleContext = React.createContext<ReturnType<typeof useSortable>['listeners']>(undefined);
+
+interface SortableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
+  'data-row-key'?: string;
+}
+
+function SortableRow(props: SortableRowProps) {
+  const id = props['data-row-key'] ?? '';
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+  const style: React.CSSProperties = {
+    ...props.style,
+    transform: CSS.Translate.toString(transform),
+    transition,
+    ...(isDragging ? { position: 'relative', zIndex: 99 } : {}),
+  };
+
+  return (
+    <DragHandleContext.Provider value={listeners}>
+      <tr {...props} ref={setNodeRef} style={style} {...attributes} />
+    </DragHandleContext.Provider>
+  );
+}
+
+function DragHandle() {
+  const listeners = React.useContext(DragHandleContext);
+  return (
+    <HolderOutlined
+      style={{ color: '#999', cursor: 'grab' }}
+      {...listeners}
+      onClick={(e) => e.stopPropagation()}
+    />
+  );
+}
+
+export function ProcessesPage() {
+  const tenantId = useAuthStore((s) => s.tenantId);
+  const queryClient = useQueryClient();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [detailProcess, setDetailProcess] = useState<ProcessDto | null>(null);
+  const [createForm] = Form.useForm();
+  const [editForm] = Form.useForm();
+  const [subProcessForm] = Form.useForm();
+  const { message, modal } = App.useApp();
+  const { t } = useTranslation('dashboard');
+
+  // ─── Filter & Pagination State ──────────────────────────
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
+  const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
+  const [dateFrom, setDateFrom] = useState<dayjs.Dayjs | null>(null);
+  const [dateTo, setDateTo] = useState<dayjs.Dayjs | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sortBy, setSortBy] = useState<string | undefined>('sequenceOrder');
+  const [sortDirection, setSortDirection] = useState<string | undefined>('asc');
+
+  const { ref: tableWrapperRef, height: tableBodyHeight } = useTableHeight();
+  const { guardedClose: guardedCreateClose, onValuesChange: onCreateValuesChange } = useUnsavedChanges(createOpen);
+  const { guardedClose: guardedEditClose, onValuesChange: onEditValuesChange } = useUnsavedChanges(!!detailProcess);
+
+  useEffect(() => { setPage(1); }, [debouncedSearch, isActiveFilter, dateFrom, dateTo]);
+
+  // ─── Pending sub-processes for create drawer (controlled state) ────
+  const [pendingSubProcesses, setPendingSubProcesses] = useState<{ key: number; name: string; sequenceOrder: number }[]>([]);
+  const [nextSubKey, setNextSubKey] = useState(0);
+  const [addSubName, setAddSubName] = useState('');
+  const [addSubOrder, setAddSubOrder] = useState<number | undefined>(1);
+
+  const { data: pagedResult, isLoading } = useQuery({
+    queryKey: ['processes', tenantId, debouncedSearch, isActiveFilter, dateFrom?.format('YYYY-MM-DD'), dateTo?.format('YYYY-MM-DD'), page, pageSize, sortBy, sortDirection],
+    queryFn: () => processesApi.getAll({
+      tenantId: tenantId!,
+      search: debouncedSearch || undefined,
+      isActive: isActiveFilter,
+      createdFrom: dateFrom?.format('YYYY-MM-DD'),
+      createdTo: dateTo?.format('YYYY-MM-DD'),
+      page,
+      pageSize,
+      sortBy,
+      sortDirection,
+    }).then((r) => r.data),
+    enabled: !!tenantId,
+  });
+
+  // Auto sequence order for new process
+  const nextSequenceOrder = useMemo(() => {
+    if (!pagedResult?.items?.length) return 1;
+    return Math.max(...pagedResult.items.map((p) => p.sequenceOrder)) + 1;
+  }, [pagedResult]);
+
+  // Refresh detail from list data
+  const currentDetail = detailProcess
+    ? pagedResult?.items.find((p) => p.id === detailProcess.id) ?? detailProcess
+    : null;
+
+  useEffect(() => {
+    if (currentDetail) {
+      editForm.setFieldsValue({ code: currentDetail.code, name: currentDetail.name, sequenceOrder: currentDetail.sequenceOrder });
+    }
+  }, [currentDetail, editForm]);
+
+  const createMutation = useMutation({
+    mutationFn: (values: { code: string; name: string; sequenceOrder: number }) =>
+      processesApi.create({
+        tenantId: tenantId!,
+        ...values,
+        subProcesses: pendingSubProcesses.length > 0
+          ? pendingSubProcesses.map(({ name, sequenceOrder }) => ({ name, sequenceOrder }))
+          : undefined,
+      }),
+    onSuccess: (resp) => {
+      queryClient.invalidateQueries({ queryKey: ['processes'] });
+      setCreateOpen(false);
+      createForm.resetFields();
+      setPendingSubProcesses([]);
+      setAddSubName('');
+      setAddSubOrder(1);
+      message.success(t('admin.processes.created'));
+      const newProcess = resp.data as ProcessDto;
+      if (newProcess?.id) setDetailProcess(newProcess);
+    },
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.processes.createFailed'))),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, values }: { id: string; values: { code: string; name: string; sequenceOrder: number } }) =>
+      processesApi.update(id, {
+        code: values.code,
+        name: values.name,
+        sequenceOrder: values.sequenceOrder,
+        addSubProcesses: pendingSubAdds.length > 0
+          ? pendingSubAdds.map(({ name, sequenceOrder }) => ({ name, sequenceOrder }))
+          : undefined,
+        deactivateSubProcessIds: pendingSubRemovals.size > 0
+          ? [...pendingSubRemovals]
+          : undefined,
+      }),
+    onSuccess: async (resp, variables) => {
+      await queryClient.invalidateQueries({ queryKey: ['processes'] });
+      // If sub-processes were removed, reorder remaining ones to close gaps
+      if (pendingSubRemovals.size > 0) {
+        const updated = resp.data as ProcessDto;
+        const remaining = (updated?.subProcesses ?? [])
+          .filter((s) => s.isActive)
+          .sort((a, b) => a.sequenceOrder - b.sequenceOrder);
+        if (remaining.length > 0) {
+          const hasGaps = remaining.some((s, idx) => s.sequenceOrder !== idx + 1);
+          if (hasGaps) {
+            const reorderItems = remaining.map((s, idx) => ({ id: s.id, sequenceOrder: idx + 1 }));
+            reorderSubProcessesMutation.mutate({ processId: variables.id, items: reorderItems });
+          }
+        }
+      }
+      setPendingSubAdds([]);
+      setPendingSubRemovals(new Set());
+      subProcessForm.resetFields();
+      message.success(t('admin.processes.updated'));
+    },
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.processes.updateFailed'))),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: ({ id, action }: { id: string; action: 'check' | 'deactivate' | 'forceDelete' }) => {
+      if (action === 'deactivate') return processesApi.deactivate(id);
+      if (action === 'forceDelete') return processesApi.forceDelete(id);
+      return processesApi.smartDelete(id);
+    },
+    onSuccess: (resp, { id, action }) => {
+      if (action === 'check' && resp.data && typeof resp.data === 'object' && 'hasReferences' in resp.data) {
+        const count = (resp.data as { referencedOrderCount: number }).referencedOrderCount;
+        modal.confirm({
+          title: t('admin.processes.hasReferences'),
+          content: t('admin.processes.hasReferencesDetail', { count }),
+          okText: t('admin.processes.deactivateInstead'),
+          cancelText: t('common:actions.cancel'),
+          onOk: () => deleteMutation.mutate({ id, action: 'deactivate' }),
+        });
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ['processes'] });
+      setDetailProcess(null);
+      message.success(t('admin.processes.deactivated'));
+    },
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.processes.deactivateFailed'))),
+  });
+
+  const activateMutation = useMutation({
+    mutationFn: (id: string) => processesApi.activate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['processes'] });
+      setDetailProcess(null);
+      message.success(t('admin.processes.activated'));
+    },
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.processes.activateFailed'))),
+  });
+
+  const reorderMutation = useMutation({
+    mutationFn: (items: { id: string; sequenceOrder: number }[]) => processesApi.reorder(items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['processes'] });
+    },
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.processes.updateFailed'))),
+  });
+
+  const reorderSubProcessesMutation = useMutation({
+    mutationFn: ({ processId, items }: { processId: string; items: { id: string; sequenceOrder: number }[] }) =>
+      processesApi.reorderSubProcesses(processId, items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['processes'] });
+    },
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.processes.updateFailed'))),
+  });
+
+  // ─── Pending sub-process changes for edit drawer ────────
+  const [pendingSubAdds, setPendingSubAdds] = useState<{ key: number; name: string; sequenceOrder: number }[]>([]);
+  const [pendingSubRemovals, setPendingSubRemovals] = useState<Set<string>>(new Set());
+  const [nextEditSubKey, setNextEditSubKey] = useState(0);
+
+  const openDetail = (process: ProcessDto) => {
+    setDetailProcess(process);
+    setPendingSubAdds([]);
+    setPendingSubRemovals(new Set());
+    setNextEditSubKey(0);
+  };
+
+  const handleAddPendingSub = () => {
+    if (!addSubName.trim() || !addSubOrder) return;
+    setPendingSubProcesses((prev) => [...prev, { name: addSubName.trim(), sequenceOrder: addSubOrder, key: nextSubKey }]);
+    setNextSubKey((k) => k + 1);
+    setAddSubName('');
+    setAddSubOrder(addSubOrder + 1);
+  };
+
+  // ─── Drag-and-drop ────────────────────────────────
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !pagedResult?.items) return;
+
+    const items = [...pagedResult.items];
+    const oldIndex = items.findIndex((i) => i.id === active.id);
+    const newIndex = items.findIndex((i) => i.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(items, oldIndex, newIndex);
+    const updates = reordered.map((item, idx) => ({ id: item.id, sequenceOrder: idx + 1 }));
+
+    // Optimistic update
+    queryClient.setQueryData(
+      ['processes', tenantId, debouncedSearch, isActiveFilter, dateFrom?.format('YYYY-MM-DD'), dateTo?.format('YYYY-MM-DD'), page, pageSize, sortBy, sortDirection],
+      { ...pagedResult, items: reordered.map((item, idx) => ({ ...item, sequenceOrder: idx + 1 })) },
+    );
+
+    reorderMutation.mutate(updates);
+  };
+
+  const handleSubDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !currentDetail || !pagedResult?.items) return;
+
+    const oldIndex = activeSubs.findIndex((s) => s.id === active.id);
+    const newIndex = activeSubs.findIndex((s) => s.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(activeSubs, oldIndex, newIndex);
+    const updates = reordered.map((sub, idx) => ({ id: sub.id, sequenceOrder: idx + 1 }));
+
+    // Optimistic update
+    const queryKey = ['processes', tenantId, debouncedSearch, isActiveFilter, dateFrom?.format('YYYY-MM-DD'), dateTo?.format('YYYY-MM-DD'), page, pageSize, sortBy, sortDirection];
+    queryClient.setQueryData(queryKey, {
+      ...pagedResult,
+      items: pagedResult.items.map((p) =>
+        p.id === currentDetail.id
+          ? { ...p, subProcesses: p.subProcesses.map((s) => { const idx = reordered.findIndex((r) => r.id === s.id); return idx !== -1 ? { ...s, sequenceOrder: idx + 1 } : s; }) }
+          : p
+      ),
+    });
+
+    reorderSubProcessesMutation.mutate({ processId: currentDetail.id, items: updates });
+  };
+
+  const columns = [
+    {
+      title: '',
+      dataIndex: 'dragHandle',
+      width: 40,
+      render: () => <DragHandle />,
+    },
+    {
+      title: t('common:labels.code'),
+      dataIndex: 'code',
+      sorter: true,
+      sortOrder: sortBy === 'code' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
+    },
+    {
+      title: t('common:labels.name'),
+      dataIndex: 'name',
+      sorter: true,
+      sortOrder: sortBy === 'name' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
+    },
+    {
+      title: t('admin.processes.sequenceOrder'),
+      dataIndex: 'sequenceOrder',
+      width: 100,
+      sorter: true,
+      sortOrder: sortBy === 'sequenceOrder' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
+    },
+    {
+      title: t('admin.processes.subProcesses'),
+      dataIndex: 'subProcesses',
+      width: 120,
+      render: (subs: SubProcessDto[]) => subs.filter((s) => s.isActive).length,
+    },
+    {
+      title: t('common:labels.created'),
+      dataIndex: 'createdAt',
+      width: 150,
+      render: (d: string) => d ? dayjs(d).format('DD.MM.YYYY.') : '—',
+      sorter: true,
+      sortOrder: sortBy === 'createdAt' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
+    },
+    {
+      title: t('common:labels.status'),
+      dataIndex: 'isActive',
+      width: 110,
+      render: (active: boolean) => (
+        <Tag color={active ? 'green' : 'default'}>{active ? t('common:status.active') : t('common:status.inactive')}</Tag>
+      ),
+    },
+  ];
+
+  const activeSubs = (currentDetail?.subProcesses ?? [])
+    .filter((s) => s.isActive && !pendingSubRemovals.has(s.id))
+    .sort((a, b) => a.sequenceOrder - b.sequenceOrder)
+    .map((s, idx) => ({ ...s, sequenceOrder: idx + 1 }));
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+        <Title level={4} style={{ margin: 0 }}>{t('admin.processes.title')}</Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => { createForm.resetFields(); createForm.setFieldValue('sequenceOrder', nextSequenceOrder); setPendingSubProcesses([]); setAddSubName(''); setAddSubOrder(1); setCreateOpen(true); }}>
+          {t('admin.processes.addProcess')}
+        </Button>
+      </div>
+
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+        <Input.Search
+          placeholder={t('common:actions.search')}
+          allowClear
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ width: 260 }}
+        />
+        <Select
+          placeholder={t('common:labels.status')}
+          allowClear
+          value={isActiveFilter}
+          onChange={(v) => setIsActiveFilter(v)}
+          style={{ width: 150 }}
+          options={[
+            { label: t('common:status.active'), value: true },
+            { label: t('common:status.inactive'), value: false },
+          ]}
+        />
+        <DatePicker
+          value={dateFrom}
+          onChange={setDateFrom}
+          format="DD.MM.YYYY"
+          allowClear
+          placeholder={t('common:labels.dateFrom')}
+        />
+        <DatePicker
+          value={dateTo}
+          onChange={setDateTo}
+          format="DD.MM.YYYY"
+          allowClear
+          placeholder={t('common:labels.dateTo')}
+        />
+      </div>
+
+      <div ref={tableWrapperRef} style={{ flex: 1, minHeight: 0 }}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={pagedResult?.items?.map((i) => i.id) ?? []} strategy={verticalListSortingStrategy}>
+            <Table
+              columns={columns}
+              dataSource={pagedResult?.items}
+              rowKey="id"
+              loading={isLoading}
+              scroll={{ x: 'max-content', y: tableBodyHeight }}
+              components={{ body: { row: SortableRow } }}
+              pagination={{
+                current: page,
+                pageSize,
+                total: pagedResult?.totalCount,
+                showSizeChanger: true,
+              }}
+              onChange={(pagination, _filters, sorter) => {
+                if (pagination.pageSize !== pageSize) {
+                  setPageSize(pagination.pageSize ?? 20);
+                  setPage(1);
+                  return;
+                }
+                const s = Array.isArray(sorter) ? sorter[0] : sorter;
+                const newField = (s?.order ? (s.field as string) : undefined) ?? 'sequenceOrder';
+                const newDir = (s?.order === 'descend' ? 'desc' : s?.order === 'ascend' ? 'asc' : undefined) ?? 'asc';
+                if (newField !== sortBy || newDir !== sortDirection) {
+                  setSortBy(newField);
+                  setSortDirection(newDir);
+                  setPage(1);
+                  return;
+                }
+                if (pagination.current !== page) setPage(pagination.current ?? 1);
+              }}
+              onRow={(record) => ({
+                onClick: () => openDetail(record),
+                style: { cursor: 'pointer' },
+              })}
+            />
+          </SortableContext>
+        </DndContext>
+      </div>
+
+      {/* Create Process Drawer */}
+      <Drawer
+        title={t('admin.processes.createProcess')}
+        open={createOpen}
+        onClose={(e) => guardedCreateClose(() => { createForm.resetFields(); setPendingSubProcesses([]); setAddSubName(''); setAddSubOrder(1); setCreateOpen(false); }, e)}
+        width={Math.min(520, window.innerWidth)}
+        extra={
+          <Button type="primary" onClick={() => createForm.submit()} loading={createMutation.isPending}>{t('common:actions.save')}</Button>
+        }
+      >
+        <Form form={createForm} layout="vertical" scrollToFirstError={{ behavior: "smooth", block: "center" }} onFinish={(v) => createMutation.mutate(v)} onValuesChange={onCreateValuesChange}>
+          <Form.Item name="code" label={t('common:labels.code')} rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="name" label={t('common:labels.name')} rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="sequenceOrder" label={t('admin.processes.sequenceOrder')} rules={[{ required: true }]}>
+            <InputNumber min={1} precision={0} style={{ width: '100%' }} />
+          </Form.Item>
+        </Form>
+
+        <Divider style={{ margin: '12px 0' }} />
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <Title level={5} style={{ margin: 0 }}>
+            {t('admin.processes.subProcesses')} ({pendingSubProcesses.length})
+          </Title>
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'flex-start' }}>
+          <Input
+            placeholder={t('common:labels.name')}
+            value={addSubName}
+            onChange={(e) => setAddSubName(e.target.value)}
+            style={{ minWidth: 180 }}
+            onPressEnter={handleAddPendingSub}
+          />
+          <InputNumber
+            min={1}
+            precision={0}
+            placeholder={t('admin.processes.sequenceOrder')}
+            value={addSubOrder}
+            onChange={(v) => setAddSubOrder(v ?? undefined)}
+            style={{ width: 80 }}
+          />
+          <Button
+            type="dashed"
+            icon={<PlusOutlined />}
+            onClick={handleAddPendingSub}
+            disabled={!addSubName.trim() || !addSubOrder}
+          >
+            {t('common:actions.add')}
+          </Button>
+        </div>
+
+        {pendingSubProcesses.length > 0 ? (
+          <Table
+            dataSource={pendingSubProcesses}
+            rowKey="key"
+            size="small"
+            pagination={false}
+            columns={[
+              { title: t('common:labels.name'), dataIndex: 'name' },
+              { title: t('admin.processes.sequenceOrder'), dataIndex: 'sequenceOrder', width: 100 },
+              {
+                title: '',
+                width: 40,
+                render: (_: unknown, record: { key: number }) => (
+                  <Button
+                    type="text"
+                    danger
+                    size="small"
+                    icon={<DeleteOutlined />}
+                    onClick={() => setPendingSubProcesses((prev) => prev.filter((s) => s.key !== record.key))}
+                  />
+                ),
+              },
+            ]}
+          />
+        ) : (
+          <Text type="secondary">{t('admin.processes.noSubProcesses')}</Text>
+        )}
+      </Drawer>
+
+      {/* Detail / Edit Drawer */}
+      <Drawer
+        title={currentDetail ? `${currentDetail.code} — ${currentDetail.name}` : ''}
+        open={!!detailProcess}
+        onClose={(e) => guardedEditClose(() => { setDetailProcess(null); setPendingSubAdds([]); setPendingSubRemovals(new Set()); editForm.resetFields(); subProcessForm.resetFields(); }, e)}
+        width={Math.min(520, window.innerWidth)}
+        extra={
+          <div style={{ display: 'flex', gap: 8 }}>
+            {currentDetail?.isActive ? (
+              <Popconfirm
+                title={t('admin.processes.deactivateConfirm')}
+                okText={t('common:actions.confirm')}
+                cancelText={t('common:actions.no')}
+                onConfirm={() => deleteMutation.mutate({ id: currentDetail!.id, action: 'check' })}
+              >
+                <Button danger loading={deleteMutation.isPending}>{t('admin.processes.deactivate')}</Button>
+              </Popconfirm>
+            ) : currentDetail && (
+              <Popconfirm
+                title={t('admin.processes.activateConfirm')}
+                okText={t('common:actions.confirm')}
+                cancelText={t('common:actions.no')}
+                onConfirm={() => activateMutation.mutate(currentDetail.id)}
+              >
+                <Button type="primary" ghost loading={activateMutation.isPending}>{t('admin.processes.activate')}</Button>
+              </Popconfirm>
+            )}
+            <Button type="primary" onClick={() => editForm.submit()} loading={updateMutation.isPending}>{t('common:actions.save')}</Button>
+          </div>
+        }
+      >
+        {currentDetail && (
+          <>
+            <Form
+              form={editForm}
+              layout="vertical"
+              onFinish={(v) => updateMutation.mutate({ id: currentDetail.id, values: v })}
+              onValuesChange={onEditValuesChange}
+            >
+              <Form.Item name="code" label={t('common:labels.code')} rules={[{ required: true }]}>
+                <Input />
+              </Form.Item>
+              <Form.Item name="name" label={t('common:labels.name')} rules={[{ required: true }]}>
+                <Input />
+              </Form.Item>
+              <Form.Item name="sequenceOrder" label={t('admin.processes.sequenceOrder')} rules={[{ required: true }]}>
+                <InputNumber min={1} precision={0} style={{ width: '100%' }} />
+              </Form.Item>
+            </Form>
+            {currentDetail.updatedAt && (
+              <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 8 }}>
+                {t('common:labels.updated')}: {dayjs(currentDetail.updatedAt).format('DD.MM.YYYY.')}
+              </Text>
+            )}
+
+            <Divider style={{ margin: '12px 0' }} />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <Title level={5} style={{ margin: 0 }}>
+                {t('admin.processes.subProcesses')} ({activeSubs.length + pendingSubAdds.length})
+              </Title>
+            </div>
+
+            {currentDetail.isActive && (
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'flex-start' }}>
+                <Form
+                  form={subProcessForm}
+                  layout="inline"
+                  onFinish={(v) => {
+                    setPendingSubAdds((prev) => [...prev, { key: nextEditSubKey, name: v.name, sequenceOrder: v.sequenceOrder }]);
+                    setNextEditSubKey((k) => k + 1);
+                    subProcessForm.resetFields();
+                    subProcessForm.setFieldValue('sequenceOrder', activeSubs.length + pendingSubAdds.length + 2);
+                  }}
+                >
+                  <Form.Item name="name" rules={[{ required: true, message: t('common:validation.required') }]} style={{ minWidth: 180 }}>
+                    <Input placeholder={t('common:labels.name')} />
+                  </Form.Item>
+                  <Form.Item name="sequenceOrder" rules={[{ required: true, message: t('common:validation.required') }]} initialValue={activeSubs.length + pendingSubAdds.length + 1}>
+                    <InputNumber min={1} precision={0} placeholder={t('admin.processes.sequenceOrder')} style={{ width: 80 }} />
+                  </Form.Item>
+                  <Form.Item>
+                    <Button type="dashed" icon={<PlusOutlined />} htmlType="submit">
+                      {t('common:actions.add')}
+                    </Button>
+                  </Form.Item>
+                </Form>
+              </div>
+            )}
+
+            {(activeSubs.length > 0 || pendingSubAdds.length > 0) ? (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSubDragEnd}>
+                <SortableContext items={activeSubs.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                  <Table<{ key: string; name: string; sequenceOrder: number; isNew: boolean; id: string }>
+                    dataSource={[
+                      ...activeSubs.map((s) => ({ key: s.id, name: s.name, sequenceOrder: s.sequenceOrder, isNew: false, id: s.id })),
+                      ...pendingSubAdds.map((s) => ({ key: `new-${s.key}`, name: s.name, sequenceOrder: s.sequenceOrder, isNew: true, id: `new-${s.key}` })),
+                    ]}
+                    rowKey="key"
+                    size="small"
+                    pagination={false}
+                    components={{ body: { row: SortableRow } }}
+                    columns={[
+                      {
+                        title: '',
+                        dataIndex: 'dragHandle',
+                        width: 32,
+                        render: (_, record) => record.isNew ? null : <DragHandle />,
+                      },
+                      {
+                        title: t('common:labels.name'),
+                        dataIndex: 'name',
+                        render: (name, record) => (
+                          record.isNew ? <Text type="success">{name}</Text> : name
+                        ),
+                      },
+                      {
+                        title: t('admin.processes.sequenceOrder'),
+                        dataIndex: 'sequenceOrder',
+                        width: 100,
+                      },
+                      {
+                        title: '',
+                        width: 40,
+                        render: (_, record) => (
+                          record.isNew ? (
+                            <Button
+                              type="text"
+                              danger
+                              size="small"
+                              icon={<DeleteOutlined />}
+                              onClick={() => {
+                                const numKey = Number(record.key.replace('new-', ''));
+                                setPendingSubAdds((prev) => prev.filter((s) => s.key !== numKey));
+                              }}
+                            />
+                          ) : (
+                            <Button
+                              type="text"
+                              danger
+                              size="small"
+                              icon={<DeleteOutlined />}
+                              onClick={() => setPendingSubRemovals((prev) => new Set([...prev, record.id]))}
+                            />
+                          )
+                        ),
+                      },
+                    ]}
+                  />
+                </SortableContext>
+              </DndContext>
+            ) : (
+              <Text type="secondary">{t('admin.processes.noSubProcesses')}</Text>
+            )}
+          </>
+        )}
+      </Drawer>
+    </div>
+  );
+}
