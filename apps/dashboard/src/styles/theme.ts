@@ -2,7 +2,7 @@ import type { ThemeConfig } from 'antd';
 
 export const theme: ThemeConfig = {
   token: {
-    colorPrimary: '#2e7d32',
+    colorPrimary: '#1677ff',
     borderRadius: 6,
     colorBgContainer: '#ffffff',
   },

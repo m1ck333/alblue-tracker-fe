@@ -16,7 +16,7 @@ export default defineConfig({
         name: 'Alblue MES - Tablet',
         short_name: 'Alblue',
         description: 'Factory floor tablet app for Alblue MES',
-        theme_color: '#2e7d32',
+        theme_color: '#1677ff',
         background_color: '#f5f5f5',
         display: 'standalone',
         orientation: 'portrait',

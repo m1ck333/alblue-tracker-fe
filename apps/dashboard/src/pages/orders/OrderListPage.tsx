@@ -27,8 +27,6 @@ import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
-const ATTACHMENT_RECOVERY = import.meta.env.VITE_ATTACHMENT_RECOVERY === 'true';
-
 // ─── Process status color mapping (matching Excel conditional formatting) ────
 
 const processStatusColors: Record<ProcessStatus, string> = {
@@ -2161,7 +2159,7 @@ export function OrderListPage() {
                         {item.notes}
                       </Text>
                     )}
-                    <OrderAttachments orderId={detailOrder.id} orderItemId={item.id} attachments={item.attachments ?? []} readOnly={!isDraft && !ATTACHMENT_RECOVERY} ref={(handle) => { if (handle) attachmentRefsMap.current.set(item.id, handle); else attachmentRefsMap.current.delete(item.id); }} />
+                    <OrderAttachments orderId={detailOrder.id} orderItemId={item.id} attachments={item.attachments ?? []} readOnly={!isDraft} ref={(handle) => { if (handle) attachmentRefsMap.current.set(item.id, handle); else attachmentRefsMap.current.delete(item.id); }} />
                   </Card>
                 );
               })}
@@ -2277,7 +2275,7 @@ export function OrderListPage() {
             )}
 
             {/* E) Attachments — inline, same pattern as create mode */}
-            <OrderAttachments orderId={detailOrder.id} attachments={detailOrder.attachments ?? []} readOnly={detailOrder.status !== OrderStatus.Draft && !ATTACHMENT_RECOVERY} ref={(handle) => { if (handle) attachmentRefsMap.current.set('order', handle); else attachmentRefsMap.current.delete('order'); }} />
+            <OrderAttachments orderId={detailOrder.id} attachments={detailOrder.attachments ?? []} readOnly={detailOrder.status !== OrderStatus.Draft} ref={(handle) => { if (handle) attachmentRefsMap.current.set('order', handle); else attachmentRefsMap.current.delete('order'); }} />
           </>
         ) : (
           <Typography.Text>{t('orders.orderNotFound')}</Typography.Text>
