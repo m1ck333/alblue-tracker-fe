@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-export VITE_API_BASE_URL=https://tracker-api.alblue.rs/api
-export VITE_SIGNALR_URL=https://tracker-api.alblue.rs/hubs/production
+export VITE_API_BASE_URL=http://46.101.166.137:5040/api
+export VITE_SIGNALR_URL=http://46.101.166.137:5040/hubs/production
 
 TARGET=${1:-all}
 
