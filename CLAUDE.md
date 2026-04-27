@@ -86,3 +86,13 @@ DeadlineWarning
 - API services return axios response (access .data for payload)
 - TanStack Query for all server state, Zustand for client state
 - antd Form for dashboard forms, controlled inputs for tablet
+
+## Color rule (no hardcoded colors)
+- **Never** use hardcoded hex / rgba / named colors in components.
+- Use antd design tokens via `theme.useToken()` — `token.colorError`, `token.colorTextSecondary`, `token.colorBgContainer`, `token.colorBorderSecondary`, `token.colorSuccessBg`, `token.colorWarningBorder`, etc.
+- Exceptions (allowed):
+  - `apps/dashboard/src/styles/theme.ts` — the theme definition itself
+  - `processStatusColors`, `orderTypeColors`, `orderStatusTextColors` palettes in `OrderListPage.tsx` (semantic process palette, mirrors Excel parity — intentional design)
+  - Process status SQUARES and BADGES that render those palettes (ProcessCell, ItemProcessBar, ProcessTimeline rendering)
+  - User-configurable defaults stored in DB (e.g. tenant warning/critical color picker defaults)
+- New code: always start with the token; only fall back to hex if no suitable token exists, and document why with a comment.

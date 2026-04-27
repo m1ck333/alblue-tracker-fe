@@ -1,41 +1,19 @@
-import { theme as antdTheme, type ThemeConfig } from 'antd';
+import type { ThemeConfig } from 'antd';
 
-const sharedTokens = {
-  colorPrimary: '#1677ff',
-  borderRadius: 6,
-};
-
-const sharedComponents: ThemeConfig['components'] = {
-  Form: {
-    itemMarginBottom: 20,
-    verticalLabelPadding: '0 0 4px',
-  },
-};
-
-export const lightTheme: ThemeConfig = {
-  algorithm: antdTheme.defaultAlgorithm,
+export const theme: ThemeConfig = {
   token: {
-    ...sharedTokens,
+    colorPrimary: '#2e7d32',
+    borderRadius: 6,
     colorBgContainer: '#ffffff',
   },
   components: {
-    ...sharedComponents,
     Layout: {
-      siderBg: '#001529',
+      siderBg: '#0d3818',
       headerBg: '#ffffff',
     },
-  },
-};
-
-export const darkTheme: ThemeConfig = {
-  algorithm: antdTheme.darkAlgorithm,
-  token: sharedTokens,
-  components: {
-    ...sharedComponents,
-    Layout: {
-      siderBg: '#000814',
+    Form: {
+      itemMarginBottom: 20,
+      verticalLabelPadding: '0 0 4px',
     },
   },
 };
-
-export const theme = lightTheme;

@@ -46,6 +46,7 @@ function formatTime(iso: string): string {
 
 export function CoordinatorDashboard() {
   const navigate = useNavigate();
+  const { token } = theme.useToken();
   const [activeOrdersProcess, setActiveOrdersProcess] = useState<LiveViewProcessDto | null>(null);
   const warnings = useDashboardWarnings();
   const liveView = useDashboardLiveView();
@@ -55,7 +56,6 @@ export function CoordinatorDashboard() {
   const changeRequests = usePendingChangeRequests();
   const { t } = useTranslation('dashboard');
   const { tEnum } = useEnumTranslation();
-  const { token } = theme.useToken();
 
   return (
     <div>
@@ -72,8 +72,8 @@ export function CoordinatorDashboard() {
                 { title: t('coordinator.stats.ordersCompleted'), value: s.today?.ordersCompleted ?? 0 },
                 { title: t('coordinator.stats.processesCompleted'), value: s.today?.processesCompleted ?? 0 },
                 { title: t('coordinator.stats.avgProcessTime'), value: s.today?.averageProcessTimeMinutes ?? 0, suffix: t('coordinator.stats.min') },
-                { title: t('coordinator.stats.criticalWarnings'), value: s.warnings?.criticalCount ?? 0, color: s.warnings?.criticalCount ? '#cf1322' : undefined },
-                { title: t('coordinator.stats.warnings'), value: s.warnings?.warningCount ?? 0, color: s.warnings?.warningCount ? '#faad14' : undefined },
+                { title: t('coordinator.stats.criticalWarnings'), value: s.warnings?.criticalCount ?? 0, color: s.warnings?.criticalCount ? token.colorError : undefined },
+                { title: t('coordinator.stats.warnings'), value: s.warnings?.warningCount ?? 0, color: s.warnings?.warningCount ? token.colorWarning : undefined },
                 { title: t('coordinator.stats.pendingBlockRequests'), value: s.pendingBlockRequests ?? 0 },
               ];
               return (
@@ -118,7 +118,7 @@ export function CoordinatorDashboard() {
                       title={item.orderNumber}
                       description={
                         <>
-                          <span style={isOverdue ? { color: '#cf1322', fontWeight: 500 } : undefined}>
+                          <span style={isOverdue ? { color: token.colorError, fontWeight: 500 } : undefined}>
                             {daysText}
                           </span>
                           {' · '}
@@ -179,7 +179,7 @@ export function CoordinatorDashboard() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                           {processWorkers.map((w) => (
                             <div key={w.userId} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', backgroundColor: w.isCheckedIn ? '#52c41a' : '#ff4d4f', flexShrink: 0 }} />
+                              <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', backgroundColor: w.isCheckedIn ? token.colorSuccess : token.colorError, flexShrink: 0 }} />
                               <Text style={{ fontSize: 13 }}>
                                 {w.name}
                                 {w.isCheckedIn && w.checkedInAt && (
