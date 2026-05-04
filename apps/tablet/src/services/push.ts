@@ -80,15 +80,14 @@ export async function subscribeToPush(): Promise<boolean> {
       return false;
     }
 
-    // Register subscription on the server
-    const { tenantId, user } = useAuthStore.getState();
-    if (!tenantId || !user?.id) {
-      console.warn('[Push] No tenantId or userId in auth store');
+    // Register subscription on the server (tenant derived from JWT)
+    const { user } = useAuthStore.getState();
+    if (!user?.id) {
+      console.warn('[Push] No userId in auth store');
       return false;
     }
 
     await pushApi.subscribe({
-      tenantId,
       userId: user.id,
       endpoint: json.endpoint,
       p256dhKey: json.keys.p256dh,
