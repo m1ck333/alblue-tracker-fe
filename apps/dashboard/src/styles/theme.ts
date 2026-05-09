@@ -37,7 +37,13 @@ export const lightTheme: ThemeConfig = {
 
 export const darkTheme: ThemeConfig = {
   algorithm: antdTheme.darkAlgorithm,
-  token: sharedTokens,
+  token: {
+    ...sharedTokens,
+    // Popups/dropdowns lift slightly above the page bg so the user can tell
+    // them apart in dark mode (default antd dark popup bg blends into the
+    // dashboard's dark surface).
+    colorBgElevated: '#262626',
+  },
   components: {
     ...sharedComponents,
     Layout: {
@@ -50,6 +56,11 @@ export const darkTheme: ThemeConfig = {
       darkSubMenuItemBg: '#000408',
       darkItemHoverBg: '#0f1f33',
       darkPopupBg: '#000814',
+    },
+    Popover: {
+      // Stronger contrast so Popconfirm and tooltips read clearly against
+      // the dark dashboard. Default antd dark popup is too close to bg.
+      colorBgElevated: '#2a2a2a',
     },
   },
 };
