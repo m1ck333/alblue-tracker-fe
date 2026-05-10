@@ -72,6 +72,17 @@ export interface OrderDto {
   itemCount: number;
 }
 
+export interface OrderManualProcessDto {
+  processId: string;
+  sequenceOrder: number;
+  defaultComplexity: ComplexityType | null;
+}
+
+export interface OrderManualDependencyDto {
+  processId: string;
+  dependsOnProcessId: string;
+}
+
 export interface OrderDetailDto {
   id: string;
   tenantId: string;
@@ -87,6 +98,8 @@ export interface OrderDetailDto {
   attachments: OrderAttachmentDto[];
   completedAt: string | null;
   isInvoiced: boolean;
+  manualProcesses: OrderManualProcessDto[];
+  manualProcessDependencies: OrderManualDependencyDto[];
 }
 
 export interface OrderItemDto {
@@ -291,6 +304,21 @@ export interface ProductCategoryDependencyDto {
   processCode: string | null;
   dependsOnProcessId: string;
   dependsOnProcessCode: string | null;
+}
+
+export interface OrderTypeDto {
+  id: string;
+  code: string;
+  name: string;
+  allowsManualProcesses: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface DeleteOrderTypeResult {
+  hardDeleted: boolean;
+  deactivated: boolean;
 }
 
 export interface SpecialRequestTypeDto {

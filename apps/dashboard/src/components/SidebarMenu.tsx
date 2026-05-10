@@ -11,6 +11,7 @@ import {
   ApartmentOutlined,
   AppstoreOutlined,
   TagOutlined,
+  ProfileOutlined,
   BankOutlined,
   ClockCircleOutlined,
   BarChartOutlined,
@@ -89,6 +90,7 @@ export function SidebarMenu({ collapsed: _collapsed }: SidebarMenuProps) {
         { key: '/admin/users', icon: <UserOutlined />, label: t('nav.users') },
         { key: '/admin/processes', icon: <ApartmentOutlined />, label: t('nav.processes') },
         { key: '/admin/product-categories', icon: <AppstoreOutlined />, label: t('nav.categories') },
+        { key: '/admin/order-types', icon: <ProfileOutlined />, label: t('nav.orderTypes') },
         { key: '/admin/special-request-types', icon: <TagOutlined />, label: t('nav.specialRequests') },
         role === UserRole.SuperAdmin && {
           key: '/admin/tenants',

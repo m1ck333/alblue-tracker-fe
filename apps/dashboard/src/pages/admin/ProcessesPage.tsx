@@ -107,7 +107,7 @@ export function ProcessesPage() {
 
   const { ref: tableWrapperRef, height: tableBodyHeight } = useTableHeight();
   const { guardedClose: guardedCreateClose, onValuesChange: onCreateValuesChange } = useUnsavedChanges(createOpen);
-  const { guardedClose: guardedEditClose, onValuesChange: onEditValuesChange } = useUnsavedChanges(!!detailProcess);
+  const { guardedClose: guardedEditClose, onValuesChange: onEditValuesChange, markClean: markEditClean } = useUnsavedChanges(!!detailProcess);
 
   useEffect(() => { setPage(1); }, [debouncedSearch, isActiveFilter, dateFrom, dateTo]);
 
@@ -204,6 +204,7 @@ export function ProcessesPage() {
       setPendingSubRemovals(new Set());
       subProcessForm.resetFields();
       message.success(t('admin.processes.updated'));
+      markEditClean();
     },
     onError: (err) => message.error(getTranslatedError(err, t, t('admin.processes.updateFailed'))),
   });

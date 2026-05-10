@@ -53,7 +53,7 @@ export function TenantsPage() {
   const { t } = useTranslation('dashboard');
 
   const { ref: tableWrapperRef, height: tableBodyHeight } = useTableHeight();
-  const { guardedClose: guardedDrawerClose, onValuesChange: onDrawerValuesChange } = useUnsavedChanges(drawerOpen);
+  const { guardedClose: guardedDrawerClose, onValuesChange: onDrawerValuesChange, markClean: markDrawerClean } = useUnsavedChanges(drawerOpen);
 
   // ─── Filter & Pagination State ──────────────────────────
   const [search, setSearch] = useState('');
@@ -138,6 +138,7 @@ export function TenantsPage() {
       queryClient.invalidateQueries({ queryKey: ['tenants'] });
       queryClient.invalidateQueries({ queryKey: ['tenant-settings'] });
       message.success(t('admin.tenants.updated'));
+      markDrawerClean();
     },
     onError: (err) => message.error(getTranslatedError(err, t, t('admin.tenants.updateFailed'))),
   });

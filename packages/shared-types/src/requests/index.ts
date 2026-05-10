@@ -61,6 +61,17 @@ export interface CreateOrderItemInput {
   notes?: string;
 }
 
+export interface ManualProcessInput {
+  processId: string;
+  sequenceOrder: number;
+  defaultComplexity?: ComplexityType;
+}
+
+export interface ManualDependencyInput {
+  processId: string;
+  dependsOnProcessId: string;
+}
+
 export interface CreateOrderRequest {
   orderNumber: string;
   deliveryDate: string;
@@ -70,6 +81,8 @@ export interface CreateOrderRequest {
   customWarningDays?: number;
   customCriticalDays?: number;
   items?: CreateOrderItemInput[];
+  manualProcesses?: ManualProcessInput[];
+  manualDependencies?: ManualDependencyInput[];
 }
 
 export interface UpdateOrderRequest {
@@ -240,6 +253,20 @@ export interface AddCategoryProcessRequest {
 export interface AddCategoryDependencyRequest {
   processId: string;
   dependsOnProcessId: string;
+}
+
+// ─── Order Types ─────────────────────────────────────────
+
+export interface CreateOrderTypeRequest {
+  code: string;
+  name: string;
+  allowsManualProcesses: boolean;
+}
+
+export interface UpdateOrderTypeRequest {
+  name: string;
+  allowsManualProcesses: boolean;
+  isActive: boolean;
 }
 
 // ─── Special Request Types ───────────────────────────────

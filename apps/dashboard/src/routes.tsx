@@ -13,6 +13,7 @@ import { UsersPage } from './pages/admin/UsersPage';
 import { ProcessesPage } from './pages/admin/ProcessesPage';
 import { ProductCategoriesPage } from './pages/admin/ProductCategoriesPage';
 import { SpecialRequestTypesPage } from './pages/admin/SpecialRequestTypesPage';
+import { OrderTypesPage } from './pages/admin/OrderTypesPage';
 import { TenantsPage } from './pages/admin/TenantsPage';
 import { ShiftsPage } from './pages/admin/ShiftsPage';
 import { ReportsPage } from './pages/reports/ReportsPage';
@@ -120,6 +121,14 @@ export function AppRoutes() {
           element={
             <RequireRole roles={[UserRole.Admin, UserRole.Manager, UserRole.SuperAdmin]}>
               <SpecialRequestTypesPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/admin/order-types"
+          element={
+            <RequireRole roles={[UserRole.Admin, UserRole.Manager, UserRole.SuperAdmin]}>
+              <OrderTypesPage />
             </RequireRole>
           }
         />

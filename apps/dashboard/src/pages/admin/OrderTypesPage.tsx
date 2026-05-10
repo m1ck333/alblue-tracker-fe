@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useTableHeight } from '../../hooks/useTableHeight';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
-import { Typography, Table, Button, Drawer, Form, Input, Select, Tag, Space, App, Popconfirm, Divider, DatePicker } from 'antd';
+import { Typography, Table, Button, Drawer, Form, Input, Select, Tag, Switch, App, Popconfirm, DatePicker } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -13,19 +13,15 @@ function useDebounce<T>(value: T, delay: number): T {
   return debounced;
 }
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { specialRequestTypesApi, processesApi } from '@alblue/api-client';
+import { orderTypesApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
-import type { SpecialRequestTypeDto, ProcessDto } from '@alblue/shared-types';
+import type { OrderTypeDto, DeleteOrderTypeResult } from '@alblue/shared-types';
 import { useTranslation } from '@alblue/i18n';
 import dayjs from 'dayjs';
 import { TableExportButton } from '../../components/TableExportButton';
 import type { ExportColumn } from '../../utils/exportTable';
 
 const { Title, Text } = Typography;
-
-function getApiErrorCode(error: unknown): string | undefined {
-  return (error as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
-}
 
 function getTranslatedError(error: unknown, t: (key: string, opts?: Record<string, string>) => string, fallback: string): string {
   const resp = (error as { response?: { data?: { error?: { code?: string; message?: string } } } })?.response?.data?.error;
@@ -36,11 +32,11 @@ function getTranslatedError(error: unknown, t: (key: string, opts?: Record<strin
   return resp?.message || fallback;
 }
 
-export function SpecialRequestTypesPage() {
+export function OrderTypesPage() {
   const tenantId = useAuthStore((s) => s.tenantId);
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
-  const [detailItem, setDetailItem] = useState<SpecialRequestTypeDto | null>(null);
+  const [detailItem, setDetailItem] = useState<OrderTypeDto | null>(null);
   const [createForm] = Form.useForm();
   const [editForm] = Form.useForm();
   const { message } = App.useApp();
@@ -63,8 +59,8 @@ export function SpecialRequestTypesPage() {
   useEffect(() => { setPage(1); }, [debouncedSearch, isActiveFilter, dateFrom, dateTo]);
 
   const { data: pagedResult, isLoading } = useQuery({
-    queryKey: ['special-request-types', tenantId, debouncedSearch, isActiveFilter, dateFrom?.format('YYYY-MM-DD'), dateTo?.format('YYYY-MM-DD'), page, pageSize, sortBy, sortDirection],
-    queryFn: () => specialRequestTypesApi.getAll({
+    queryKey: ['order-types', tenantId, debouncedSearch, isActiveFilter, dateFrom?.format('YYYY-MM-DD'), dateTo?.format('YYYY-MM-DD'), page, pageSize, sortBy, sortDirection],
+    queryFn: () => orderTypesApi.getAll({
       search: debouncedSearch || undefined,
       isActive: isActiveFilter,
       createdFrom: dateFrom?.format('YYYY-MM-DD'),
@@ -78,111 +74,64 @@ export function SpecialRequestTypesPage() {
   });
 
   const data = pagedResult?.items;
-
-  const { data: processes } = useQuery({
-    queryKey: ['processes', tenantId],
-    queryFn: () => processesApi.getAll({ pageSize: 100 }).then((r) => r.data.items),
-    enabled: !!tenantId && (!!detailItem || createOpen),
-  });
-
-  const processMap = useMemo(() => {
-    const map = new Map<string, ProcessDto>();
-    (processes ?? []).forEach((p) => map.set(p.id, p));
-    return map;
-  }, [processes]);
-
-  const processOptions = (processes ?? []).map((p) => ({ label: `${p.code} — ${p.name}`, value: p.id }));
-
-  // Refresh detail from list data
   const currentDetail = detailItem ? data?.find((item) => item.id === detailItem.id) ?? detailItem : null;
 
   const createMutation = useMutation({
     mutationFn: (values: Record<string, unknown>) =>
-      specialRequestTypesApi.create({
+      orderTypesApi.create({
         code: values.code as string,
         name: values.name as string,
-        description: values.description as string | undefined,
-        addsProcesses: values.addsProcesses as string[] | undefined,
-        removesProcesses: values.removesProcesses as string[] | undefined,
-        onlyProcesses: values.onlyProcesses as string[] | undefined,
+        allowsManualProcesses: !!values.allowsManualProcesses,
       }),
     onSuccess: (resp) => {
-      queryClient.invalidateQueries({ queryKey: ['special-request-types'] });
+      queryClient.invalidateQueries({ queryKey: ['order-types'] });
       setCreateOpen(false);
       createForm.resetFields();
-      message.success(t('admin.specialRequestTypes.created'));
-      // Open detail drawer for the newly created item
-      const newItem = resp.data as SpecialRequestTypeDto;
+      message.success(t('admin.orderTypes.created'));
+      const newItem = resp.data as OrderTypeDto;
       if (newItem?.id) setDetailItem(newItem);
     },
-    onError: (err) => message.error(getTranslatedError(err, t, t('admin.specialRequestTypes.createFailed'))),
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.orderTypes.createFailed'))),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: Record<string, unknown> }) =>
-      specialRequestTypesApi.update(id, {
+      orderTypesApi.update(id, {
         name: values.name as string,
-        description: values.description as string | undefined,
-        addsProcesses: values.addsProcesses as string[] | undefined,
-        removesProcesses: values.removesProcesses as string[] | undefined,
-        onlyProcesses: values.onlyProcesses as string[] | undefined,
+        allowsManualProcesses: !!values.allowsManualProcesses,
+        isActive: !!values.isActive,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['special-request-types'] });
-      message.success(t('admin.specialRequestTypes.updated'));
+      queryClient.invalidateQueries({ queryKey: ['order-types'] });
+      message.success(t('admin.orderTypes.updated'));
       markEditClean();
     },
-    onError: (err) => message.error(getTranslatedError(err, t, t('admin.specialRequestTypes.updateFailed'))),
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.orderTypes.updateFailed'))),
   });
 
-  const deactivateMutation = useMutation({
-    mutationFn: (id: string) => specialRequestTypesApi.deactivate(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['special-request-types'] });
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => orderTypesApi.delete(id).then((r) => r.data as DeleteOrderTypeResult),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['order-types'] });
       setDetailItem(null);
-      message.success(t('admin.specialRequestTypes.deactivated'));
+      if (result?.hardDeleted) {
+        message.success(t('admin.orderTypes.deletedHard'));
+      } else {
+        message.info(t('admin.orderTypes.deletedSoft'));
+      }
     },
-    onError: (err) => message.error(getTranslatedError(err, t, t('admin.specialRequestTypes.deactivateFailed'))),
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.orderTypes.deleteFailed'))),
   });
 
-  const activateMutation = useMutation({
-    mutationFn: (id: string) => specialRequestTypesApi.activate(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['special-request-types'] });
-      setDetailItem(null);
-      message.success(t('admin.specialRequestTypes.activated'));
-    },
-    onError: (err) => message.error(getTranslatedError(err, t, t('admin.specialRequestTypes.activateFailed'))),
-  });
-
-  const openDetail = (item: SpecialRequestTypeDto) => {
-    setDetailItem(item);
-  };
-
-  // Auto-populate edit form when detail loads
   useEffect(() => {
     if (currentDetail) {
       editForm.setFieldsValue({
         name: currentDetail.name,
-        description: currentDetail.description,
-        addsProcesses: currentDetail.addsProcesses,
-        removesProcesses: currentDetail.removesProcesses,
-        onlyProcesses: currentDetail.onlyProcesses,
+        allowsManualProcesses: currentDetail.allowsManualProcesses,
+        isActive: currentDetail.isActive,
       });
     }
   }, [currentDetail, editForm]);
-
-  const renderProcessTags = (ids: string[]) => {
-    if (!ids || ids.length === 0) return <Text type="secondary">—</Text>;
-    return (
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-        {ids.map((id) => {
-          const proc = processMap.get(id);
-          return <Tag key={id} color="blue">{proc ? `${proc.code} — ${proc.name}` : id.slice(0, 8)}</Tag>;
-        })}
-      </div>
-    );
-  };
 
   const columns = [
     {
@@ -197,7 +146,14 @@ export function SpecialRequestTypesPage() {
       sorter: true,
       sortOrder: sortBy === 'name' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
     },
-    { title: t('common:labels.description'), dataIndex: 'description', ellipsis: true },
+    {
+      title: t('admin.orderTypes.allowsManualProcesses'),
+      dataIndex: 'allowsManualProcesses',
+      width: 180,
+      render: (v: boolean) => (
+        <Tag color={v ? 'blue' : 'default'}>{v ? t('common:actions.yes') : t('common:actions.no')}</Tag>
+      ),
+    },
     {
       title: t('common:labels.created'),
       dataIndex: 'createdAt',
@@ -216,25 +172,14 @@ export function SpecialRequestTypesPage() {
     },
   ];
 
-  // Process rules form items (reused in create & edit)
-  const processRuleFields = (
-    <>
-      <Form.Item name="addsProcesses" label={t('admin.specialRequestTypes.addsProcesses')}>
-        <Select mode="multiple" options={processOptions} allowClear placeholder={t('admin.specialRequestTypes.selectProcesses')} />
-      </Form.Item>
-      <Form.Item name="removesProcesses" label={t('admin.specialRequestTypes.removesProcesses')}>
-        <Select mode="multiple" options={processOptions} allowClear placeholder={t('admin.specialRequestTypes.selectProcesses')} />
-      </Form.Item>
-      <Form.Item name="onlyProcesses" label={t('admin.specialRequestTypes.onlyProcesses')}>
-        <Select mode="multiple" options={processOptions} allowClear placeholder={t('admin.specialRequestTypes.selectProcesses')} />
-      </Form.Item>
-    </>
-  );
-
-  const exportColumns: ExportColumn<SpecialRequestTypeDto>[] = [
-    { header: t('common:labels.code'), value: (s) => s.code, width: 12 },
+  const exportColumns: ExportColumn<OrderTypeDto>[] = [
+    { header: t('common:labels.code'), value: (s) => s.code, width: 14 },
     { header: t('common:labels.name'), value: (s) => s.name, width: 28 },
-    { header: t('common:labels.description'), value: (s) => s.description ?? '', width: 32 },
+    {
+      header: t('admin.orderTypes.allowsManualProcesses'),
+      value: (s) => (s.allowsManualProcesses ? t('common:actions.yes') : t('common:actions.no')),
+      width: 22,
+    },
     {
       header: t('common:labels.status'),
       value: (s) => (s.isActive ? t('common:status.active') : t('common:status.inactive')),
@@ -249,8 +194,8 @@ export function SpecialRequestTypesPage() {
   if (dateFrom) exportFilters.push({ label: t('export.dateFrom'), value: dateFrom.format('DD.MM.YYYY.') });
   if (dateTo) exportFilters.push({ label: t('export.dateTo'), value: dateTo.format('DD.MM.YYYY.') });
 
-  const fetchAllSrt = async (): Promise<SpecialRequestTypeDto[]> => {
-    const { data } = await specialRequestTypesApi.getAll({
+  const fetchAll = async (): Promise<OrderTypeDto[]> => {
+    const { data } = await orderTypesApi.getAll({
       search: debouncedSearch || undefined,
       isActive: isActiveFilter,
       createdFrom: dateFrom?.format('YYYY-MM-DD'),
@@ -266,20 +211,20 @@ export function SpecialRequestTypesPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>{t('admin.specialRequestTypes.title')}</Title>
+        <Title level={4} style={{ margin: 0 }}>{t('admin.orderTypes.title')}</Title>
         <div style={{ display: 'flex', gap: 8 }}>
           <TableExportButton
-            onFetchAll={fetchAllSrt}
+            onFetchAll={fetchAll}
             columns={exportColumns}
             options={{
-              fileName: `special-request-types-${dayjs().format('YYYY-MM-DD')}`,
-              title: `${t('common:appName')} — ${t('admin.specialRequestTypes.title')}`,
+              fileName: `order-types-${dayjs().format('YYYY-MM-DD')}`,
+              title: `${t('common:appName')} — ${t('admin.orderTypes.title')}`,
               filters: exportFilters,
-              sheetName: t('admin.specialRequestTypes.title'),
+              sheetName: t('admin.orderTypes.title'),
             }}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
-            {t('admin.specialRequestTypes.addType')}
+            {t('admin.orderTypes.addType')}
           </Button>
         </div>
       </div>
@@ -350,7 +295,7 @@ export function SpecialRequestTypesPage() {
             if (pagination.current !== page) setPage(pagination.current ?? 1);
           }}
           onRow={(record) => ({
-            onClick: () => openDetail(record),
+            onClick: () => setDetailItem(record),
             style: { cursor: 'pointer' },
           })}
         />
@@ -358,7 +303,7 @@ export function SpecialRequestTypesPage() {
 
       {/* Create Drawer */}
       <Drawer
-        title={t('admin.specialRequestTypes.createType')}
+        title={t('admin.orderTypes.createType')}
         open={createOpen}
         onClose={(e) => guardedCreateClose(() => { createForm.resetFields(); setCreateOpen(false); }, e)}
         width={Math.min(480, window.innerWidth)}
@@ -366,17 +311,28 @@ export function SpecialRequestTypesPage() {
           <Button type="primary" onClick={() => createForm.submit()} loading={createMutation.isPending}>{t('common:actions.save')}</Button>
         }
       >
-        <Form form={createForm} layout="vertical" scrollToFirstError={{ behavior: "smooth", block: "center" }} onFinish={(v) => createMutation.mutate(v)} onValuesChange={onCreateValuesChange}>
+        <Form
+          form={createForm}
+          layout="vertical"
+          scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
+          initialValues={{ allowsManualProcesses: false }}
+          onFinish={(v) => createMutation.mutate(v)}
+          onValuesChange={onCreateValuesChange}
+        >
           <Form.Item name="code" label={t('common:labels.code')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item name="name" label={t('common:labels.name')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="description" label={t('common:labels.description')}>
-            <Input.TextArea rows={2} />
+          <Form.Item
+            name="allowsManualProcesses"
+            label={t('admin.orderTypes.allowsManualProcesses')}
+            valuePropName="checked"
+            extra={t('admin.orderTypes.allowsManualProcessesHelp')}
+          >
+            <Switch />
           </Form.Item>
-          {processRuleFields}
         </Form>
       </Drawer>
 
@@ -388,23 +344,14 @@ export function SpecialRequestTypesPage() {
         width={Math.min(480, window.innerWidth)}
         extra={
           <div style={{ display: 'flex', gap: 8 }}>
-            {currentDetail?.isActive ? (
+            {currentDetail && (
               <Popconfirm
-                title={t('admin.specialRequestTypes.deactivateConfirm')}
+                title={t('admin.orderTypes.deleteConfirm')}
                 okText={t('common:actions.confirm')}
                 cancelText={t('common:actions.no')}
-                onConfirm={() => deactivateMutation.mutate(currentDetail!.id)}
+                onConfirm={() => deleteMutation.mutate(currentDetail.id)}
               >
-                <Button danger loading={deactivateMutation.isPending}>{t('admin.specialRequestTypes.deactivate')}</Button>
-              </Popconfirm>
-            ) : currentDetail && (
-              <Popconfirm
-                title={t('admin.specialRequestTypes.activateConfirm')}
-                okText={t('common:actions.confirm')}
-                cancelText={t('common:actions.no')}
-                onConfirm={() => activateMutation.mutate(currentDetail.id)}
-              >
-                <Button type="primary" ghost loading={activateMutation.isPending}>{t('admin.specialRequestTypes.activate')}</Button>
+                <Button danger loading={deleteMutation.isPending}>{t('admin.orderTypes.delete')}</Button>
               </Popconfirm>
             )}
             <Button type="primary" onClick={() => editForm.submit()} loading={updateMutation.isPending}>{t('common:actions.save')}</Button>
@@ -422,12 +369,17 @@ export function SpecialRequestTypesPage() {
               <Form.Item name="name" label={t('common:labels.name')} rules={[{ required: true }]}>
                 <Input />
               </Form.Item>
-              <Form.Item name="description" label={t('common:labels.description')}>
-                <Input.TextArea rows={2} />
+              <Form.Item
+                name="allowsManualProcesses"
+                label={t('admin.orderTypes.allowsManualProcesses')}
+                valuePropName="checked"
+                extra={t('admin.orderTypes.allowsManualProcessesHelp')}
+              >
+                <Switch />
               </Form.Item>
-              <Divider style={{ margin: '12px 0' }} />
-              <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 12 }}>{t('admin.specialRequestTypes.processRules')}</Text>
-              {processRuleFields}
+              <Form.Item name="isActive" label={t('common:labels.status')} valuePropName="checked">
+                <Switch checkedChildren={t('common:status.active')} unCheckedChildren={t('common:status.inactive')} />
+              </Form.Item>
             </Form>
             {currentDetail.updatedAt && (
               <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 12 }}>

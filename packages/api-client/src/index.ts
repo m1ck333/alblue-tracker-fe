@@ -16,6 +16,7 @@ export { subProcessWorkflowApi } from './api/sub-process-workflow';
 export { processesApi } from './api/processes';
 export { productCategoriesApi } from './api/product-categories';
 export { specialRequestTypesApi } from './api/special-request-types';
+export { orderTypesApi } from './api/order-types';
 export { tenantsApi } from './api/tenants';
 export { tabletApi } from './api/tablet';
 export { pushApi } from './api/push';

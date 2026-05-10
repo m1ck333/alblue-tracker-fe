@@ -9,12 +9,12 @@ import { PlusOutlined, DeleteOutlined, CheckOutlined, PaperClipOutlined, UndoOut
 import type { ColumnsType } from 'antd/es/table';
 import { useAuthStore } from '@alblue/auth';
 import { OrderStatus, OrderType, ProcessStatus, ComplexityType, UserRole } from '@alblue/shared-types';
-import type { OrderMasterViewDto, OrderDetailDto, OrderItemDto, OrderItemProcessDto, OrderItemSubProcessDto, ProcessDto, ProductCategoryDto, SpecialRequestTypeDto, AddOrderItemRequest } from '@alblue/shared-types';
+import type { OrderMasterViewDto, OrderDetailDto, OrderItemDto, OrderItemProcessDto, OrderItemSubProcessDto, ProcessDto, ProductCategoryDto, SpecialRequestTypeDto, AddOrderItemRequest, OrderTypeDto, ManualProcessInput, ManualDependencyInput } from '@alblue/shared-types';
 import {
   useCreateOrder, useOrder, useActivateOrder,
   useUpdateOrder, useCancelOrder, usePauseOrder, useResumeOrder, useReopenOrder,
 } from '../../hooks/useOrders';
-import { productCategoriesApi, processesApi, ordersApi, specialRequestTypesApi, processWorkflowApi, blockRequestsApi, changeRequestsApi } from '@alblue/api-client';
+import { productCategoriesApi, processesApi, ordersApi, specialRequestTypesApi, processWorkflowApi, blockRequestsApi, changeRequestsApi, orderTypesApi } from '@alblue/api-client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { StatusBadge } from '../../components/StatusBadge';
 import { OrderAttachments, type OrderAttachmentsHandle } from '../../components/OrderAttachments';
@@ -605,7 +605,7 @@ export function OrderListPage() {
   const [editForm] = Form.useForm();
   const [itemForm] = Form.useForm();
   const { guardedClose: guardedDrawerClose, onValuesChange: onCreateValuesChange } = useUnsavedChanges(isCreating);
-  const { guardedClose: guardedEditClose, onValuesChange: onEditValuesChange } = useUnsavedChanges(!!detailOrderId);
+  const { guardedClose: guardedEditClose, onValuesChange: onEditValuesChange, markClean: markEditClean } = useUnsavedChanges(!!detailOrderId);
   const createOrder = useCreateOrder();
   const updateOrder = useUpdateOrder();
   const fullscreen = useLayoutStore((s) => s.fullscreen);
@@ -694,6 +694,51 @@ export function OrderListPage() {
     enabled: !!tenantId,
   });
 
+  // Order types — used to gate the manual-processes section in create/edit drawer.
+  // Each enum value (Standard/Repair/...) maps to an OrderTypeDto by Code, and
+  // each type carries an `allowsManualProcesses` flag the admin toggles.
+  const { data: orderTypes } = useQuery({
+    queryKey: ['order-types', tenantId, 'active'],
+    queryFn: () => orderTypesApi.getAll({ isActive: true, pageSize: 100 }).then((r) => r.data.items),
+    enabled: !!tenantId,
+  });
+  const orderTypeByCode = useMemo(() => {
+    const map = new Map<string, OrderTypeDto>();
+    (orderTypes ?? []).forEach((ot) => map.set(ot.code.toUpperCase(), ot));
+    return map;
+  }, [orderTypes]);
+
+  // Watch the create-form's orderType field so we can render the manual-process
+  // section conditionally when the matched OrderType has allowsManualProcesses=true.
+  const watchedOrderType = Form.useWatch('orderType', form) as OrderType | undefined;
+  const watchedOrderTypeMeta = watchedOrderType
+    ? orderTypeByCode.get(String(watchedOrderType).toUpperCase())
+    : undefined;
+
+  // Manual process picker state — used only when watchedOrderTypeMeta.allowsManualProcesses
+  // is true. Sequence is the position in `manualProcessIds`. Reset whenever the
+  // selected order type stops allowing manual processes.
+  const [manualProcessIds, setManualProcessIds] = useState<string[]>([]);
+  const [manualComplexity, setManualComplexity] = useState<Record<string, ComplexityType | undefined>>({});
+  const [manualDeps, setManualDeps] = useState<Record<string, string[]>>({});
+  useEffect(() => {
+    if (!watchedOrderTypeMeta?.allowsManualProcesses) {
+      setManualProcessIds([]);
+      setManualComplexity({});
+      setManualDeps({});
+    }
+  }, [watchedOrderTypeMeta?.allowsManualProcesses]);
+  // Drop dangling deps when a process is removed from the manual list.
+  useEffect(() => {
+    setManualDeps((prev) => {
+      const next: Record<string, string[]> = {};
+      for (const pid of manualProcessIds) {
+        next[pid] = (prev[pid] ?? []).filter((d) => manualProcessIds.includes(d) && d !== pid);
+      }
+      return next;
+    });
+  }, [manualProcessIds]);
+
   // Process lookup map
   const processMap = useMemo(() => {
     const map = new Map<string, ProcessDto>();
@@ -707,7 +752,7 @@ export function OrderListPage() {
       { header: t('common:labels.orderNumber'), value: (o) => o.orderNumber, width: 16 },
       {
         header: t('common:labels.type'),
-        value: (o) => tEnum('OrderType', o.orderType),
+        value: (o) => orderTypeByCode.get(String(o.orderType).toUpperCase())?.name ?? tEnum('OrderType', o.orderType),
         cell: (o) => ({ fillColor: orderTypeColors[o.orderType] === 'blue' ? '#E6F4FF' : orderTypeColors[o.orderType] === 'orange' ? '#FFF4E6' : orderTypeColors[o.orderType] === 'red' ? '#FFE6E6' : '#F4E6FF' }),
         width: 14,
       },
@@ -871,12 +916,13 @@ export function OrderListPage() {
       queryClient.invalidateQueries({ queryKey: ['orders-master-view'] });
       message.success(t('orders.updatedSuccess'));
       setEditingOrderNumber(false);
+      markEditClean();
     } catch (err) {
       message.error(getTranslatedError(err, t, t('orders.updateFailed')));
     } finally {
       setSavingInline(false);
     }
-  }, [detailOrder, orderNumberDraft, updateOrder, queryClient, t, message]);
+  }, [detailOrder, orderNumberDraft, updateOrder, queryClient, t, message, markEditClean]);
 
   const saveInlineDeliveryDate = useCallback(async () => {
     if (!detailOrder || !deliveryDateDraft) return;
@@ -889,12 +935,13 @@ export function OrderListPage() {
       queryClient.invalidateQueries({ queryKey: ['orders-master-view'] });
       message.success(t('orders.updatedSuccess'));
       setEditingDeliveryDate(false);
+      markEditClean();
     } catch (err) {
       message.error(getTranslatedError(err, t, t('orders.updateFailed')));
     } finally {
       setSavingInline(false);
     }
-  }, [detailOrder, deliveryDateDraft, updateOrder, queryClient, t, message]);
+  }, [detailOrder, deliveryDateDraft, updateOrder, queryClient, t, message, markEditClean]);
 
   useEffect(() => {
     if (detailOrder) {
@@ -940,6 +987,22 @@ export function OrderListPage() {
         const compressed = await Promise.all(files.map((f) => compressFile(f)));
         if (compressed.length > 0) compressedItemAttachments.set(key, compressed);
       }
+      // Build manual processes payload only when the picked order type allows it.
+      const manualProcessesPayload: ManualProcessInput[] | undefined =
+        watchedOrderTypeMeta?.allowsManualProcesses && manualProcessIds.length > 0
+          ? manualProcessIds.map((pid, i) => ({
+              processId: pid,
+              sequenceOrder: i + 1,
+              defaultComplexity: manualComplexity[pid],
+            }))
+          : undefined;
+      const manualDependenciesPayload: ManualDependencyInput[] | undefined =
+        watchedOrderTypeMeta?.allowsManualProcesses && manualProcessIds.length > 0
+          ? Object.entries(manualDeps).flatMap(([pid, deps]) =>
+              deps.map((d) => ({ processId: pid, dependsOnProcessId: d })),
+            )
+          : undefined;
+
       await createOrder.mutateAsync({
         orderNumber: values.orderNumber as string,
         deliveryDate: dayjs(values.deliveryDate as string).format('YYYY-MM-DD') + 'T12:00:00Z',
@@ -951,6 +1014,8 @@ export function OrderListPage() {
         items: createPendingItems.length > 0 ? createPendingItems : undefined,
         attachments: compressedOrderFiles.length > 0 ? compressedOrderFiles : undefined,
         itemAttachments: compressedItemAttachments.size > 0 ? compressedItemAttachments : undefined,
+        manualProcesses: manualProcessesPayload,
+        manualDependencies: manualDependenciesPayload && manualDependenciesPayload.length > 0 ? manualDependenciesPayload : undefined,
       });
       message.success(t('orders.createdSuccess'));
       form.resetFields();
@@ -958,6 +1023,9 @@ export function OrderListPage() {
       setPendingFiles(new Map());
       setAddingItem(false);
       setIsCreating(false);
+      setManualProcessIds([]);
+      setManualComplexity({});
+      setManualDeps({});
     } catch (err) {
       message.error(getTranslatedError(err, t, t('orders.createFailed')));
     }
@@ -998,7 +1066,9 @@ export function OrderListPage() {
         sorter: true,
         sortOrder: sortBy === 'orderType' ? (sortDirection === 'desc' ? 'descend' : 'ascend') : null,
         render: (type: OrderType) => (
-          <Tag color={orderTypeColors[type]}>{tEnum('OrderType', type)}</Tag>
+          <Tag color={orderTypeColors[type]}>
+            {orderTypeByCode.get(String(type).toUpperCase())?.name ?? tEnum('OrderType', type)}
+          </Tag>
         ),
       },
       {
@@ -1259,7 +1329,10 @@ export function OrderListPage() {
           value={orderTypeFilter}
           onChange={(v) => setOrderTypeFilter(v)}
           style={{ width: 160 }}
-          options={Object.values(OrderType).map((ot) => ({ label: tEnum('OrderType', ot), value: ot }))}
+          options={Object.values(OrderType).map((ot) => ({
+            label: orderTypeByCode.get(String(ot).toUpperCase())?.name ?? tEnum('OrderType', ot),
+            value: ot,
+          }))}
         />
         <DatePicker
           value={dateFrom}
@@ -1444,6 +1517,7 @@ export function OrderListPage() {
                   queryClient.invalidateQueries({ queryKey: ['orders-master-view'] });
                   clearPendingState();
                   message.success(t('orders.updatedSuccess'));
+                  markEditClean();
                 } catch (err) {
                   message.error(getTranslatedError(err, t, t('orders.updateFailed')));
                 }
@@ -1478,7 +1552,10 @@ export function OrderListPage() {
                     label={t('orders.orderType')}
                     rules={[{ required: true }]}
                   >
-                    <Select options={Object.values(OrderType).map((ot) => ({ label: tEnum('OrderType', ot), value: ot }))} />
+                    <Select options={Object.values(OrderType).map((ot) => ({
+                      label: orderTypeByCode.get(String(ot).toUpperCase())?.name ?? tEnum('OrderType', ot),
+                      value: ot,
+                    }))} />
                   </Form.Item>
                 </Col>
               </Row>
@@ -1527,6 +1604,105 @@ export function OrderListPage() {
                   </Form.Item>
                 </Col>
               </Row>
+
+              {watchedOrderTypeMeta?.allowsManualProcesses && (
+                <Card
+                  size="small"
+                  style={{ marginTop: 8, borderColor: token.colorPrimaryBorder, background: token.colorPrimaryBg }}
+                  title={
+                    <Space>
+                      <Text strong>{t('orders.manualProcessesTitle')}</Text>
+                      <Tag color="blue">{watchedOrderTypeMeta.name}</Tag>
+                    </Space>
+                  }
+                >
+                  <Text type="secondary" style={{ display: 'block', marginBottom: 8, fontSize: 12 }}>
+                    {t('orders.manualProcessesHelp')}
+                  </Text>
+                  <Select
+                    mode="multiple"
+                    style={{ width: '100%', marginBottom: 8 }}
+                    placeholder={t('orders.manualProcessesPick')}
+                    value={manualProcessIds}
+                    onChange={(vals: string[]) => setManualProcessIds(vals)}
+                    options={(processes ?? []).map((p) => ({ label: `${p.code} — ${p.name}`, value: p.id }))}
+                    optionFilterProp="label"
+                  />
+                  {manualProcessIds.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {manualProcessIds.map((pid, idx) => {
+                        const proc = processMap.get(pid);
+                        const otherIds = manualProcessIds.filter((id) => id !== pid);
+                        // Adding edge pid → cand cycles if cand already reaches pid via
+                        // existing manualDeps. BFS forward from cand.
+                        const wouldCycle = (cand: string): boolean => {
+                          const visited = new Set<string>();
+                          const stack: string[] = [cand];
+                          while (stack.length) {
+                            const cur = stack.pop()!;
+                            if (cur === pid) return true;
+                            if (visited.has(cur)) continue;
+                            visited.add(cur);
+                            for (const next of manualDeps[cur] ?? []) stack.push(next);
+                          }
+                          return false;
+                        };
+                        return (
+                          <Card key={pid} size="small" bodyStyle={{ padding: 8 }}>
+                            <Row gutter={8} align="middle">
+                              <Col flex="40px"><Tag>{idx + 1}</Tag></Col>
+                              <Col flex="auto">
+                                <Text strong>{proc ? `${proc.code} — ${proc.name}` : pid.slice(0, 8)}</Text>
+                              </Col>
+                              <Col flex="120px">
+                                <Select
+                                  size="small"
+                                  allowClear
+                                  style={{ width: '100%' }}
+                                  placeholder={t('common:labels.complexity')}
+                                  value={manualComplexity[pid]}
+                                  onChange={(v) => setManualComplexity((prev) => ({ ...prev, [pid]: v }))}
+                                  options={Object.values(ComplexityType).map((c) => ({ label: tEnum('ComplexityType', c), value: c }))}
+                                />
+                              </Col>
+                            </Row>
+                            {otherIds.length > 0 && (
+                              <Row gutter={8} align="middle" style={{ marginTop: 6 }}>
+                                <Col flex="80px">
+                                  <Text type="secondary" style={{ fontSize: 12 }}>{t('orders.dependsOn')}</Text>
+                                </Col>
+                                <Col flex="auto">
+                                  <Select
+                                    mode="multiple"
+                                    size="small"
+                                    style={{ width: '100%' }}
+                                    placeholder={t('orders.dependsOnPlaceholder')}
+                                    value={manualDeps[pid] ?? []}
+                                    onChange={(vals: string[]) => setManualDeps((prev) => ({ ...prev, [pid]: vals }))}
+                                    options={otherIds.map((id) => {
+                                      const p = processMap.get(id);
+                                      const cycles = wouldCycle(id);
+                                      const isCurrent = (manualDeps[pid] ?? []).includes(id);
+                                      return {
+                                        label: cycles && !isCurrent
+                                          ? `${p ? `${p.code} — ${p.name}` : id.slice(0, 8)} (${t('orders.cycleBlocked')})`
+                                          : (p ? `${p.code} — ${p.name}` : id.slice(0, 8)),
+                                        value: id,
+                                        disabled: cycles && !isCurrent,
+                                      };
+                                    })}
+                                    optionFilterProp="label"
+                                  />
+                                </Col>
+                              </Row>
+                            )}
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Card>
+              )}
             </Form>
 
             <Divider style={{ margin: '12px 0' }} />
@@ -1775,7 +1951,7 @@ export function OrderListPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, gap: 8 }}>
               <Space size={4} wrap>
                 <Text style={{ color: orderTypeTextColors[detailOrder.orderType], fontWeight: 500 }}>
-                  #{tEnum('OrderType', detailOrder.orderType)}
+                  #{orderTypeByCode.get(String(detailOrder.orderType).toUpperCase())?.name ?? tEnum('OrderType', detailOrder.orderType)}
                 </Text>
                 <StatusText status={detailOrder.status} />
               </Space>
@@ -1995,6 +2171,49 @@ export function OrderListPage() {
                 </Text>
                 <ProcessTimeline order={detailOrder} processes={processes} tEnum={tEnum} processDependencies={detailDeps} />
               </div>
+            )}
+
+            {/* Manual processes (read-only summary) — only when this order has them. */}
+            {detailOrder.manualProcesses && detailOrder.manualProcesses.length > 0 && (
+              <Card
+                size="small"
+                style={{ marginBottom: 12, borderColor: token.colorPrimaryBorder, background: token.colorPrimaryBg }}
+                title={
+                  <Space>
+                    <Text strong>{t('orders.manualProcessesTitle')}</Text>
+                    <Tag color="blue">
+                      {orderTypeByCode.get(String(detailOrder.orderType).toUpperCase())?.name ?? tEnum('OrderType', detailOrder.orderType)}
+                    </Tag>
+                  </Space>
+                }
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {[...detailOrder.manualProcesses]
+                    .sort((a, b) => a.sequenceOrder - b.sequenceOrder)
+                    .map((mp) => {
+                      const proc = processMap.get(mp.processId);
+                      const deps = (detailOrder.manualProcessDependencies ?? []).filter((d) => d.processId === mp.processId);
+                      return (
+                        <div key={mp.processId} style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <Tag>{mp.sequenceOrder}</Tag>
+                          <Text strong>{proc ? `${proc.code} — ${proc.name}` : mp.processId.slice(0, 8)}</Text>
+                          {mp.defaultComplexity && (
+                            <Tag color="default">{tEnum('ComplexityType', mp.defaultComplexity)}</Tag>
+                          )}
+                          {deps.length > 0 && (
+                            <>
+                              <Text type="secondary" style={{ fontSize: 12 }}>{t('orders.dependsOn')}:</Text>
+                              {deps.map((d) => {
+                                const dp = processMap.get(d.dependsOnProcessId);
+                                return <Tag key={d.dependsOnProcessId}>{dp ? `${dp.code} — ${dp.name}` : d.dependsOnProcessId.slice(0, 8)}</Tag>;
+                              })}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              </Card>
             )}
 
             <Divider style={{ margin: '12px 0' }} />

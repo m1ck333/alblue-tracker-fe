@@ -103,7 +103,7 @@ export function ProductCategoriesPage() {
   const { t } = useTranslation('dashboard');
 
   const { ref: tableWrapperRef, height: tableBodyHeight } = useTableHeight();
-  const { guardedClose: guardedDrawerClose, onValuesChange: onDrawerValuesChange } = useUnsavedChanges(isCreating || !!detailId);
+  const { guardedClose: guardedDrawerClose, onValuesChange: onDrawerValuesChange, markClean: markDrawerClean } = useUnsavedChanges(isCreating || !!detailId);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -238,6 +238,7 @@ export function ProductCategoriesPage() {
     onSuccess: () => {
       invalidate();
       message.success(t('admin.productCategories.updated'));
+      markDrawerClean();
     },
     onError: (err) => message.error(getTranslatedError(err, t, t('admin.productCategories.updateFailed'))),
   });

@@ -62,6 +62,13 @@ export const ordersApi = {
     if (data.attachments) {
       data.attachments.forEach((file) => formData.append('Attachments', file));
     }
+    // Manual processes / dependencies (passed as JSON strings; controller deserializes)
+    if (data.manualProcesses && data.manualProcesses.length > 0) {
+      formData.append('ManualProcessesJson', JSON.stringify(data.manualProcesses));
+    }
+    if (data.manualDependencies && data.manualDependencies.length > 0) {
+      formData.append('ManualDependenciesJson', JSON.stringify(data.manualDependencies));
+    }
     return apiClient.post<OrderDetailDto>('/orders', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
