@@ -634,16 +634,39 @@ export function OrderListPage() {
   const resumeOrder = useResumeOrder();
   const { data: detailOrder, isLoading: detailLoading } = useOrder(detailOrderId ?? undefined);
   // Fetch processDependencies for the detail order independently from paginated master view
-  const { data: detailDeps } = useQuery({
+  // When the order has manual processes, build the dependency map locally from
+  // the detail payload — no need to hit master-view. Avoids a search collision
+  // bug where pageSize=1 + LIKE-search would return the wrong order when an order
+  // number was a substring of another (e.g. "001" matching "ORD-2026-001").
+  // For category-based orders we still fetch from master-view, but with a larger
+  // pageSize so `find(by id)` always lands on the right row.
+  const manualDepsMap = useMemo<Record<string, string[]> | null>(() => {
+    if (!detailOrder?.manualProcessDependencies || detailOrder.manualProcessDependencies.length === 0) return null;
+    const map: Record<string, string[]> = {};
+    for (const d of detailOrder.manualProcessDependencies) {
+      if (!map[d.processId]) map[d.processId] = [];
+      map[d.processId].push(d.dependsOnProcessId);
+    }
+    // Manual orders use exactly this map — even an empty list (when the order
+    // has manual processes but no deps configured) must be a non-null object
+    // so getAggregateProcessState's hasDeps signal is true.
+    return map;
+  }, [detailOrder?.manualProcessDependencies]);
+
+  const hasManual = !!detailOrder?.manualProcesses && detailOrder.manualProcesses.length > 0;
+
+  const { data: categoryDetailDeps } = useQuery({
     queryKey: ['order-detail-deps', tenantId, detailOrderId],
     queryFn: () =>
-      ordersApi.getMasterView({ search: detailOrder!.orderNumber, page: 1, pageSize: 1 }).then((r) => {
+      ordersApi.getMasterView({ search: detailOrder!.orderNumber, page: 1, pageSize: 50 }).then((r) => {
         const entry = r.data.items.find((o) => o.id === detailOrderId);
         return entry?.processDependencies ?? {};
       }),
-    enabled: !!tenantId && !!detailOrderId && !!detailOrder,
+    enabled: !!tenantId && !!detailOrderId && !!detailOrder && !hasManual,
     staleTime: 10_000,
   });
+
+  const detailDeps: Record<string, string[]> | undefined = hasManual ? (manualDepsMap ?? {}) : categoryDetailDeps;
 
   // Fetch block & change requests for the detail order
   const { data: detailBlockRequests } = useQuery({
