@@ -1,4 +1,4 @@
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { Card, Form, Input, Button, Typography, Alert, theme } from 'antd';
 import { UserOutlined, LockOutlined, BankOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useAuthStore } from '@alblue/auth';
@@ -9,9 +9,15 @@ const { Title } = Typography;
 export function LoginPage() {
   const [form] = Form.useForm();
   const navigate = useNavigate();
-  const { login, isLoading, error } = useAuthStore();
+  const { login, isLoading, error, isAuthenticated } = useAuthStore();
   const { t } = useTranslation('dashboard');
   const { token } = theme.useToken();
+
+  // Already signed in → bounce to role-based landing. Without this, an authed
+  // user who manually navigated to /login would just see the form again.
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
 
   const onFinish = async (values: { email: string; password: string; tenantCode: string }) => {
     try {
@@ -23,6 +29,7 @@ export function LoginPage() {
   };
 
   return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
     <Card style={{ width: 400, boxShadow: token.boxShadow }}>
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
         <Title level={3} style={{ margin: 0 }}>
@@ -67,10 +74,11 @@ export function LoginPage() {
         </Form.Item>
       </Form>
       <div style={{ textAlign: 'center', marginTop: 12 }}>
-        <Link to="/o-aplikaciji">
+        <Link to="/about">
           <InfoCircleOutlined /> {t('about.learnMore')}
         </Link>
       </div>
     </Card>
+    </div>
   );
 }

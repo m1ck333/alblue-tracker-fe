@@ -3,7 +3,7 @@ import { GlobalOutlined } from '@ant-design/icons';
 import { useTranslation } from '@alblue/i18n';
 
 /**
- * Compact language switcher for public pages (login, /o-aplikaciji) — the
+ * Compact language switcher for public pages (login, /about) — the
  * regular one lives in the sidebar profile menu which is auth-gated.
  */
 export function PublicLanguageSwitcher() {

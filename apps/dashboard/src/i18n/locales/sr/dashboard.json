@@ -15,7 +15,8 @@
     "shifts": "Smene",
     "reports": "Vremena procesa",
     "notifications": "Obaveštenja",
-    "profile": "Profil"
+    "profile": "Profil",
+    "tutorial": "Uputstvo"
   },
   "profile": {
     "theme": "Tema",
@@ -65,6 +66,10 @@
     "ctaEmail": "sales@algreen.rs",
     "backToLogin": "Nazad na prijavu",
     "learnMore": "Saznajte više o aplikaciji"
+  },
+  "tutorial": {
+    "title": "Uputstvo",
+    "enFallback": "English version is in progress. Showing the Serbian original below."
   },
   "login": {
     "title": "Alblue MES",

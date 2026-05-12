@@ -15,7 +15,8 @@
     "shifts": "Shifts",
     "reports": "Process Times",
     "notifications": "Notifications",
-    "profile": "Profile"
+    "profile": "Profile",
+    "tutorial": "Tutorial"
   },
   "profile": {
     "theme": "Theme",
@@ -65,6 +66,10 @@
     "ctaEmail": "sales@algreen.rs",
     "backToLogin": "Back to sign in",
     "learnMore": "Learn more about the app"
+  },
+  "tutorial": {
+    "title": "Tutorial",
+    "enFallback": "English version is in progress. Showing the Serbian original below."
   },
   "login": {
     "title": "Alblue MES",

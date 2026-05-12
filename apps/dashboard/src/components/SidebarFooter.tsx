@@ -11,7 +11,9 @@ import {
   DeleteOutlined,
   ClearOutlined,
   EyeInvisibleOutlined,
+  BookOutlined,
 } from '@ant-design/icons';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationsApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
@@ -46,6 +48,9 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
   const { token } = theme.useToken();
   const themeMode = useThemeStore((s) => s.mode);
   const setThemeMode = useThemeStore((s) => s.setMode);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const tutorialActive = location.pathname === '/tutorial';
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -256,6 +261,17 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
 
   return (
     <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 4, paddingBottom: 4 }}>
+      <Tooltip title={collapsed ? t('nav.tutorial') : ''} placement="right">
+        <div
+          style={{ ...rowStyle, background: tutorialActive ? 'rgba(255,255,255,0.12)' : 'transparent' }}
+          onMouseEnter={(e) => { if (!tutorialActive) e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = tutorialActive ? 'rgba(255,255,255,0.12)' : 'transparent'; }}
+          onClick={() => navigate('/tutorial')}
+        >
+          <BookOutlined style={{ fontSize: 16 }} />
+          {!collapsed && <span>{t('nav.tutorial')}</span>}
+        </div>
+      </Tooltip>
       <Popover
         content={notificationsContent}
         trigger="click"

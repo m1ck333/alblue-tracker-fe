@@ -4,19 +4,15 @@ import { PublicLanguageSwitcher } from '../components/PublicLanguageSwitcher';
 
 export function AuthLayout() {
   const { token } = theme.useToken();
-  // flex-start (not center) so a long page like /o-aplikaciji scrolls from the
-  // top instead of clipping. Short content (login Card) just sits near the top
-  // with the paddingTop breathing room.
+  // Neutral wrapper — each page handles its own centering. LoginPage wraps
+  // the Card in a centered flex container; AboutPage uses its own max-width
+  // container with auto margins. This avoids the trade-off where vertical
+  // centering clips long pages off the top.
   return (
     <Layout
       style={{
         minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
         background: token.colorBgLayout,
-        paddingTop: 'clamp(24px, 8vh, 80px)',
-        paddingBottom: 24,
       }}
     >
       <PublicLanguageSwitcher />

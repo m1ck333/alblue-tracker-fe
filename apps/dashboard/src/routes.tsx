@@ -5,6 +5,7 @@ import { AuthLayout } from './layouts/AuthLayout';
 import { MainLayout } from './layouts/MainLayout';
 import { LoginPage } from './pages/login/LoginPage';
 import { AboutPage } from './pages/about/AboutPage';
+import { TutorialPage } from './pages/tutorial/TutorialPage';
 import { CoordinatorDashboard } from './pages/coordinator/CoordinatorDashboard';
 import { OrderListPage } from './pages/orders/OrderListPage';
 import { SalesDashboard } from './pages/sales/SalesDashboard';
@@ -26,7 +27,7 @@ export function AppRoutes() {
       {/* Public */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/o-aplikaciji" element={<AboutPage />} />
+        <Route path="/about" element={<AboutPage />} />
       </Route>
 
       {/* Authenticated */}
@@ -38,6 +39,8 @@ export function AppRoutes() {
         }
       >
         <Route index element={<RoleRedirect />} />
+
+        <Route path="/tutorial" element={<TutorialPage />} />
 
         <Route
           path="/dashboard"
