@@ -119,7 +119,13 @@ function getAggregateProcessState(
       if (!item) return false;
       return deps.every((depId) => {
         const depProc = item.processes.find((ip) => ip.processId === depId);
-        return depProc && (depProc.status === ProcessStatus.Completed || depProc.isWithdrawn);
+        // Dep process not in this item's pipeline → effectively satisfied.
+        // Mirrors BE master-view (categoryDeps are unioned across items but each
+        // category may not have every process; an item without the dep shouldn't
+        // be blocked by it). Without this, an order whose items have different
+        // category dep graphs would aggregate-classic where it should aggregate-ready.
+        if (!depProc) return true;
+        return depProc.status === ProcessStatus.Completed || depProc.isWithdrawn;
       });
     }
     return hasDeps; // no deps in a dependency system = independent = ready
