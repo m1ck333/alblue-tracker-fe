@@ -540,6 +540,7 @@ export function OrderListPage() {
   const { token } = theme.useToken();
   const [statusFilter, setStatusFilter] = useState<OrderStatus | undefined>(undefined);
   const [orderTypeFilter, setOrderTypeFilter] = useState<OrderType | undefined>(undefined);
+  const [isInvoicedFilter, setIsInvoicedFilter] = useState<boolean | undefined>(undefined);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [dateFrom, setDateFrom] = useState<dayjs.Dayjs | null>(null);
@@ -557,13 +558,14 @@ export function OrderListPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => { setPage(1); }, [debouncedSearch, statusFilter, orderTypeFilter, dateFrom, dateTo]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, statusFilter, orderTypeFilter, isInvoicedFilter, dateFrom, dateTo]);
 
   const { data: masterResult, isLoading } = useQuery({
-    queryKey: ['orders-master-view', tenantId, statusFilter, orderTypeFilter, debouncedSearch, dateFrom?.format('YYYY-MM-DD'), dateTo?.format('YYYY-MM-DD'), page, pageSize, sortBy, sortDirection],
+    queryKey: ['orders-master-view', tenantId, statusFilter, orderTypeFilter, isInvoicedFilter, debouncedSearch, dateFrom?.format('YYYY-MM-DD'), dateTo?.format('YYYY-MM-DD'), page, pageSize, sortBy, sortDirection],
     queryFn: () => ordersApi.getMasterView({
       status: statusFilter,
       orderType: orderTypeFilter,
+      isInvoiced: isInvoicedFilter,
       search: debouncedSearch || undefined,
       dateFrom: dateFrom?.format('YYYY-MM-DD'),
       dateTo: dateTo?.format('YYYY-MM-DD'),
@@ -805,7 +807,7 @@ export function OrderListPage() {
       },
       {
         header: t('orders.export.invoiced'),
-        value: (o) => (o.isInvoiced ? t('common:status.active') : '-'),
+        value: (o) => (o.isInvoiced ? t('common:actions.yes') : t('common:actions.no')),
         align: 'center',
         width: 12,
       },
@@ -849,15 +851,17 @@ export function OrderListPage() {
     if (debouncedSearch) filters.push({ label: t('export.search'), value: debouncedSearch });
     if (statusFilter) filters.push({ label: t('export.status'), value: tEnum('OrderStatus', statusFilter) });
     if (orderTypeFilter) filters.push({ label: t('export.type'), value: tEnum('OrderType', orderTypeFilter) });
+    if (isInvoicedFilter !== undefined) filters.push({ label: t('orders.invoiced'), value: isInvoicedFilter ? t('common:actions.yes') : t('common:actions.no') });
     if (dateFrom) filters.push({ label: t('export.dateFrom'), value: dateFrom.format('DD.MM.YYYY.') });
     if (dateTo) filters.push({ label: t('export.dateTo'), value: dateTo.format('DD.MM.YYYY.') });
     return filters;
-  }, [debouncedSearch, statusFilter, orderTypeFilter, dateFrom, dateTo, t, tEnum]);
+  }, [debouncedSearch, statusFilter, orderTypeFilter, isInvoicedFilter, dateFrom, dateTo, t, tEnum]);
 
   const fetchAllOrders = async (): Promise<OrderMasterViewDto[]> => {
     const { data } = await ordersApi.getMasterView({
       status: statusFilter,
       orderType: orderTypeFilter,
+      isInvoiced: isInvoicedFilter,
       search: debouncedSearch || undefined,
       dateFrom: dateFrom?.format('YYYY-MM-DD'),
       dateTo: dateTo?.format('YYYY-MM-DD'),
@@ -1362,6 +1366,17 @@ export function OrderListPage() {
             label: orderTypeByCode.get(String(ot).toUpperCase())?.name ?? tEnum('OrderType', ot),
             value: ot,
           }))}
+        />
+        <Select
+          placeholder={t('orders.invoiced')}
+          allowClear
+          value={isInvoicedFilter}
+          onChange={(v) => setIsInvoicedFilter(v)}
+          style={{ width: 140 }}
+          options={[
+            { label: t('common:actions.yes'), value: true },
+            { label: t('common:actions.no'), value: false },
+          ]}
         />
         <DatePicker
           value={dateFrom}

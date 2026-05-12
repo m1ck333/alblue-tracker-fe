@@ -13,6 +13,7 @@ import { tokenManager } from '../token-manager';
 export interface OrdersQuery {
   status?: OrderStatus;
   orderType?: OrderType;
+  isInvoiced?: boolean;
   search?: string;
   dateFrom?: string;
   dateTo?: string;

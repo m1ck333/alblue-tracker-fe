@@ -9,7 +9,7 @@
     "users": "Korisnici",
     "processes": "Procesi",
     "categories": "Kategorije",
-    "orderTypes": "Tipovi naloga",
+    "orderTypes": "Tipovi narudžbine",
     "specialRequests": "Specijalni zahtevi",
     "tenants": "Firme",
     "shifts": "Smene",
@@ -82,7 +82,7 @@
     "orderNumber": "Br. narudžbine",
     "export": {
       "progress": "Napredak (kompletirano/ukupno)",
-      "invoiced": "Fakturisana"
+      "invoiced": "Fakturisano"
     },
     "filterByStatus": "Filtriraj po statusu",
     "createOrder": "Kreiraj narudžbinu",
@@ -139,7 +139,7 @@
     "criticalDays": "Kritični dani",
     "orderType": "Tip narudžbine",
     "manualProcessesTitle": "Ručni izbor procesa",
-    "manualProcessesPlaceholder": "Ovaj tip naloga koristi ručno izabrane procese umesto procesa iz kategorije proizvoda. Birač procesa biće dodat u sledećem koraku.",
+    "manualProcessesPlaceholder": "Ovaj tip narudžbine koristi ručno izabrane procese umesto procesa iz kategorije proizvoda. Birač procesa biće dodat u sledećem koraku.",
     "manualProcessesHelp": "Izaberite procese koji se primenjuju na ovu narudžbinu. Procesi iz kategorije proizvoda biće zanemareni. Možete podesiti zavisnosti i kompleksnost po procesu.",
     "manualProcessesPick": "Izaberite procese...",
     "dependsOn": "Zavisi od",
@@ -314,18 +314,18 @@
       "duplicate": "Dupliraj"
     },
     "orderTypes": {
-      "title": "Tipovi naloga",
+      "title": "Tipovi narudžbine",
       "addType": "Dodaj tip",
-      "createType": "Kreiraj tip naloga",
-      "created": "Tip naloga kreiran",
+      "createType": "Kreiraj tip narudžbine",
+      "created": "Tip narudžbine kreiran",
       "createFailed": "Kreiranje tipa nije uspelo",
-      "updated": "Tip naloga ažuriran",
+      "updated": "Tip narudžbine ažuriran",
       "updateFailed": "Ažuriranje tipa nije uspelo",
-      "deletedHard": "Tip naloga obrisan",
-      "deletedSoft": "Tip naloga deaktiviran (postoje narudžbine koje ga koriste)",
+      "deletedHard": "Tip narudžbine obrisan",
+      "deletedSoft": "Tip narudžbine deaktiviran (postoje narudžbine koje ga koriste)",
       "deleteFailed": "Brisanje tipa nije uspelo",
       "delete": "Obriši",
-      "deleteConfirm": "Da li ste sigurni da želite da obrišete ovaj tip naloga? Ako postoje narudžbine koje ga koriste, biće samo deaktiviran.",
+      "deleteConfirm": "Da li ste sigurni da želite da obrišete ovaj tip narudžbine? Ako postoje narudžbine koje ga koriste, biće samo deaktiviran.",
       "allowsManualProcesses": "Ručni izbor procesa",
       "allowsManualProcessesHelp": "Ako je uključeno, narudžbine ovog tipa nose ručno izabran spisak procesa i zavisnosti umesto procesa iz kategorije proizvoda."
     },
