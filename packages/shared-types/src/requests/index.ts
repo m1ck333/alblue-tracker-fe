@@ -258,7 +258,8 @@ export interface AddCategoryDependencyRequest {
 // ─── Order Types ─────────────────────────────────────────
 
 export interface CreateOrderTypeRequest {
-  code: string;
+  // Optional — server auto-generates a slug from name when empty.
+  code?: string;
   name: string;
   allowsManualProcesses: boolean;
 }

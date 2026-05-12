@@ -53,7 +53,7 @@ export function OrderTypesPage() {
   const [dateTo, setDateTo] = useState<dayjs.Dayjs | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [sortBy, setSortBy] = useState<string | undefined>('code');
+  const [sortBy, setSortBy] = useState<string | undefined>('name');
   const [sortDirection, setSortDirection] = useState<string | undefined>('asc');
 
   useEffect(() => { setPage(1); }, [debouncedSearch, isActiveFilter, dateFrom, dateTo]);
@@ -79,7 +79,6 @@ export function OrderTypesPage() {
   const createMutation = useMutation({
     mutationFn: (values: Record<string, unknown>) =>
       orderTypesApi.create({
-        code: values.code as string,
         name: values.name as string,
         allowsManualProcesses: !!values.allowsManualProcesses,
       }),
@@ -135,12 +134,6 @@ export function OrderTypesPage() {
 
   const columns = [
     {
-      title: t('common:labels.code'),
-      dataIndex: 'code',
-      sorter: true,
-      sortOrder: sortBy === 'code' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
-    },
-    {
       title: t('common:labels.name'),
       dataIndex: 'name',
       sorter: true,
@@ -173,7 +166,6 @@ export function OrderTypesPage() {
   ];
 
   const exportColumns: ExportColumn<OrderTypeDto>[] = [
-    { header: t('common:labels.code'), value: (s) => s.code, width: 14 },
     { header: t('common:labels.name'), value: (s) => s.name, width: 28 },
     {
       header: t('admin.orderTypes.allowsManualProcesses'),
@@ -284,7 +276,7 @@ export function OrderTypesPage() {
               return;
             }
             const s = Array.isArray(sorter) ? sorter[0] : sorter;
-            const newField = (s?.order ? (s.field as string) : undefined) ?? 'code';
+            const newField = (s?.order ? (s.field as string) : undefined) ?? 'name';
             const newDir = (s?.order === 'descend' ? 'desc' : s?.order === 'ascend' ? 'asc' : undefined) ?? 'asc';
             if (newField !== sortBy || newDir !== sortDirection) {
               setSortBy(newField);
@@ -319,9 +311,6 @@ export function OrderTypesPage() {
           onFinish={(v) => createMutation.mutate(v)}
           onValuesChange={onCreateValuesChange}
         >
-          <Form.Item name="code" label={t('common:labels.code')} rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
           <Form.Item name="name" label={t('common:labels.name')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
@@ -338,7 +327,7 @@ export function OrderTypesPage() {
 
       {/* Detail / Edit Drawer */}
       <Drawer
-        title={currentDetail ? `${currentDetail.code} — ${currentDetail.name}` : ''}
+        title={currentDetail ? currentDetail.name : ''}
         open={!!detailItem}
         onClose={(e) => guardedEditClose(() => { setDetailItem(null); editForm.resetFields(); }, e)}
         width={Math.min(480, window.innerWidth)}
