@@ -1,6 +1,6 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, Form, Input, Button, Typography, Alert, theme } from 'antd';
-import { UserOutlined, LockOutlined, BankOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined, BankOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useAuthStore } from '@alblue/auth';
 import { useTranslation } from '@alblue/i18n';
 
@@ -60,12 +60,17 @@ export function LoginPage() {
           <Input.Password prefix={<LockOutlined />} placeholder={t('login.password')} />
         </Form.Item>
 
-        <Form.Item>
+        <Form.Item style={{ marginBottom: 8 }}>
           <Button type="primary" htmlType="submit" block loading={isLoading}>
             {t('common:actions.signIn')}
           </Button>
         </Form.Item>
       </Form>
+      <div style={{ textAlign: 'center', marginTop: 12 }}>
+        <Link to="/o-aplikaciji">
+          <InfoCircleOutlined /> {t('about.learnMore')}
+        </Link>
+      </div>
     </Card>
   );
 }

@@ -23,6 +23,49 @@
     "themeDark": "Dark",
     "language": "Language"
   },
+  "about": {
+    "title": "About the app",
+    "tagline": "Manufacturing Execution System — dashboard and tablet in one",
+    "intro": "An end-to-end MES that connects office management to the shop floor in real time. Multiple companies can run on the same system independently, each with isolated data.",
+    "audience": "Who it's for",
+    "audienceDashboard": "Dashboard (desktop): managers, coordinators, sales and admin — create and track orders, approve requests, monitor KPIs.",
+    "audienceTablet": "Tablet (PWA): shop-floor workers — check in to processes, work the queue, report blockers and finished operations.",
+    "dashboardTitle": "Dashboard",
+    "dashboardSubtitle": "Full production overview in one place.",
+    "dashboardFeatures": [
+      "Create, edit and activate orders with items and attachments",
+      "Per-tenant order types, optional manual process selection",
+      "Master table with live status of every process across all orders",
+      "Coordinator dashboard — workers, active orders, deadline warnings",
+      "Block and change request workflow with approval queue",
+      "Reports on process times, worker hours, Excel/CSV export",
+      "Admin: users, processes, product categories, shifts, order types"
+    ],
+    "tabletTitle": "Tablet app",
+    "tabletSubtitle": "Fast and simple for the shop floor.",
+    "tabletFeatures": [
+      "Large touch targets — usable with gloves",
+      "Queue sorted by priority and delivery date",
+      "Per-process and per-sub-process timer, auto-pause",
+      "Report block directly from the active process",
+      "Incoming view — see what's coming from the previous process",
+      "Works offline (PWA), syncs automatically"
+    ],
+    "techTitle": "Technical highlights",
+    "techFeatures": [
+      "Multi-tenant with full data isolation between companies",
+      "Real-time sync (SignalR) between dashboard and tablet",
+      "Push notifications to tablet and mobile",
+      "Multi-language (Serbian, English)",
+      "Light and dark theme",
+      "JWT authentication with roles (Admin, Manager, Coordinator, Sales, Department)"
+    ],
+    "ctaTitle": "Interested?",
+    "ctaText": "Get in touch:",
+    "ctaEmail": "sales@algreen.rs",
+    "backToLogin": "Back to sign in",
+    "learnMore": "Learn more about the app"
+  },
   "login": {
     "title": "Alblue MES",
     "subtitle": "Sign in to your account",

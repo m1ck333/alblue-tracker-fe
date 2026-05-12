@@ -23,6 +23,49 @@
     "themeDark": "Tamna",
     "language": "Jezik"
   },
+  "about": {
+    "title": "O aplikaciji",
+    "tagline": "MES sistem za proizvodnju — kontrolna tabla i tablet u jednom",
+    "intro": "Sveobuhvatan softver za upravljanje proizvodnjom (MES) koji povezuje menadžment kancelarije sa radnicima na proizvodnoj liniji u realnom vremenu. Više firmi može koristiti isti sistem nezavisno, svaka sa svojim podacima.",
+    "audience": "Za koga je",
+    "audienceDashboard": "Kontrolna tabla (desktop): menadžeri, koordinatori, prodajni timovi i administracija — kreiraju i prate narudžbine, odobravaju zahteve, vode statistiku.",
+    "audienceTablet": "Tablet (PWA): radnici u pogonu — prijavljuju se na procese, izvršavaju zadatke iz reda čekanja, prijavljuju blokade i završene operacije.",
+    "dashboardTitle": "Kontrolna tabla",
+    "dashboardSubtitle": "Kompletan pregled proizvodnje na jednom mestu.",
+    "dashboardFeatures": [
+      "Kreiranje, izmena i aktiviranje narudžbina sa stavkama i prilozima",
+      "Tipovi narudžbina prilagodljivi po firmi, sa opcijom ručnog izbora procesa",
+      "Master tabela sa živim pregledom statusa svih procesa po narudžbini",
+      "Kontrolna tabla koordinatora — radnici, aktivne narudžbine, kritični rokovi",
+      "Zahtevi za blokadu i izmenu sa workflow-om za odobravanje",
+      "Izveštaji o vremenima procesa, satima rada radnika, izvoz u Excel/CSV",
+      "Administracija: korisnici, procesi, kategorije proizvoda, smene, tipovi narudžbina"
+    ],
+    "tabletTitle": "Tablet aplikacija",
+    "tabletSubtitle": "Brzo i jednostavno za radnike u pogonu.",
+    "tabletFeatures": [
+      "Velika tasterska polja za korišćenje rukavicama",
+      "Red čekanja sortiran po prioritetu i roku isporuke",
+      "Tajmer po procesu i pod-procesu, automatsko pauziranje",
+      "Prijava blokade direktno iz aktivnog procesa",
+      "Pregled dolazećih narudžbina iz prethodnog procesa",
+      "Radi i bez interneta (PWA), automatski se sinhronizuje"
+    ],
+    "techTitle": "Tehničke karakteristike",
+    "techFeatures": [
+      "Više firmi (multi-tenant) sa potpunom izolacijom podataka",
+      "Sinhronizacija u realnom vremenu (SignalR) između kontrolne table i tableta",
+      "Push obaveštenja na tablet i mobilni",
+      "Više jezika (srpski, engleski)",
+      "Tamna i svetla tema",
+      "JWT autentikacija sa ulogama (Admin, Manager, Koordinator, Prodaja, Odeljenje)"
+    ],
+    "ctaTitle": "Zainteresovani?",
+    "ctaText": "Pišite na",
+    "ctaEmail": "sales@algreen.rs",
+    "backToLogin": "Nazad na prijavu",
+    "learnMore": "Saznajte više o aplikaciji"
+  },
   "login": {
     "title": "Alblue MES",
     "subtitle": "Prijavite se na svoj nalog",
