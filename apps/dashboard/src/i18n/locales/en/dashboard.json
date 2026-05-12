@@ -68,8 +68,7 @@
     "learnMore": "Learn more about the app"
   },
   "tutorial": {
-    "title": "Tutorial",
-    "enFallback": "English version is in progress. Showing the Serbian original below."
+    "title": "Tutorial"
   },
   "login": {
     "title": "Alblue MES",

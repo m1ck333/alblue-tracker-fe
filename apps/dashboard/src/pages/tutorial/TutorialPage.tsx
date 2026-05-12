@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Typography, theme, Alert, Grid } from 'antd';
+import { Typography, theme, Grid } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSlug from 'rehype-slug';
 import { useTranslation } from '@alblue/i18n';
 import tutorialSr from './TUTORIAL.sr.md?raw';
+import tutorialEn from './TUTORIAL.en.md?raw';
 
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -19,10 +20,7 @@ export function TutorialPage() {
   const screens = useBreakpoint();
   const showSideToc = !!screens.lg;
 
-  // EN translation not yet written — fall back to SR with a notice. When EN
-  // exists we'll mirror the SR file to TUTORIAL.en.md and pick by language.
-  const content = tutorialSr;
-  const showEnFallbackNotice = i18n.language === 'en';
+  const content = i18n.language === 'en' ? tutorialEn : tutorialSr;
 
   // TOC tree derived from rendered H2/H3s after the markdown mounts.
   const [tocTree, setTocTree] = useState<TocTree>([]);
@@ -277,15 +275,6 @@ export function TutorialPage() {
       )}
 
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-        {showEnFallbackNotice && (
-          <Alert
-            type="info"
-            showIcon
-            message={t('tutorial.enFallback')}
-            style={{ marginBottom: 16, flexShrink: 0 }}
-          />
-        )}
-
         {/* Plain styled container instead of antd Card so we can put overflow
             directly on the body and have a clean fixed-height panel. */}
         <div
