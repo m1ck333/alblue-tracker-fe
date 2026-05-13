@@ -90,55 +90,38 @@ type AggregateState = {
   isPaused: boolean; // subset of isReady - show "Pauzirano" text
 };
 
+/**
+ * Sourced directly from the master-view row (BE-computed):
+ *   - processStatuses[processId] — aggregated status string
+ *   - processReady[processId]    — true if any item has it Pending + deps satisfied
+ *   - processPaused[processId]   — true if any item has it paused
+ *
+ * Previously this was recomputed on the FE from a flattened processDependencies
+ * dict, which was wrong for multi-item orders with different categories: deps
+ * from item A's category were applied to item B and vice-versa, giving false
+ * negatives/positives. The BE already does the right per-item computation —
+ * just consume it.
+ */
+type MasterRowFields = {
+  processStatuses?: Record<string, string>;
+  processReady?: Record<string, boolean>;
+  processPaused?: Record<string, boolean>;
+};
+
 function getAggregateProcessState(
-  order: OrderDetailDto,
+  masterRow: MasterRowFields | undefined,
   processId: string,
-  processDependencies?: Record<string, string[]>,
 ): AggregateState {
-  const procs = order.items
-    .map((item) => item.processes.find((p) => p.processId === processId))
-    .filter(Boolean) as OrderItemProcessDto[];
-
-  if (procs.length === 0) return { status: null, isReady: false, isPaused: false };
-
-  // Priority: Blocked > InProgress (running) > Paused/PendingReady > PendingNotReady > Completed
-  const hasBlocked = procs.some((p) => p.status === ProcessStatus.Blocked);
-  if (hasBlocked) return { status: ProcessStatus.Blocked, isReady: false, isPaused: false };
-
-  const hasRunning = procs.some((p) => p.status === ProcessStatus.InProgress && !isPaused(p));
-  if (hasRunning) return { status: ProcessStatus.InProgress, isReady: false, isPaused: false };
-
-  const hasPaused = procs.some((p) => isPaused(p));
-  const hasPendingReady = procs.some((p) => {
-    if (p.status !== ProcessStatus.Pending) return false;
-    const allDeps = processDependencies ?? {};
-    const hasDeps = Object.keys(allDeps).length > 0;
-    const deps = allDeps[processId];
-    if (deps && deps.length > 0) {
-      const item = order.items.find((it) => it.processes.some((ip) => ip.id === p.id));
-      if (!item) return false;
-      return deps.every((depId) => {
-        const depProc = item.processes.find((ip) => ip.processId === depId);
-        // Dep process not in this item's pipeline → effectively satisfied.
-        // Mirrors BE master-view (categoryDeps are unioned across items but each
-        // category may not have every process; an item without the dep shouldn't
-        // be blocked by it). Without this, an order whose items have different
-        // category dep graphs would aggregate-classic where it should aggregate-ready.
-        if (!depProc) return true;
-        return depProc.status === ProcessStatus.Completed || depProc.isWithdrawn;
-      });
-    }
-    return hasDeps; // no deps in a dependency system = independent = ready
-  });
-  if (hasPaused || hasPendingReady) return { status: ProcessStatus.Pending, isReady: true, isPaused: hasPaused };
-
-  const hasPending = procs.some((p) => p.status === ProcessStatus.Pending);
-  if (hasPending) return { status: ProcessStatus.Pending, isReady: false, isPaused: false };
-
-  if (procs.every((p) => p.status === ProcessStatus.Completed || p.isWithdrawn))
-    return { status: ProcessStatus.Completed, isReady: false, isPaused: false };
-
-  return { status: ProcessStatus.Completed, isReady: false, isPaused: false };
+  if (!masterRow?.processStatuses || !(processId in masterRow.processStatuses)) {
+    return { status: null, isReady: false, isPaused: false };
+  }
+  const status = masterRow.processStatuses[processId] as ProcessStatus;
+  const isPausedAgg = masterRow.processPaused?.[processId] ?? false;
+  const isReady = masterRow.processReady?.[processId] ?? false;
+  // BE already enforces the priority (Blocked/InProgress beat Ready), so we
+  // just forward what it says — the only twist is when paused, the bold ring
+  // is replaced with the orange "paused" visual.
+  return { status, isReady, isPaused: isPausedAgg };
 }
 
 /** Count completed vs total processes across all items (used in detail drawer) */
@@ -321,12 +304,12 @@ function ProcessTimeline({
   order,
   processes,
   tEnum,
-  processDependencies,
+  masterRow,
 }: {
   order: OrderDetailDto;
   processes: ProcessDto[];
   tEnum: (enumName: string, value: string) => string;
-  processDependencies?: Record<string, string[]>;
+  masterRow?: MasterRowFields;
 }) {
   const { t } = useTranslation('dashboard');
   const { token } = theme.useToken();
@@ -334,8 +317,8 @@ function ProcessTimeline({
   const CIRCLE = 24;
   const totalWidth = processes.length * STEP;
 
-  // Pre-compute aggregate states
-  const states = processes.map((proc) => getAggregateProcessState(order, proc.id, processDependencies));
+  // Pre-compute aggregate states from BE-supplied per-process fields.
+  const states = processes.map((proc) => getAggregateProcessState(masterRow, proc.id));
 
   return (
     <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
@@ -641,40 +624,27 @@ export function OrderListPage() {
   const pauseOrder = usePauseOrder();
   const resumeOrder = useResumeOrder();
   const { data: detailOrder, isLoading: detailLoading } = useOrder(detailOrderId ?? undefined);
-  // Fetch processDependencies for the detail order independently from paginated master view
-  // When the order has manual processes, build the dependency map locally from
-  // the detail payload — no need to hit master-view. Avoids a search collision
-  // bug where pageSize=1 + LIKE-search would return the wrong order when an order
-  // number was a substring of another (e.g. "001" matching "ORD-2026-001").
-  // For category-based orders we still fetch from master-view, but with a larger
-  // pageSize so `find(by id)` always lands on the right row.
-  const manualDepsMap = useMemo<Record<string, string[]> | null>(() => {
-    if (!detailOrder?.manualProcessDependencies || detailOrder.manualProcessDependencies.length === 0) return null;
-    const map: Record<string, string[]> = {};
-    for (const d of detailOrder.manualProcessDependencies) {
-      if (!map[d.processId]) map[d.processId] = [];
-      map[d.processId].push(d.dependsOnProcessId);
-    }
-    // Manual orders use exactly this map — even an empty list (when the order
-    // has manual processes but no deps configured) must be a non-null object
-    // so getAggregateProcessState's hasDeps signal is true.
-    return map;
-  }, [detailOrder?.manualProcessDependencies]);
-
-  const hasManual = !!detailOrder?.manualProcesses && detailOrder.manualProcesses.length > 0;
-
-  const { data: categoryDetailDeps } = useQuery({
-    queryKey: ['order-detail-deps', tenantId, detailOrderId],
+  // Fetch the master-view row for this order so the drawer can reuse the
+  // BE-computed processStatuses / processReady / processPaused / processDependencies
+  // instead of recomputing on the FE. Re-doing readiness on the FE was buggy
+  // for multi-item orders with different categories — the flattened deps dict
+  // cross-pollinated edges between items. BE already does this correctly
+  // per-item; we just trust the row.
+  const { data: detailMasterRow } = useQuery({
+    queryKey: ['order-detail-master-row', tenantId, detailOrderId],
     queryFn: () =>
       ordersApi.getMasterView({ search: detailOrder!.orderNumber, page: 1, pageSize: 50 }).then((r) => {
-        const entry = r.data.items.find((o) => o.id === detailOrderId);
-        return entry?.processDependencies ?? {};
+        return r.data.items.find((o) => o.id === detailOrderId) ?? null;
       }),
-    enabled: !!tenantId && !!detailOrderId && !!detailOrder && !hasManual,
-    staleTime: 10_000,
+    enabled: !!tenantId && !!detailOrderId && !!detailOrder,
+    staleTime: 5_000,
+    refetchInterval: 15_000, // keep ready/paused state fresh as work progresses
   });
 
-  const detailDeps: Record<string, string[]> | undefined = hasManual ? (manualDepsMap ?? {}) : categoryDetailDeps;
+  // For the per-item ItemProcessBar (drawer item squares), keep using a deps
+  // dict — that view is per-item and the "if !depProc return true" rule there
+  // is correct: an item not having a dep process means the dep doesn't apply.
+  const detailDeps: Record<string, string[]> | undefined = detailMasterRow?.processDependencies;
 
   // Fetch block & change requests for the detail order
   const { data: detailBlockRequests } = useQuery({
@@ -2213,7 +2183,7 @@ export function OrderListPage() {
                 <Text type="secondary" style={{ fontSize: 12, marginBottom: 4, display: 'block' }}>
                   {t('orders.processFlow')}
                 </Text>
-                <ProcessTimeline order={detailOrder} processes={processes} tEnum={tEnum} processDependencies={detailDeps} />
+                <ProcessTimeline order={detailOrder} processes={processes} tEnum={tEnum} masterRow={detailMasterRow ?? undefined} />
               </div>
             )}
 
