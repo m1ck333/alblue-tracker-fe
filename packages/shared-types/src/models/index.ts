@@ -170,6 +170,13 @@ export interface OrderMasterViewDto {
    * when sibling items are still mid-pipeline.
    */
   processReady: Record<string, boolean>;
+  /**
+   * Per-item readiness: itemId → (processId → ready). The FE per-item
+   * ItemProcessBar uses this directly — it can't compute it locally because
+   * the flat processDependencies map merges deps across categories and gives
+   * wrong answers for multi-item orders with different categories.
+   */
+  itemProcessReady: Record<string, Record<string, boolean>>;
   /** Map of processId → list of processIds it depends on */
   processDependencies: Record<string, string[]>;
   attachmentCount: number;

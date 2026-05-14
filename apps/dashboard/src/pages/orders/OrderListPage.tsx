@@ -413,14 +413,15 @@ function ItemProcessBar({
   tEnum,
   onRestart,
   canRestart,
-  processDependencies,
+  itemProcessReady,
 }: {
   item: OrderItemDto;
   processMap: Map<string, ProcessDto>;
   tEnum: (enumName: string, value: string) => string;
   onRestart?: (orderItemProcessId: string, resetTime: boolean) => void;
   canRestart?: boolean;
-  processDependencies?: Record<string, string[]>;
+  /** Per-item readiness map keyed by processId. Source of truth from BE. */
+  itemProcessReady?: Record<string, boolean>;
 }) {
   const { t } = useTranslation('dashboard');
   const { token } = theme.useToken();
@@ -434,33 +435,13 @@ function ItemProcessBar({
 
   return (
     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-      {sorted.map((proc, idx) => {
+      {sorted.map((proc) => {
         const process = processMap.get(proc.processId);
         const procPaused = isPaused(proc);
-        // Check if this Pending process is ready to start (using dependencies if available).
-        // IMPORTANT: look up dependencies in the UNFILTERED `item.processes`, not in
-        // `sorted` (which strips Withdrawn). If a dep is Withdrawn for this item it
-        // counts as satisfied — strip-then-lookup made every such case look "not ready".
-        let isReady = false;
-        if (proc.status === ProcessStatus.Pending) {
-          const allDeps = processDependencies ?? {};
-          const hasDependencySystem = Object.keys(allDeps).length > 0;
-          const deps = allDeps[proc.processId];
-          if (deps && deps.length > 0) {
-            isReady = deps.every((depId) => {
-              const depProc = item.processes.find((p) => p.processId === depId);
-              if (!depProc) return true; // dep doesn't exist on this item → effectively withdrawn
-              return depProc.status === ProcessStatus.Completed || depProc.isWithdrawn;
-            });
-          } else if (hasDependencySystem) {
-            isReady = true;
-          } else if (idx === 0) {
-            isReady = true;
-          } else {
-            const prev = sorted[idx - 1];
-            isReady = prev.status === ProcessStatus.Completed || prev.isWithdrawn;
-          }
-        }
+        // Trust BE's per-item readiness. Was previously recomputed from a flat
+        // processDependencies dict which unioned deps across categories and
+        // gave wrong answers for multi-item orders.
+        const isReady = !!itemProcessReady?.[proc.processId];
         const color = procPaused ? '#FFAA00' : processStatusColors[proc.status];
         const statusLabel = tEnum('ProcessStatus', proc.status);
         return (
@@ -641,10 +622,6 @@ export function OrderListPage() {
     refetchInterval: 15_000, // keep ready/paused state fresh as work progresses
   });
 
-  // For the per-item ItemProcessBar (drawer item squares), keep using a deps
-  // dict — that view is per-item and the "if !depProc return true" rule there
-  // is correct: an item not having a dep process means the dep doesn't apply.
-  const detailDeps: Record<string, string[]> | undefined = detailMasterRow?.processDependencies;
 
   // Fetch block & change requests for the detail order
   const { data: detailBlockRequests } = useQuery({
@@ -2373,7 +2350,7 @@ export function OrderListPage() {
                   >
                     <ItemProcessBar
                       item={item} processMap={processMap} tEnum={tEnum}
-                      processDependencies={detailDeps}
+                      itemProcessReady={detailMasterRow?.itemProcessReady?.[item.id]}
                       canRestart={(detailOrder.status === OrderStatus.Active || detailOrder.status === OrderStatus.Completed) && user?.role !== UserRole.SalesManager}
                       onRestart={async (oipId, resetTime) => {
                         try {
