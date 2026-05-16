@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@alblue/auth';
-import { workSessionsApi } from '@alblue/api-client';
+import { workSessionsApi, processWorkflowApi } from '@alblue/api-client';
 import { useTranslation } from '@alblue/i18n';
 import { useWorkSessionStore } from '../../stores/work-session-store';
 import { subscribeToPush } from '../../services/push';
@@ -34,6 +34,18 @@ export function TabletLoginPage() {
         await workSessionsApi.checkIn({ userId: user.id });
       } catch {
         // Non-critical — proceed even if check-in fails
+      }
+
+      // Resume any processes that were auto-paused at the last station
+      // logout. BE only resumes items marked PausedByStationAt — so manual
+      // pauses stay paused. Failures are non-critical: worker can still
+      // start work manually.
+      if (user.processes?.length) {
+        await Promise.allSettled(
+          user.processes.map((p) =>
+            processWorkflowApi.resumeStation({ processId: p.processId, userId: user.id }),
+          ),
+        );
       }
 
       setCheckInTime(new Date().toISOString());
