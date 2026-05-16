@@ -16,6 +16,7 @@
     "@alblue/i18n": "workspace:*",
     "@alblue/shared-types": "workspace:*",
     "@alblue/signalr-client": "workspace:*",
+    "@sentry/react": "^10.53.1",
     "@tanstack/react-query": "^5.56.0",
     "nosleep.js": "^0.12.0",
     "pdfjs-dist": "^5.5.207",
