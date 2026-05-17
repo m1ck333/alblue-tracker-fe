@@ -460,7 +460,12 @@ export function UsersPage() {
             <Input />
           </Form.Item>
           <Form.Item name="role" label={t('common:labels.role')} rules={[{ required: true }]}>
+            {/* Sprint 3.0 F-7 — only SuperAdmin can change an existing user's
+                role. Non-SuperAdmin viewers see the current role as a
+                disabled select (so they can read it but not modify). BE
+                rejects with FORBIDDEN_ROLE_CHANGE as defense in depth. */}
             <Select
+              disabled={!isSuperAdmin}
               options={assignableRoles.map((r) => ({ label: tEnum('UserRole', r), value: r }))}
               onChange={() => editForm.setFieldValue('processIds', undefined)}
             />
