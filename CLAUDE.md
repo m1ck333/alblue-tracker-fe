@@ -1,5 +1,9 @@
 # Alblue MES Frontend
 
+> **New Claude session: read `../../skysoft/algreen-tracker/algreen-tracker-be/docs/CLAUDE_ONBOARDING.md` first.** Covers the full picture across all 5 repos, infrastructure, deploy commands, Sprint 3 outcomes, workflow rules, gotchas, and Milos's preferences. This file is per-repo coding conventions only.
+>
+> **This repo is the alblue FE (staging — Bojan/Sale test before Mile gets it).** Active development. Always-in-lockstep with algreen-tracker-fe; do not `cp` between them, use line-by-line `Edit`.
+
 ## Project Overview
 Multi-tenant Manufacturing Execution System (MES) frontend. Two React apps in a pnpm monorepo:
 - **Dashboard** (desktop) - Ant Design, for managers/coordinators/sales/admin
