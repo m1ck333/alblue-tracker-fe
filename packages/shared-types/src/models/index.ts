@@ -575,12 +575,32 @@ export interface TimeTrackingItemDto {
   completedAt: string | null;
   /** SECONDS. Format with h:mm:ss. */
   durationSeconds: number;
+  /** Sale/Bojan's per-row exclusion toggle (persisted server-side). When
+   * true, this row is filtered out of /reports/process-times aggregation
+   * and from the Praćenje XLSX/CSV export. */
+  isExcludedFromReports: boolean;
   subProcesses: SubProcessTimeDto[];
 }
 
 export interface TimeTrackingResponseDto {
   items: TimeTrackingItemDto[];
 }
+
+export interface DeliveryComplianceBucketDto {
+  /** ISO date of bucket start (week → Monday, month → first day). */
+  bucketStart: string;
+  onTimeCount: number;
+  lateCount: number;
+  totalCount: number;
+  onTimePercent: number;
+  latePercent: number;
+}
+
+export interface DeliveryComplianceReportDto {
+  buckets: DeliveryComplianceBucketDto[];
+}
+
+export type ReportGranularity = 'Week' | 'Month';
 
 export interface WorkerDailyBreakdownDto {
   date: string;
