@@ -46,6 +46,24 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    id: '2026-05-24-bugfixes-trend-and-ordertype',
+    date: '2026-05-24',
+    title: {
+      sr: 'Ispravke: zelena zona na Trend grafikonu + Tip narudžbine u tabeli Praćenje vremena',
+      en: 'Fixes: green zone on Trend chart + Order type in Time Tracking table',
+    },
+    bullets: [
+      {
+        sr: 'Zelena zona MIN/MAX se sada pravilno crta na grafikonu Trend prosečnog vremena (ranije nije bila vidljiva).',
+        en: 'The MIN/MAX green zone now renders correctly on the Average Time Trend chart (previously invisible).',
+      },
+      {
+        sr: 'Kolona Tip narudžbine u tabeli Praćenje vremena sada prikazuje ime koje ste podesili u Administracija → Tipovi narudžbina (ranije se ne prenosilo ispravno).',
+        en: 'The Order Type column in the Time Tracking table now shows the name you configured in Administration → Order Types (previously not transferring correctly).',
+      },
+    ],
+  },
+  {
     id: '2026-05-24-docs-and-meta',
     date: '2026-05-24',
     title: {
