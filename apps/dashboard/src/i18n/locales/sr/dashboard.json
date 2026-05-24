@@ -23,6 +23,7 @@
   "whatsNew": {
     "title": "Šta je novo",
     "subtitle": "Pregled poslednjih izmena u aplikaciji",
+    "lastUpdated": "Poslednja izmena: {{date}}",
     "showOlder": "Prikaži starije unose ({{count}})"
   },
   "profile": {

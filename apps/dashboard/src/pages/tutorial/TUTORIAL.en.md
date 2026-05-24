@@ -299,15 +299,103 @@ applies the requested action.
 
 ### 3.7 Process times (reports)
 
-Three tables:
+The `Process times` page has three tabs: **Times per process**,
+**Time tracking** and **Worker hours**. All numbers come from
+completed processes in the selected date range.
 
-- **Average process times** — how long each process takes on average,
-  broken down by product category and complexity.
-- **Times by order** — how long each process took for a specific
-  order.
-- **Worker hours** — cumulative work per worker, filterable by date.
+#### "Times per process" tab
 
-All tables support Excel/CSV export.
+Per-process × per-complexity statistics, plus three charts.
+
+**Table** — one row per process. Columns:
+
+- **Code** and **Process** — process code and name (e.g. `A — Cutting`)
+- **Product category** and **Order type** — value of the active filter
+  (or "All" when no filter is set)
+- Per complexity (Heavy / Medium / Light) five metrics:
+  - **Average** — arithmetic mean of all completed durations
+  - **min** and **max** — smallest and largest value *within the μ±σ
+    window* (values outside the window are dropped as outliers — e.g.
+    a forgotten 48-hour process won't ruin the MAX)
+  - **Trimmed mean** — average of the values inside the μ±σ window.
+    This is the honest number when outliers exist.
+  - **Std. deviation** — how spread the values are around the mean
+
+The Heavy / Medium / Light column groups are framed by bold borders
+to make the table easier to scan.
+
+**Filters** — date (from/to), product category (multi-select), order
+type (multi-select, sourced from your Admin → Order Types
+configuration). Renaming an order type in Admin shows up everywhere
+after a refresh.
+
+**Three charts below the table:**
+
+1. **Average time per process** — grouped bar chart, one cluster per
+   process, three bars per complexity. Shows the **Trimmed mean** per
+   process and complexity.
+2. **Average time trend — by week** — line chart of the Trimmed mean
+   over time. Filters: Process, Complexity, Granularity (Week /
+   Month). Green band shows MIN/MAX range per period; red dashed line
+   is the **Target (Normativ) = 85% of the Trimmed mean across the
+   whole filtered period**. Chart stays empty until you pick both a
+   Process and a Complexity.
+3. **Delivery compliance & delay analysis** — 100% stacked bars per
+   week or month. Green = % of orders completed on time
+   (`Completed ≤ Delivery date`), red = % late. Filter by order type.
+
+**Export** — `Export` button top-right. XLSX and CSV supported; the
+export respects all active filters.
+
+#### "Time tracking" tab
+
+Row-by-row detail of every completed process in the date range, with
+drill-down into sub-processes.
+
+**Columns:** Order #, Product category, Order type, Process,
+Complexity, Started, Completed, Duration (`h:mm:ss`), Include
+(switch).
+
+**Sub-process drill-down** — for processes that have sub-processes, a
+`+` arrow on the left of the row opens a sub-table with each
+sub-process name and duration. Parent process time = sum of
+sub-process times (idle gaps between sub-processes don't count).
+
+**Filters** — date, order number (search), process, complexity,
+product category, order type. Page sizes: 10 / 20 / 50 / 100.
+
+**Include / Exclude switch** (rightmost column) — manually exclude a
+row if you don't want it counted in statistics. The choice is **saved
+server-side**: visible to all users in the same tenant, survives
+refresh and device change. Excluded rows:
+- don't enter calculations on the **Times per process** tab (Average,
+  min, max, Trimmed mean, Std. deviation all ignore them)
+- don't enter the charts (Trend, Delivery compliance)
+- don't enter the **export** (XLSX/CSV)
+- stay visible in the Time tracking table but are faded — so you can
+  re-include them any time by flipping the switch
+
+There's also a **bulk switch in the column header** — one click
+includes or excludes every currently loaded item. The `?` icon next
+to it explains the behavior.
+
+**Export** — Export to XLSX (two sheets: main row-by-row + a separate
+"Sub-processes" sheet linkable back to the main via `Order #` + `Code`)
+or CSV (single file with a **"Row type"** column distinguishing
+`Process` from `Sub-process` rows). Durations export as `h:mm:ss`,
+dates as `DD.MM.YYYY HH:mm`. Excluded rows are skipped.
+
+#### "Worker hours" tab
+
+Cumulative work per worker over the selected period. Columns:
+
+- **Worker** — first + last name
+- **Total hours** — sum of work time (based on tablet work sessions)
+- **Sessions** — how many times the worker signed in
+- **Avg per day** — average daily work time
+
+Click the arrow to expand a daily breakdown for that worker. Filter
+by worker, date range.
 
 ### 3.8 Administration
 

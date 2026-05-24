@@ -31,6 +31,24 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    id: '2026-05-24-docs-and-meta',
+    date: '2026-05-24',
+    title: {
+      sr: 'Uputstvo dopunjeno + oznaka poslednje izmene',
+      en: 'Tutorial updated + last-updated marker',
+    },
+    bullets: [
+      {
+        sr: 'Sekcija "Vremena procesa" u Uputstvu prepisana — sada pokriva sve nove izveštaje i grafikone (Realni prosek, St. devijacija, Trend, Analiza kašnjenja, Napredak aktivnih narudžbina, Uključi/Isključi prekidač sa server-side čuvanjem, drill-down pod-procesa, dvosheet XLSX izvoz).',
+        en: 'The "Process times" section of the Tutorial was rewritten — now covers all the new reports and charts (Trimmed mean, Std. deviation, Trend, Delivery compliance, Active orders funnel, Include/Exclude switch with server-side persistence, sub-process drill-down, two-sheet XLSX export).',
+      },
+      {
+        sr: 'Strana "Šta je novo" sada prikazuje datum poslednje izmene u zaglavlju — odmah znate koliko je sadržaj svež.',
+        en: 'The "What\'s new" page now shows the last-updated date in the header — you immediately see how fresh the content is.',
+      },
+    ],
+  },
+  {
     id: '2026-05-24-polish',
     date: '2026-05-24',
     title: {

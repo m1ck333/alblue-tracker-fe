@@ -301,16 +301,106 @@ sprovodi traženu akciju.
 
 ### 3.7 Vremena procesa (izveštaji)
 
-Tri tabele:
+Stranica `Vremena procesa` sadrži tri taba: **Vremena po procesu**,
+**Praćenje vremena** i **Sati radnika**. Svi podaci se računaju na
+osnovu završenih procesa u izabranom periodu.
 
-- **Prosečna vremena procesa** — koliko prosečno traje svaki proces,
-  raščlanjeno po kategoriji proizvoda i kompleksnosti.
-- **Vremena po narudžbini** — koliko je svaki proces trajao za
-  određenu narudžbinu.
-- **Sati rada radnika** — kumulativni rad po radniku, sa filterom po
-  datumu.
+#### Tab "Vremena po procesu"
 
-Sve tabele podržavaju izvoz u Excel/CSV.
+Pregled statistike po procesu i kompleksnosti, plus tri grafikona.
+
+**Tabela** — jedan red po procesu. Kolone:
+
+- **Šifra** i **Proces** — kod i naziv procesa (npr. `A — Krojenje`)
+- **Kategorija proizvoda** i **Tip narudžbine** — vrednost aktivnog
+  filtera (ili "Sve" ako filter nije postavljen)
+- Po kompleksnosti (Teško / Srednje / Lako) pet metrika:
+  - **Prosek** — aritmetička sredina svih završenih vremena
+  - **min** i **max** — najmanja i najveća vrednost *unutar μ±σ prozora*
+    (vrednosti van prozora se odbacuju kao outlier-i — npr. zaboravljen
+    proces od 48 sati neće pokvariti MAX)
+  - **Realni prosek** — prosek vrednosti unutar μ±σ prozora (skraćeni
+    prosek). Ovo je pošteniji broj kad postoje outlier-i.
+  - **St. devijacija** — koliko su vrednosti rasute oko proseka
+
+Grupe kolona Teško / Srednje / Lako su uokvirene boldiranim ramovima
+radi lakšeg praćenja.
+
+**Filteri** — datum (od/do), kategorija proizvoda (multi-select), tip
+narudžbine (multi-select, koristi vašu konfiguraciju iz Admin → Tipovi
+narudžbina). Promena imena tipa u Admin-u se vidi svuda nakon refresh-a.
+
+**Tri grafikona ispod tabele:**
+
+1. **Prosečno vreme po procesu** — gruba bar grafikon, jedan blok po
+   procesu, tri stuba po kompleksnosti. Prikazuje **Realni prosek**
+   po procesu i kompleksnosti.
+2. **Trend prosečnog vremena po nedelji** — linijski grafikon kretanja
+   Realnog proseka kroz period. Filteri: Proces, Kompleksnost, Granul
+   (Nedelja / Mesec). Zelena zona pokazuje raspon MIN/MAX po periodu;
+   crvena isprekidana linija je **Normativ (cilj) = 85% Realnog
+   proseka za ceo izabrani period**. Grafikon ostaje prazan dok ne
+   izaberete i Proces i Kompleksnost.
+3. **Analiza kašnjenja i poštovanja rokova** — 100% stacked bar po
+   nedelji ili mesecu. Zelena = % narudžbina završenih na vreme
+   (`Završetak ≤ Rok isporuke`), crvena = % koje kasne. Filter po
+   tipu narudžbine.
+
+**Izvoz** — dugme `Izvezi` u gornjem desnom uglu. XLSX i CSV
+podržani; sve aktivne filtere prati i izvoz.
+
+#### Tab "Praćenje vremena"
+
+Detaljan red-po-red pregled svih završenih procesa u izabranom
+periodu, sa drill-down-om na pod-procese.
+
+**Kolone:** Br. narudžbine, Kategorija proizvoda, Tip narudžbine,
+Proces, Kompleksnost, Početak, Završetak, Trajanje (`h:mm:ss`),
+Uključi (prekidač).
+
+**Drill-down pod-procesa** — kod procesa koji imaju pod-procese,
+strelica `+` levo od reda otvara pod-tabelu sa naziom i trajanjem
+svakog pod-procesa. Vreme parent procesa = zbir vremena pod-procesa
+(vreme između pod-procesa kad niko ne radi se *ne* uračunava).
+
+**Filteri** — datum, broj narudžbine (pretraga), proces, kompleksnost,
+kategorija proizvoda, tip narudžbine. Broj stavki po strani: 10 / 20 /
+50 / 100.
+
+**Uključi / Isključi prekidač** (kolona desno) — manualno isključite
+red ako ne želite da se računa u statistike. Promena se **čuva u
+bazi**: vidljiva svim korisnicima istog tenant-a, preživi refresh i
+promenu uređaja. Isključeni redovi:
+- ne ulaze u proračun na tabu **Vremena po procesu** (Prosek, min,
+  max, Realni prosek, St. devijacija ih ignorišu)
+- ne ulaze u grafikone (Trend, Analiza kašnjenja)
+- ne ulaze u **izvoz** (XLSX/CSV)
+- ostaju vidljivi u Praćenje vremena tabeli, ali su zatamnjeni —
+  pošto bilo kada možete da ih vratite uključujući prekidač
+
+Postoji i **bulk prekidač u zaglavlju kolone** — jedan klik uključi
+ili isključi sve trenutno učitane stavke. Ikonica `?` pored objašnjava
+funkcionalnost.
+
+**Izvoz** — Izvezi u XLSX (dva sheet-a: glavni red-po-red + posebni
+"Pod-procesi" sa linkom natrag na glavni preko `Br. narudžbine` +
+`Šifra`) ili CSV (jedan fajl sa kolonom **"Tip reda"** koja razlikuje
+`Proces` od `Pod-proces`). Trajanja se izvoze kao `h:mm:ss`, datumi
+kao `DD.MM.YYYY HH:mm`. Isključeni redovi se preskaču.
+
+#### Tab "Sati radnika"
+
+Kumulativni rad po radniku za izabran period. Kolone:
+
+- **Radnik** — ime i prezime
+- **Ukupno sati** — sumarno radno vreme (na osnovu work sessions iz
+  tableta)
+- **Br. sesija** — koliko puta se radnik prijavljivao
+- **Prosek po danu** — prosečno radno vreme po radnom danu
+
+Klik na strelicu otvara dnevni breakdown za tog radnika.
+
+Filter po radniku, datum opseg.
 
 ### 3.8 Administracija
 

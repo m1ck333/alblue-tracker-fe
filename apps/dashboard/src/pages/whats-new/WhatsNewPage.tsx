@@ -15,6 +15,9 @@ export function WhatsNewPage() {
   const lang = (i18n.language === 'en' ? 'en' : 'sr') as 'sr' | 'en';
   const visible = showAll ? changelog : changelog.slice(0, DEFAULT_VISIBLE_COUNT);
   const olderCount = Math.max(0, changelog.length - DEFAULT_VISIBLE_COUNT);
+  // Newest entry's date — surfaced as a "you're current as of X" anchor
+  // so users see the freshness signal without reading individual entries.
+  const lastUpdated = changelog.length > 0 ? changelog[0].date : null;
 
   return (
     <div style={{ maxWidth: 880, margin: '0 auto', padding: '24px 16px' }}>
@@ -22,6 +25,13 @@ export function WhatsNewPage() {
         {t('whatsNew.title')}
       </Title>
       <Text type="secondary">{t('whatsNew.subtitle')}</Text>
+      {lastUpdated && (
+        <div style={{ marginTop: 4 }}>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {t('whatsNew.lastUpdated', { date: dayjs(lastUpdated).format('DD.MM.YYYY') })}
+          </Text>
+        </div>
+      )}
       <Divider />
 
       <Space direction="vertical" size={16} style={{ width: '100%' }}>

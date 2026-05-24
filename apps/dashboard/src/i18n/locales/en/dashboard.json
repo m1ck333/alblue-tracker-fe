@@ -23,6 +23,7 @@
   "whatsNew": {
     "title": "What's new",
     "subtitle": "Recent changes in the app",
+    "lastUpdated": "Last updated: {{date}}",
     "showOlder": "Show older entries ({{count}})"
   },
   "profile": {
