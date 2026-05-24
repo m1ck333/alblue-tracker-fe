@@ -1,16 +1,21 @@
 /**
  * Source of truth for the in-app "Šta je novo" page. User-facing — keep
- * the language concrete and focused on what Sale/Bojan can SEE / DO
+ * the language concrete and focused on what users can SEE / DO
  * differently after the change. Skip BE-only / dev-facing churn (those
  * belong in repo-root CHANGELOG.md).
+ *
+ * NEVER mention internal brand names (algreen / alblue / easy-mes /
+ * etc.) in the user-visible text fields. The MES product is white-
+ * labeled; the in-app changelog must read as if it belongs to whoever
+ * is looking at it.
  *
  * Entries are newest-first. The page shows the first 5 expanded by
  * default; the rest are behind a "Stariji unosi" toggle. No automatic
  * "unread" tracking yet — add localStorage-based badge later if needed.
  *
  * To add an entry: prepend to the array. Write both sr + en — Serbian
- * is the production language, English keeps parity for new/easy-mes
- * tenants and for screenshots / docs.
+ * is the production language, English keeps parity for other tenants
+ * and for screenshots / docs.
  */
 
 export type LocaleText = { sr: string; en: string };
