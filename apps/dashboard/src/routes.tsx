@@ -6,6 +6,7 @@ import { MainLayout } from './layouts/MainLayout';
 import { LoginPage } from './pages/login/LoginPage';
 import { AboutPage } from './pages/about/AboutPage';
 import { TutorialPage } from './pages/tutorial/TutorialPage';
+import { WhatsNewPage } from './pages/whats-new/WhatsNewPage';
 import { CoordinatorDashboard } from './pages/coordinator/CoordinatorDashboard';
 import { OrderListPage } from './pages/orders/OrderListPage';
 import { SalesDashboard } from './pages/sales/SalesDashboard';
@@ -41,6 +42,7 @@ export function AppRoutes() {
         <Route index element={<RoleRedirect />} />
 
         <Route path="/tutorial" element={<TutorialPage />} />
+        <Route path="/whats-new" element={<WhatsNewPage />} />
 
         <Route
           path="/dashboard"

@@ -16,7 +16,14 @@
     "reports": "Process Times",
     "notifications": "Notifications",
     "profile": "Profile",
-    "tutorial": "Tutorial"
+    "tutorial": "Tutorial",
+    "whatsNew": "What's new",
+    "info": "Info"
+  },
+  "whatsNew": {
+    "title": "What's new",
+    "subtitle": "Recent changes in the app",
+    "showOlder": "Show older entries ({{count}})"
   },
   "profile": {
     "theme": "Theme",

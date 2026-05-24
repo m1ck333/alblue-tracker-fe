@@ -16,7 +16,14 @@
     "reports": "Vremena procesa",
     "notifications": "Obaveštenja",
     "profile": "Profil",
-    "tutorial": "Uputstvo"
+    "tutorial": "Uputstvo",
+    "whatsNew": "Šta je novo",
+    "info": "Info"
+  },
+  "whatsNew": {
+    "title": "Šta je novo",
+    "subtitle": "Pregled poslednjih izmena u aplikaciji",
+    "showOlder": "Prikaži starije unose ({{count}})"
   },
   "profile": {
     "theme": "Tema",

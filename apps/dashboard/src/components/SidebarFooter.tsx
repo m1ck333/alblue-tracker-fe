@@ -12,6 +12,8 @@ import {
   ClearOutlined,
   EyeInvisibleOutlined,
   BookOutlined,
+  InfoCircleOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -51,9 +53,12 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const tutorialActive = location.pathname === '/tutorial';
+  const whatsNewActive = location.pathname === '/whats-new';
+  const infoActive = tutorialActive || whatsNewActive;
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
   const [page, setPage] = useState(1);
 
   const { data: count } = useQuery({
@@ -261,17 +266,56 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
 
   return (
     <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 4, paddingBottom: 4 }}>
-      <Tooltip title={collapsed ? t('nav.tutorial') : ''} placement="right">
-        <div
-          style={{ ...rowStyle, background: tutorialActive ? 'rgba(255,255,255,0.12)' : 'transparent' }}
-          onMouseEnter={(e) => { if (!tutorialActive) e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = tutorialActive ? 'rgba(255,255,255,0.12)' : 'transparent'; }}
-          onClick={() => navigate('/tutorial')}
-        >
-          <BookOutlined style={{ fontSize: 16 }} />
-          {!collapsed && <span>{t('nav.tutorial')}</span>}
-        </div>
-      </Tooltip>
+      {/* Info menu: groups Uputstvo + Šta je novo behind one icon. Click
+          shows a small popover with the two items; either one navigates and
+          closes the popover. Highlighted when either child route is active. */}
+      <Popover
+        content={
+          <div style={{ width: 200 }}>
+            <List
+              size="small"
+              dataSource={[
+                { key: 'tutorial', label: t('nav.tutorial'), icon: <BookOutlined />, path: '/tutorial' },
+                { key: 'whatsNew', label: t('nav.whatsNew'), icon: <HistoryOutlined />, path: '/whats-new' },
+              ]}
+              renderItem={(item) => (
+                <List.Item
+                  style={{
+                    padding: '8px 12px',
+                    cursor: 'pointer',
+                    background: location.pathname === item.path ? token.colorPrimaryBg : undefined,
+                  }}
+                  onClick={() => {
+                    setInfoOpen(false);
+                    navigate(item.path);
+                  }}
+                >
+                  <Space>
+                    {item.icon}
+                    <Text>{item.label}</Text>
+                  </Space>
+                </List.Item>
+              )}
+            />
+          </div>
+        }
+        trigger="click"
+        open={infoOpen}
+        onOpenChange={setInfoOpen}
+        placement="rightBottom"
+        arrow={false}
+      >
+        <Tooltip title={collapsed ? t('nav.info') : ''} placement="right">
+          <div
+            style={{ ...rowStyle, background: infoActive ? 'rgba(255,255,255,0.12)' : 'transparent' }}
+            onMouseEnter={(e) => { if (!infoActive) e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = infoActive ? 'rgba(255,255,255,0.12)' : 'transparent'; }}
+          >
+            <InfoCircleOutlined style={{ fontSize: 16 }} />
+            {!collapsed && <span>{t('nav.info')}</span>}
+          </div>
+        </Tooltip>
+      </Popover>
       <Popover
         content={notificationsContent}
         trigger="click"
