@@ -1,11 +1,11 @@
-# AlBlue MES — Korisničko uputstvo
+# Korisničko uputstvo
 
 ## 1. Uvod
 
-AlBlue MES je sistem za upravljanje proizvodnjom (Manufacturing
-Execution System) koji povezuje menadžment kancelarije sa radnicima u
-proizvodnom pogonu u realnom vremenu. Sastoji se iz dva dela koji
-funkcionišu zajedno:
+Ovaj sistem za upravljanje proizvodnjom (Manufacturing Execution
+System) povezuje menadžment kancelarije sa radnicima u proizvodnom
+pogonu u realnom vremenu. Sastoji se iz dva dela koji funkcionišu
+zajedno:
 
 - **Kontrolna tabla (desktop):** za menadžere, koordinatore, prodajne
   timove i administraciju. Otvara se u web pretraživaču na računaru.

@@ -56,7 +56,7 @@ export function TutorialPage() {
   // visually offset levels by 1 (markdown # renders as antd Title level={2} → DOM
   // <h2>, ## → <h3>, ### → <h4>) for visual hierarchy. So DOM <h3> = markdown
   // section (##), DOM <h4> = markdown subsection (###). Filter accordingly so
-  // the page H1 ("AlBlue MES — Korisničko uputstvo") doesn't pollute the TOC.
+  // the page H1 ("Korisničko uputstvo") doesn't pollute the TOC.
   useEffect(() => {
     const body = document.querySelector('.md-body');
     if (!body) return;

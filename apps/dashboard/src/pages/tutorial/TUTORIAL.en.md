@@ -1,10 +1,10 @@
-# AlBlue MES — User Manual
+# User Manual
 
 ## 1. Introduction
 
-AlBlue MES is a Manufacturing Execution System that connects office
-management with shop-floor workers in real time. It consists of two
-parts that work together:
+This Manufacturing Execution System connects office management with
+shop-floor workers in real time. It consists of two parts that work
+together:
 
 - **Dashboard (desktop):** for managers, coordinators, sales teams and
   administration. Opens in a web browser on a computer.
