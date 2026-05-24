@@ -4,6 +4,21 @@
  * differently after the change. Skip BE-only / dev-facing churn (those
  * belong in repo-root CHANGELOG.md).
  *
+ * NO PROGRAMMER JARGON in LocaleText values. Sale/Bojan and friends
+ * don't know what these words mean and shouldn't have to look them up:
+ *   ❌ BE / FE / API / endpoint / token / JWT / refresh token
+ *   ❌ tenant (use "firma" / "company")
+ *   ❌ N+1 / query / cache / database / table / column
+ *   ❌ wall-clock / timestamp / ISO / UUID
+ *   ❌ μ / σ / sigma / outlier (use "ekstremne vrednosti" / "ekstremne vrijednosti" / plain prose)
+ *   ❌ CreatedAt / UpdatedAt / column-style names
+ *   ❌ audit trail (use "istorija izmena" / "change history")
+ *   ❌ Sentry / monitoring service names — say "tehnička podrška" / "administrators"
+ *   ❌ Sub-process is OK because it's how the table labels them; "pod-proces" is user-facing.
+ * If you catch yourself typing one, rewrite the sentence in plain
+ * business language. Rule of thumb: "would Sale or Bojan say this in
+ * a meeting?" If no, rephrase.
+ *
  * NEVER mention internal brand names (algreen / alblue / easy-mes /
  * etc.) in the user-visible text fields. The MES product is white-
  * labeled; the in-app changelog must read as if it belongs to whoever
@@ -57,7 +72,7 @@ export const changelog: ChangelogEntry[] = [
     },
     bullets: [
       {
-        sr: 'Uključi/Isključi prekidač na Praćenje vremena prikazuje znak učitavanja dok BE potvrđuje promenu.',
+        sr: 'Uključi/Isključi prekidač na Praćenje vremena prikazuje znak učitavanja dok se promena čuva.',
         en: 'The Include/Exclude switch on Time Tracking now shows a loading spinner while the change is being saved.',
       },
       {
@@ -93,12 +108,12 @@ export const changelog: ChangelogEntry[] = [
     },
     bullets: [
       {
-        sr: 'MIN i MAX se sada računaju po formuli iz Excel-a — vrednosti van μ±σ prozora se isključuju (npr. zaboravljen proces od 48 sati više ne pravi pogrešan MAX).',
-        en: 'MIN and MAX now follow the Excel formula — values outside the μ±σ window are excluded (e.g., an abandoned 48-hour process no longer skews the MAX).',
+        sr: 'MIN i MAX se sada računaju po formuli iz Excel-a — ekstremne vrednosti se odbacuju (npr. zaboravljen proces od 48 sati više ne pravi pogrešan MAX).',
+        en: 'MIN and MAX now follow the Excel formula — extreme values are filtered out (e.g., an abandoned 48-hour process no longer skews the MAX).',
       },
       {
-        sr: 'Vreme procesa sa pod-procesima sada je zbir vremena pod-procesa, umesto wall-clock vremena koje je uračunavalo prazne periode između aktivnosti.',
-        en: 'Process time for processes with sub-processes is now the sum of sub-process times, instead of wall-clock time that counted idle gaps between activities.',
+        sr: 'Vreme procesa sa pod-procesima sada je zbir vremena pod-procesa, umesto ukupnog vremena od početka do kraja koje je uračunavalo i prazne periode bez aktivnosti.',
+        en: 'Process time for processes with sub-processes is now the sum of sub-process times, instead of total start-to-end time that included idle periods.',
       },
       {
         sr: 'Uključi/Isključi prekidač se sada čuva u bazi — utiče i na statistike na strani Vremena procesa i na izvoz, i preživljava refresh / promenu uređaja.',
@@ -153,16 +168,16 @@ export const changelog: ChangelogEntry[] = [
     },
     bullets: [
       {
-        sr: 'Sprečeno brisanje poslednjeg Admin korisnika — tenant ne može da ostane bez administratora.',
-        en: 'Blocked deletion of the last Admin in a tenant — a tenant can never end up without an administrator.',
+        sr: 'Sprečeno brisanje poslednjeg Admin korisnika — firma ne može da ostane bez administratora.',
+        en: 'Blocked deletion of the last Admin in a company — a company can never end up without an administrator.',
       },
       {
         sr: 'Promena uloge korisnika sada zahteva SuperAdmin pravo.',
         en: 'Changing a user role now requires SuperAdmin privileges.',
       },
       {
-        sr: 'Refresh tokeni se poništavaju pri promeni uloge — stari token sa starim pravima ne može da nastavi posle promene.',
-        en: 'Refresh tokens are revoked on role change — an old token with old privileges cannot continue after a change.',
+        sr: 'Prilikom promene uloge korisnika, njegove postojeće sesije se odjavljuju — stara prava ne mogu da nastave da važe.',
+        en: 'When a user\'s role changes, their existing sessions are signed out — old privileges cannot remain in effect.',
       },
     ],
   },
@@ -175,8 +190,8 @@ export const changelog: ChangelogEntry[] = [
     },
     bullets: [
       {
-        sr: 'Master pregled narudžbina značajno brži za velike tenant-e (eliminisano N+1 učitavanje).',
-        en: 'Master view of orders is significantly faster for large tenants (eliminated N+1 query loading).',
+        sr: 'Master pregled narudžbina značajno brži za firme sa puno aktivnih narudžbina.',
+        en: 'The orders master view is significantly faster for companies with lots of active orders.',
       },
       {
         sr: 'Tablet ekrani (lista aktivnih + queue) brže učitavaju.',
@@ -197,12 +212,12 @@ export const changelog: ChangelogEntry[] = [
     },
     bullets: [
       {
-        sr: 'Server sada izlaže /api/health/live i /api/health/ready endpointe — monitoring može da detektuje pad pre nego što korisnici primete.',
-        en: 'The server now exposes /api/health/live and /api/health/ready endpoints — monitoring can detect outages before users notice.',
+        sr: 'Automatsko praćenje rada sistema — administratori i tehnička podrška vide da li sistem radi pre nego što korisnici primete problem.',
+        en: 'Automatic system health monitoring — administrators and support can detect issues before users notice them.',
       },
       {
-        sr: 'Svaka tabela automatski beleži CreatedAt / UpdatedAt / autora promene — kompletan audit trail.',
-        en: 'Every table automatically records CreatedAt / UpdatedAt / change author — complete audit trail.',
+        sr: 'Svaka promena u sistemu (ko je kreirao, ko je poslednji menjao, kada) sada se automatski beleži — kompletna istorija izmena za sve podatke.',
+        en: 'Every change (created by, last edited by, when) is now recorded automatically — full change history across all data.',
       },
     ],
   },
