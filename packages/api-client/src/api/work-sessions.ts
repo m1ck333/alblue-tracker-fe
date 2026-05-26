@@ -1,10 +1,22 @@
-import type { WorkSessionDto, PagedResult } from '@alblue/shared-types';
-import type { CheckInRequest, CheckOutRequest } from '@alblue/shared-types';
+import type {
+  WorkSessionDto,
+  ActiveWorkSessionDto,
+  PagedResult,
+  CheckInRequest,
+  CheckOutRequest,
+} from '@alblue/shared-types';
 import { apiClient } from '../axios-instance';
 
 export const workSessionsApi = {
   getAll(date: string) {
     return apiClient.get<PagedResult<WorkSessionDto>>('/work-sessions', { params: { date } });
+  },
+
+  /** Calling worker's open session + auto-logout alarm timestamps. 204 → null. */
+  getCurrent() {
+    return apiClient.get<ActiveWorkSessionDto | ''>('/work-sessions/current', {
+      validateStatus: (s) => s === 200 || s === 204,
+    });
   },
 
   checkIn(data: CheckInRequest) {

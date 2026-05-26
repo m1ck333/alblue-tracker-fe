@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Tabs,
   Table,
@@ -37,6 +37,9 @@ import type {
   UserDto,
   ProductCategoryDto,
   OrderTypeDto,
+  BlocksPerProcessBucketDto,
+  ProductManufacturingTimeOrderDto,
+  WorkEfficiencyRowDto,
 } from '@alblue/shared-types';
 import { UserRole, ComplexityType } from '@alblue/shared-types';
 import dayjs from 'dayjs';
@@ -495,6 +498,9 @@ function ProcessTimeTrendChart() {
   const [processId, setProcessId] = useState<string | undefined>(undefined);
   const [complexity, setComplexity] = useState<ComplexityType | undefined>(undefined);
   const [granularity, setGranularity] = useState<'Week' | 'Month'>('Week');
+  // Period selector per Bojan 25.05.2026 — month / 3 months / 6 months / year.
+  // Stored as a count of days so it round-trips cleanly through the query key.
+  const [periodDays, setPeriodDays] = useState<number>(180);
 
   const { data: processes } = useQuery({
     queryKey: ['processes-for-reports', tenantId],
@@ -502,15 +508,27 @@ function ProcessTimeTrendChart() {
     enabled: !!tenantId,
   });
 
+  // Auto-pick the first process + S complexity on first load so the chart
+  // renders immediately. Without this, the user faced a forced 2-dropdown
+  // ritual before seeing anything — bad UX feedback 26.05.2026.
+  useEffect(() => {
+    if (!processId && processes && processes.length > 0) {
+      setProcessId(processes[0].id);
+    }
+    if (!complexity) {
+      setComplexity(ComplexityType.S);
+    }
+  }, [processes, processId, complexity]);
+
   const { data, isLoading } = useQuery({
-    queryKey: ['reports-process-time-trend', tenantId, processId, complexity, granularity],
+    queryKey: ['reports-process-time-trend', tenantId, processId, complexity, granularity, periodDays],
     queryFn: () =>
       reportsApi
         .getProcessTimeTrend({
           processId: processId!,
           complexity: complexity!,
           granularity,
-          from: dayjs().subtract(180, 'day').format('YYYY-MM-DD'),
+          from: dayjs().subtract(periodDays, 'day').format('YYYY-MM-DD'),
           to: dayjs().format('YYYY-MM-DD'),
         })
         .then((r) => r.data),
@@ -581,6 +599,17 @@ function ProcessTimeTrendChart() {
           options={[
             { label: t('reports.granularityWeek'), value: 'Week' },
             { label: t('reports.granularityMonth'), value: 'Month' },
+          ]}
+        />
+        <Select
+          value={periodDays}
+          onChange={setPeriodDays}
+          style={{ width: 160 }}
+          options={[
+            { label: t('reports.period1Month'), value: 30 },
+            { label: t('reports.period3Months'), value: 90 },
+            { label: t('reports.period6Months'), value: 180 },
+            { label: t('reports.period1Year'), value: 365 },
           ]}
         />
       </Space>
@@ -1597,6 +1626,664 @@ function WorkerHoursTab() {
   );
 }
 
+// ─── Blokade po procesu tab ──────────────────────────────
+// Per-process aggregate of block requests. BE computes average duration
+// in WORKING HOURS only (intersection with active Shift windows) per
+// Bojan spec 25.05.2026 — overnight/weekend gaps don't inflate averages.
+// Approved = Approved + Resolved; Rejected counts toward "submitted"
+// but contributes zero duration. Two charts: avg duration (h) on the
+// left, submitted vs approved on the right.
+
+function BlocksPerProcessTab() {
+  const tenantId = useAuthStore((s) => s.tenantId);
+  const { t } = useTranslation('dashboard');
+  const { token } = theme.useToken();
+
+  const defaultRange: [dayjs.Dayjs, dayjs.Dayjs] = [dayjs().subtract(30, 'day'), dayjs()];
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>(defaultRange);
+
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      'reports-blocks-per-process',
+      tenantId,
+      dateRange[0].format('YYYY-MM-DD'),
+      dateRange[1].format('YYYY-MM-DD'),
+    ],
+    queryFn: () =>
+      reportsApi
+        .getBlocksPerProcess({
+          from: dateRange[0].format('YYYY-MM-DD'),
+          to: dateRange[1].format('YYYY-MM-DD'),
+        })
+        .then((r) => r.data.processes),
+    enabled: !!tenantId,
+  });
+
+  const rows = useMemo<BlocksPerProcessBucketDto[]>(
+    () =>
+      (data ?? [])
+        .slice()
+        .sort((a, b) => a.sequenceOrder - b.sequenceOrder),
+    [data],
+  );
+
+  const columns: ColumnsType<BlocksPerProcessBucketDto> = useMemo(
+    () => [
+      { title: t('reports.processCode'), dataIndex: 'processCode', width: 80 },
+      { title: t('reports.processName'), dataIndex: 'processName' },
+      {
+        title: t('reports.blocksSubmitted'),
+        dataIndex: 'totalSubmitted',
+        align: 'right',
+        sorter: (a, b) => a.totalSubmitted - b.totalSubmitted,
+      },
+      {
+        title: t('reports.blocksApproved'),
+        dataIndex: 'approvedCount',
+        align: 'right',
+        sorter: (a, b) => a.approvedCount - b.approvedCount,
+      },
+      {
+        title: t('reports.blocksResolved'),
+        dataIndex: 'resolvedCount',
+        align: 'right',
+        sorter: (a, b) => a.resolvedCount - b.resolvedCount,
+      },
+      {
+        title: t('reports.blocksRejected'),
+        dataIndex: 'rejectedCount',
+        align: 'right',
+        sorter: (a, b) => a.rejectedCount - b.rejectedCount,
+      },
+      {
+        title: t('reports.blocksAvgDurationHours'),
+        dataIndex: 'averageDurationHours',
+        align: 'right',
+        sorter: (a, b) => a.averageDurationHours - b.averageDurationHours,
+        render: (v: number) => (v > 0 ? v.toFixed(2) : '—'),
+      },
+    ],
+    [t],
+  );
+
+  const chartData = useMemo(
+    () =>
+      rows.map((r) => ({
+        process: r.processCode,
+        processName: r.processName,
+        avgHours: Number(r.averageDurationHours.toFixed(2)),
+        submitted: r.totalSubmitted,
+        approved: r.approvedCount,
+      })),
+    [rows],
+  );
+
+  const allZero = chartData.every((d) => d.submitted === 0 && d.avgHours === 0);
+
+  const tooltipStyle = {
+    contentStyle: {
+      backgroundColor: token.colorBgElevated,
+      border: `1px solid ${token.colorBorderSecondary}`,
+      borderRadius: token.borderRadiusLG,
+      color: token.colorText,
+    },
+    labelStyle: { color: token.colorText, fontWeight: 600 as const },
+    itemStyle: { color: token.colorText },
+    cursor: { fill: token.colorFillTertiary },
+  };
+
+  return (
+    <>
+      <Space wrap style={{ marginBottom: 16 }}>
+        <RangePicker
+          value={dateRange}
+          onChange={(vals) => {
+            if (vals && vals[0] && vals[1]) setDateRange([vals[0], vals[1]]);
+          }}
+          format="DD.MM.YYYY"
+        />
+      </Space>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <TableExportButton
+          onFetchAll={async () => rows}
+          columns={[
+            { header: t('reports.processCode'), value: (r: BlocksPerProcessBucketDto) => r.processCode, width: 12 },
+            { header: t('reports.processName'), value: (r: BlocksPerProcessBucketDto) => r.processName, width: 24 },
+            { header: t('reports.blocksSubmitted'), value: (r: BlocksPerProcessBucketDto) => r.totalSubmitted, align: 'right', width: 14 },
+            { header: t('reports.blocksApproved'), value: (r: BlocksPerProcessBucketDto) => r.approvedCount, align: 'right', width: 14 },
+            { header: t('reports.blocksResolved'), value: (r: BlocksPerProcessBucketDto) => r.resolvedCount, align: 'right', width: 14 },
+            { header: t('reports.blocksRejected'), value: (r: BlocksPerProcessBucketDto) => r.rejectedCount, align: 'right', width: 14 },
+            { header: t('reports.blocksAvgDurationHours'), value: (r: BlocksPerProcessBucketDto) => Number(r.averageDurationHours.toFixed(2)), align: 'right', width: 18 },
+          ] satisfies ExportColumn<BlocksPerProcessBucketDto>[]}
+          options={{
+            fileName: `reports-blocks-per-process-${dayjs().format('YYYY-MM-DD')}`,
+            title: `${t('common:appName')} — ${t('reports.tabBlocksPerProcess')}`,
+            sheetName: t('reports.tabBlocksPerProcess'),
+            filters: [
+              { label: t('export.dateFrom'), value: dateRange[0].format('DD.MM.YYYY.') },
+              { label: t('export.dateTo'), value: dateRange[1].format('DD.MM.YYYY.') },
+            ],
+          }}
+        />
+      </div>
+
+      <Card size="small" title={t('reports.blocksTableTitle')} style={{ marginBottom: 16 }}>
+        <Table
+          columns={columns}
+          dataSource={rows}
+          rowKey="processId"
+          loading={isLoading}
+          pagination={false}
+          size="small"
+          bordered
+        />
+      </Card>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <Card size="small" title={t('reports.blocksAvgDurationChart')}>
+          {allZero ? (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('reports.noData')} />
+          ) : (
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={chartData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="process" />
+                <YAxis allowDecimals />
+                <RechartsTooltip
+                  {...tooltipStyle}
+                  labelFormatter={(label, payload) => {
+                    const row = payload?.[0]?.payload as { process: string; processName: string } | undefined;
+                    return row ? `${row.process} — ${row.processName}` : String(label);
+                  }}
+                  formatter={(value) => [`${Number(value).toFixed(2)} h`, t('reports.blocksAvgDurationHours')]}
+                />
+                <Bar dataKey="avgHours" fill="#1890ff" maxBarSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </Card>
+
+        <Card size="small" title={t('reports.blocksSubmittedVsApprovedChart')}>
+          {allZero ? (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('reports.noData')} />
+          ) : (
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={chartData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="process" />
+                <YAxis allowDecimals={false} />
+                <RechartsTooltip
+                  {...tooltipStyle}
+                  labelFormatter={(label, payload) => {
+                    const row = payload?.[0]?.payload as { process: string; processName: string } | undefined;
+                    return row ? `${row.process} — ${row.processName}` : String(label);
+                  }}
+                  formatter={(value, name) => [
+                    value,
+                    name === 'submitted' ? t('reports.blocksSubmitted') : t('reports.blocksApproved'),
+                  ]}
+                />
+                <Legend
+                  formatter={(v) =>
+                    v === 'submitted' ? t('reports.blocksSubmitted') : t('reports.blocksApproved')
+                  }
+                />
+                <Bar dataKey="submitted" fill="#faad14" maxBarSize={28} />
+                <Bar dataKey="approved" fill="#52c41a" maxBarSize={28} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </Card>
+      </div>
+    </>
+  );
+}
+
+// ─── Trajanje izrade proizvoda tab ───────────────────────────
+// Wide per-order table. Each order's processes are columns rendered
+// dynamically — Bojan spec 25.05.2026 says "Svi procesi moraju da budu
+// prikazani" (no 7-process cap). For each pair of consecutive processes
+// we also render the gap; overlaps are clipped (BE returns 0 for those).
+
+function ProductManufacturingTimeTab() {
+  const tenantId = useAuthStore((s) => s.tenantId);
+  const { t } = useTranslation('dashboard');
+
+  const defaultRange: [dayjs.Dayjs, dayjs.Dayjs] = [dayjs().subtract(30, 'day'), dayjs()];
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>(defaultRange);
+  const [orderTypes, setOrderTypes] = useState<string[]>([]);
+  const [productCategoryIds, setProductCategoryIds] = useState<string[]>([]);
+
+  const { data: orderTypeList } = useQuery({
+    queryKey: ['order-types-for-reports', tenantId],
+    queryFn: () =>
+      orderTypesApi.getAll({ isActive: true, pageSize: 200 }).then((r) => r.data.items),
+    enabled: !!tenantId,
+  });
+
+  const { data: productCategoryList } = useQuery({
+    queryKey: ['product-categories-for-reports', tenantId],
+    queryFn: () =>
+      productCategoriesApi.getAll({ isActive: true, pageSize: 200 }).then((r) => r.data.items),
+    enabled: !!tenantId,
+  });
+
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      'reports-product-manufacturing-time',
+      tenantId,
+      dateRange[0].format('YYYY-MM-DD'),
+      dateRange[1].format('YYYY-MM-DD'),
+      orderTypes,
+      productCategoryIds,
+    ],
+    queryFn: () =>
+      reportsApi
+        .getProductManufacturingTime({
+          from: dateRange[0].format('YYYY-MM-DD'),
+          to: dateRange[1].format('YYYY-MM-DD'),
+          orderTypes: orderTypes.length ? orderTypes : undefined,
+          productCategoryIds: productCategoryIds.length ? productCategoryIds : undefined,
+        })
+        .then((r) => r.data.orders),
+    enabled: !!tenantId,
+  });
+
+  const rows = useMemo<ProductManufacturingTimeOrderDto[]>(() => data ?? [], [data]);
+
+  // Determine the union of all processes touched across the visible orders,
+  // sorted by the order in which the FIRST order encountered them. This keeps
+  // columns stable across orders even when some orders skip processes.
+  const processColumns = useMemo(() => {
+    const seen = new Map<string, { processId: string; processCode: string; processName: string }>();
+    rows.forEach((order) => {
+      order.processes.forEach((p) => {
+        if (!seen.has(p.processId)) {
+          seen.set(p.processId, {
+            processId: p.processId,
+            processCode: p.processCode,
+            processName: p.processName,
+          });
+        }
+      });
+    });
+    return Array.from(seen.values());
+  }, [rows]);
+
+  const orderTypeNameByCode = useMemo(() => {
+    const map = new Map<string, string>();
+    orderTypeList?.forEach((ot: OrderTypeDto) => map.set(ot.code.toLowerCase(), ot.name));
+    return map;
+  }, [orderTypeList]);
+
+  const columns: ColumnsType<ProductManufacturingTimeOrderDto> = useMemo(() => {
+    const base: ColumnsType<ProductManufacturingTimeOrderDto> = [
+      {
+        title: t('reports.orderNumber'),
+        dataIndex: 'orderNumber',
+        fixed: 'left',
+        width: 140,
+      },
+      {
+        title: t('reports.orderType'),
+        dataIndex: 'orderType',
+        fixed: 'left',
+        width: 120,
+        render: (code: string) => orderTypeNameByCode.get(code.toLowerCase()) ?? code,
+      },
+      {
+        title: t('reports.productCategory'),
+        dataIndex: 'productCategoryName',
+        fixed: 'left',
+        width: 160,
+      },
+      {
+        title: t('reports.manufacturingTopComplexity'),
+        dataIndex: 'topComplexity',
+        fixed: 'left',
+        width: 90,
+        align: 'center',
+        render: (v: string | null) => v ?? t('reports.manufacturingNoComplexity'),
+      },
+    ];
+
+    const dynamic: ColumnsType<ProductManufacturingTimeOrderDto> = processColumns.flatMap((pc, idx) => [
+      {
+        title: `${pc.processCode} — ${t('reports.manufacturingProcessDuration')}`,
+        key: `proc-${pc.processId}-dur`,
+        width: 140,
+        align: 'right' as const,
+        render: (_: unknown, record: ProductManufacturingTimeOrderDto) => {
+          const proc = record.processes.find((p) => p.processId === pc.processId);
+          return proc ? formatSeconds(proc.durationSeconds) : '—';
+        },
+      },
+      ...(idx < processColumns.length - 1
+        ? [
+            {
+              title: t('reports.manufacturingGapToNext'),
+              key: `proc-${pc.processId}-gap`,
+              width: 120,
+              align: 'right' as const,
+              render: (_: unknown, record: ProductManufacturingTimeOrderDto) => {
+                const proc = record.processes.find((p) => p.processId === pc.processId);
+                return proc ? formatSeconds(proc.gapToNextSeconds) : '—';
+              },
+            },
+          ]
+        : []),
+    ]);
+
+    const totals: ColumnsType<ProductManufacturingTimeOrderDto> = [
+      {
+        title: t('reports.manufacturingTotalWithoutGaps'),
+        dataIndex: 'totalWithoutGapsSeconds',
+        width: 160,
+        align: 'right',
+        sorter: (a, b) => a.totalWithoutGapsSeconds - b.totalWithoutGapsSeconds,
+        render: (v: number) => formatSeconds(v),
+      },
+      {
+        title: t('reports.manufacturingTotalWithGaps'),
+        dataIndex: 'totalWithGapsSeconds',
+        width: 160,
+        align: 'right',
+        sorter: (a, b) => a.totalWithGapsSeconds - b.totalWithGapsSeconds,
+        render: (v: number) => formatSeconds(v),
+      },
+    ];
+
+    return [...base, ...dynamic, ...totals];
+  }, [processColumns, orderTypeNameByCode, t]);
+
+  return (
+    <>
+      <Space wrap style={{ marginBottom: 16 }}>
+        <RangePicker
+          value={dateRange}
+          onChange={(vals) => {
+            if (vals && vals[0] && vals[1]) setDateRange([vals[0], vals[1]]);
+          }}
+          format="DD.MM.YYYY"
+        />
+        <Select
+          mode="multiple"
+          placeholder={t('reports.allTypes')}
+          value={orderTypes}
+          onChange={setOrderTypes}
+          allowClear
+          style={{ minWidth: 200 }}
+          options={orderTypeList?.map((ot: OrderTypeDto) => ({ label: ot.name, value: ot.code }))}
+        />
+        <Select
+          mode="multiple"
+          placeholder={t('reports.allCategories')}
+          value={productCategoryIds}
+          onChange={setProductCategoryIds}
+          allowClear
+          style={{ minWidth: 220 }}
+          options={productCategoryList?.map((c: ProductCategoryDto) => ({
+            label: c.name,
+            value: c.id,
+          }))}
+        />
+      </Space>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <TableExportButton
+          onFetchAll={async () => rows}
+          columns={[
+            { header: t('reports.orderNumber'), value: (r: ProductManufacturingTimeOrderDto) => r.orderNumber, width: 16 },
+            { header: t('reports.orderType'), value: (r: ProductManufacturingTimeOrderDto) => orderTypeNameByCode.get(r.orderType.toLowerCase()) ?? r.orderType, width: 14 },
+            { header: t('reports.productCategory'), value: (r: ProductManufacturingTimeOrderDto) => r.productCategoryName, width: 22 },
+            { header: t('reports.manufacturingTopComplexity'), value: (r: ProductManufacturingTimeOrderDto) => r.topComplexity ?? '—', width: 10 },
+            ...processColumns.flatMap((pc, idx) => {
+              const dur: ExportColumn<ProductManufacturingTimeOrderDto> = {
+                header: `${pc.processCode} — ${t('reports.manufacturingProcessDuration')}`,
+                value: (r: ProductManufacturingTimeOrderDto) => {
+                  const proc = r.processes.find((p) => p.processId === pc.processId);
+                  return proc ? formatSeconds(proc.durationSeconds) : '—';
+                },
+                align: 'right',
+                width: 16,
+              };
+              if (idx === processColumns.length - 1) return [dur];
+              const gap: ExportColumn<ProductManufacturingTimeOrderDto> = {
+                header: `${pc.processCode} — ${t('reports.manufacturingGapToNext')}`,
+                value: (r: ProductManufacturingTimeOrderDto) => {
+                  const proc = r.processes.find((p) => p.processId === pc.processId);
+                  return proc ? formatSeconds(proc.gapToNextSeconds) : '—';
+                },
+                align: 'right',
+                width: 14,
+              };
+              return [dur, gap];
+            }),
+            { header: t('reports.manufacturingTotalWithoutGaps'), value: (r: ProductManufacturingTimeOrderDto) => formatSeconds(r.totalWithoutGapsSeconds), align: 'right', width: 18 },
+            { header: t('reports.manufacturingTotalWithGaps'), value: (r: ProductManufacturingTimeOrderDto) => formatSeconds(r.totalWithGapsSeconds), align: 'right', width: 18 },
+          ] satisfies ExportColumn<ProductManufacturingTimeOrderDto>[]}
+          options={{
+            fileName: `reports-product-manufacturing-time-${dayjs().format('YYYY-MM-DD')}`,
+            title: `${t('common:appName')} — ${t('reports.tabProductManufacturingTime')}`,
+            sheetName: t('reports.tabProductManufacturingTime'),
+            filters: [
+              { label: t('export.dateFrom'), value: dateRange[0].format('DD.MM.YYYY.') },
+              { label: t('export.dateTo'), value: dateRange[1].format('DD.MM.YYYY.') },
+              ...(orderTypes.length ? [{ label: t('reports.orderType'), value: orderTypes.map((c) => orderTypeNameByCode.get(c.toLowerCase()) ?? c).join(', ') }] : []),
+              ...(productCategoryIds.length ? [{ label: t('reports.productCategory'), value: (productCategoryList ?? []).filter((c: ProductCategoryDto) => productCategoryIds.includes(c.id)).map((c: ProductCategoryDto) => c.name).join(', ') }] : []),
+            ],
+          }}
+        />
+      </div>
+
+      <Card size="small" title={t('reports.manufacturingTableTitle')}>
+        <Table
+          columns={columns}
+          dataSource={rows}
+          rowKey="orderId"
+          loading={isLoading}
+          pagination={{
+            defaultPageSize: 20,
+            showSizeChanger: true,
+            pageSizeOptions: [10, 20, 50, 100],
+          }}
+          scroll={{ x: 'max-content' }}
+          size="small"
+          bordered
+        />
+      </Card>
+    </>
+  );
+}
+
+// ─── Efikasnost radnog vremena tab ─────────────────────────
+// Per-worker per-day: Pravo vreme rada (wall-clock from WorkSessions),
+// Aktivno na procesima (wall-clock union of subprocess log ranges — so
+// parallel work counts once, per Bojan 25.05.2026), Pauze (worked − active),
+// Efikasnost % with color coding only in the table (no chart per spec).
+
+function WorkEfficiencyTab() {
+  const tenantId = useAuthStore((s) => s.tenantId);
+  const { t } = useTranslation('dashboard');
+  const { token } = theme.useToken();
+
+  const defaultRange: [dayjs.Dayjs, dayjs.Dayjs] = [dayjs().subtract(7, 'day'), dayjs()];
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>(defaultRange);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+
+  const { data: users } = useQuery({
+    queryKey: ['users-for-reports', tenantId],
+    queryFn: () =>
+      usersApi
+        .getAll({ role: UserRole.Department, page: 1, pageSize: 100 })
+        .then((r) => r.data.items),
+    enabled: !!tenantId,
+  });
+
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      'reports-work-efficiency',
+      tenantId,
+      dateRange[0].format('YYYY-MM-DD'),
+      dateRange[1].format('YYYY-MM-DD'),
+      userId,
+    ],
+    queryFn: () =>
+      reportsApi
+        .getWorkEfficiency({
+          from: dateRange[0].format('YYYY-MM-DD'),
+          to: dateRange[1].format('YYYY-MM-DD'),
+          userId,
+        })
+        .then((r) => r.data.rows),
+    enabled: !!tenantId,
+  });
+
+  const rows = useMemo<WorkEfficiencyRowDto[]>(() => data ?? [], [data]);
+
+  const formatMinutesAsHM = (m: number): string => {
+    if (m <= 0) return '0h 00m';
+    const h = Math.floor(m / 60);
+    const min = Math.round(m % 60);
+    return `${h}h ${String(min).padStart(2, '0')}m`;
+  };
+
+  // Color thresholds per Bojan: ≥80 green, 50–80 yellow, <50 red.
+  const effColor = (pct: number): string => {
+    if (pct >= 80) return token.colorSuccessBg;
+    if (pct >= 50) return token.colorWarningBg;
+    return token.colorErrorBg;
+  };
+  const effTextColor = (pct: number): string => {
+    if (pct >= 80) return token.colorSuccessText;
+    if (pct >= 50) return token.colorWarningText;
+    return token.colorErrorText;
+  };
+
+  const columns: ColumnsType<WorkEfficiencyRowDto> = useMemo(
+    () => [
+      {
+        title: t('reports.date'),
+        dataIndex: 'date',
+        width: 130,
+        sorter: (a, b) => a.date.localeCompare(b.date),
+        defaultSortOrder: 'descend',
+        render: (d: string) => dayjs(d).format('DD.MM.YYYY'),
+      },
+      { title: t('reports.workerName'), dataIndex: 'fullName', sorter: (a, b) => a.fullName.localeCompare(b.fullName) },
+      {
+        title: t('reports.efficiencyWorked'),
+        dataIndex: 'workedMinutes',
+        align: 'right',
+        sorter: (a, b) => a.workedMinutes - b.workedMinutes,
+        render: (v: number) => formatMinutesAsHM(v),
+      },
+      {
+        title: t('reports.efficiencyActive'),
+        dataIndex: 'activeOnProcessesMinutes',
+        align: 'right',
+        sorter: (a, b) => a.activeOnProcessesMinutes - b.activeOnProcessesMinutes,
+        render: (v: number) => formatMinutesAsHM(v),
+      },
+      {
+        title: t('reports.efficiencyBreaks'),
+        dataIndex: 'breakMinutes',
+        align: 'right',
+        sorter: (a, b) => a.breakMinutes - b.breakMinutes,
+        render: (v: number) => formatMinutesAsHM(v),
+      },
+      {
+        title: t('reports.efficiencyPercent'),
+        dataIndex: 'efficiencyPercent',
+        align: 'right',
+        width: 140,
+        sorter: (a, b) => a.efficiencyPercent - b.efficiencyPercent,
+        render: (v: number) => (
+          <div
+            style={{
+              backgroundColor: effColor(v),
+              color: effTextColor(v),
+              padding: '2px 8px',
+              borderRadius: 4,
+              fontWeight: 600,
+              textAlign: 'right',
+            }}
+          >
+            {v.toFixed(1)}%
+          </div>
+        ),
+      },
+    ],
+    [t, token],
+  );
+
+  return (
+    <>
+      <Space wrap style={{ marginBottom: 16 }}>
+        <RangePicker
+          value={dateRange}
+          onChange={(vals) => {
+            if (vals && vals[0] && vals[1]) setDateRange([vals[0], vals[1]]);
+          }}
+          format="DD.MM.YYYY"
+        />
+        <Select
+          placeholder={t('reports.allWorkers')}
+          value={userId}
+          onChange={setUserId}
+          allowClear
+          style={{ width: 220 }}
+          showSearch
+          optionFilterProp="label"
+          options={users?.map((u: UserDto) => ({
+            label: `${u.firstName} ${u.lastName}`,
+            value: u.id,
+          }))}
+        />
+      </Space>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <TableExportButton
+          onFetchAll={async () => rows}
+          columns={[
+            { header: t('reports.date'), value: (r: WorkEfficiencyRowDto) => dayjs(r.date).format('DD.MM.YYYY.'), width: 14 },
+            { header: t('reports.workerName'), value: (r: WorkEfficiencyRowDto) => r.fullName, width: 22 },
+            { header: `${t('reports.efficiencyWorked')} (min)`, value: (r: WorkEfficiencyRowDto) => r.workedMinutes, align: 'right', width: 18 },
+            { header: `${t('reports.efficiencyActive')} (min)`, value: (r: WorkEfficiencyRowDto) => r.activeOnProcessesMinutes, align: 'right', width: 18 },
+            { header: `${t('reports.efficiencyBreaks')} (min)`, value: (r: WorkEfficiencyRowDto) => r.breakMinutes, align: 'right', width: 14 },
+            { header: t('reports.efficiencyPercent'), value: (r: WorkEfficiencyRowDto) => r.efficiencyPercent, align: 'right', width: 14 },
+          ] satisfies ExportColumn<WorkEfficiencyRowDto>[]}
+          options={{
+            fileName: `reports-work-efficiency-${dayjs().format('YYYY-MM-DD')}`,
+            title: `${t('common:appName')} — ${t('reports.tabWorkEfficiency')}`,
+            sheetName: t('reports.tabWorkEfficiency'),
+            filters: [
+              { label: t('export.dateFrom'), value: dateRange[0].format('DD.MM.YYYY.') },
+              { label: t('export.dateTo'), value: dateRange[1].format('DD.MM.YYYY.') },
+              ...(userId ? [{ label: t('reports.workerName'), value: users?.find((u: UserDto) => u.id === userId)?.fullName ?? userId }] : []),
+            ],
+          }}
+        />
+      </div>
+
+      <Table
+        columns={columns}
+        dataSource={rows}
+        rowKey={(r) => `${r.userId}-${r.date}`}
+        loading={isLoading}
+        pagination={{
+          defaultPageSize: 20,
+          showSizeChanger: true,
+          pageSizeOptions: [10, 20, 50, 100],
+        }}
+        size="small"
+        bordered
+      />
+    </>
+  );
+}
+
 // ─── Main Reports Page ─────────────────────────────────
 
 export function ReportsPage() {
@@ -1625,6 +2312,21 @@ export function ReportsPage() {
             key: 'workers',
             label: t('reports.tabWorkerHours'),
             children: <WorkerHoursTab />,
+          },
+          {
+            key: 'blocks',
+            label: t('reports.tabBlocksPerProcess'),
+            children: <BlocksPerProcessTab />,
+          },
+          {
+            key: 'manufacturing',
+            label: t('reports.tabProductManufacturingTime'),
+            children: <ProductManufacturingTimeTab />,
+          },
+          {
+            key: 'efficiency',
+            label: t('reports.tabWorkEfficiency'),
+            children: <WorkEfficiencyTab />,
           },
         ]}
       />

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTableHeight } from '../../hooks/useTableHeight';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
-import { Typography, Table, Button, Drawer, Form, Input, TimePicker, Tag, App, Select, Popconfirm, DatePicker } from 'antd';
+import { Typography, Table, Button, Drawer, Form, Input, InputNumber, TimePicker, Tag, App, Select, Popconfirm, DatePicker } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -77,12 +77,26 @@ export function ShiftsPage() {
     enabled: !!tenantId,
   });
 
+  type ShiftFormValues = {
+    name: string;
+    startTime: dayjs.Dayjs;
+    endTime: dayjs.Dayjs;
+    breakMinutes: number;
+    maxOvertimeHours: number;
+    autoLogoutAfterHours: number;
+    alarmBeforeLogoutMinutes: number;
+  };
+
   const createMutation = useMutation({
-    mutationFn: (values: { name: string; startTime: dayjs.Dayjs; endTime: dayjs.Dayjs }) =>
+    mutationFn: (values: ShiftFormValues) =>
       shiftsApi.create({
         name: values.name,
         startTime: values.startTime.format('HH:mm:ss'),
         endTime: values.endTime.format('HH:mm:ss'),
+        breakMinutes: values.breakMinutes,
+        maxOvertimeHours: values.maxOvertimeHours,
+        autoLogoutAfterHours: values.autoLogoutAfterHours,
+        alarmBeforeLogoutMinutes: values.alarmBeforeLogoutMinutes,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
@@ -94,12 +108,16 @@ export function ShiftsPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, values }: { id: string; values: { name: string; startTime: dayjs.Dayjs; endTime: dayjs.Dayjs } }) =>
+    mutationFn: ({ id, values }: { id: string; values: ShiftFormValues }) =>
       shiftsApi.update(id, {
         name: values.name,
         startTime: values.startTime.format('HH:mm:ss'),
         endTime: values.endTime.format('HH:mm:ss'),
         isActive: editShift!.isActive,
+        breakMinutes: values.breakMinutes,
+        maxOvertimeHours: values.maxOvertimeHours,
+        autoLogoutAfterHours: values.autoLogoutAfterHours,
+        alarmBeforeLogoutMinutes: values.alarmBeforeLogoutMinutes,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
@@ -117,6 +135,10 @@ export function ShiftsPage() {
         startTime: shift.startTime,
         endTime: shift.endTime,
         isActive: false,
+        breakMinutes: shift.breakMinutes,
+        maxOvertimeHours: shift.maxOvertimeHours,
+        autoLogoutAfterHours: shift.autoLogoutAfterHours,
+        alarmBeforeLogoutMinutes: shift.alarmBeforeLogoutMinutes,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
@@ -134,6 +156,10 @@ export function ShiftsPage() {
         startTime: shift.startTime,
         endTime: shift.endTime,
         isActive: true,
+        breakMinutes: shift.breakMinutes,
+        maxOvertimeHours: shift.maxOvertimeHours,
+        autoLogoutAfterHours: shift.autoLogoutAfterHours,
+        alarmBeforeLogoutMinutes: shift.alarmBeforeLogoutMinutes,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
@@ -150,6 +176,10 @@ export function ShiftsPage() {
       name: shift.name,
       startTime: dayjs(shift.startTime, 'HH:mm:ss'),
       endTime: dayjs(shift.endTime, 'HH:mm:ss'),
+      breakMinutes: shift.breakMinutes,
+      maxOvertimeHours: shift.maxOvertimeHours,
+      autoLogoutAfterHours: shift.autoLogoutAfterHours,
+      alarmBeforeLogoutMinutes: shift.alarmBeforeLogoutMinutes,
     });
   };
 
@@ -333,7 +363,19 @@ export function ShiftsPage() {
           <Button type="primary" onClick={() => createForm.submit()} loading={createMutation.isPending}>{t('common:actions.save')}</Button>
         }
       >
-        <Form form={createForm} layout="vertical" scrollToFirstError={{ behavior: "smooth", block: "center" }} onFinish={(v) => createMutation.mutate(v)} onValuesChange={onCreateValuesChange}>
+        <Form
+          form={createForm}
+          layout="vertical"
+          scrollToFirstError={{ behavior: "smooth", block: "center" }}
+          onFinish={(v) => createMutation.mutate(v)}
+          onValuesChange={onCreateValuesChange}
+          initialValues={{
+            breakMinutes: 0,
+            maxOvertimeHours: 6,
+            autoLogoutAfterHours: 2,
+            alarmBeforeLogoutMinutes: 5,
+          }}
+        >
           <Form.Item name="name" label={t('common:labels.name')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
@@ -343,6 +385,22 @@ export function ShiftsPage() {
             </Form.Item>
             <Form.Item name="endTime" label={t('admin.shifts.endTime')} rules={[{ required: true }]} style={{ flex: 1 }}>
               <TimePicker format="HH:mm" style={{ width: '100%' }} />
+            </Form.Item>
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <Form.Item name="breakMinutes" label={t('admin.shifts.breakMinutes')} rules={[{ required: true }]} style={{ flex: 1 }}>
+              <InputNumber min={0} max={480} style={{ width: '100%' }} />
+            </Form.Item>
+            <Form.Item name="maxOvertimeHours" label={t('admin.shifts.maxOvertimeHours')} rules={[{ required: true }]} style={{ flex: 1 }}>
+              <InputNumber min={0} max={24} style={{ width: '100%' }} />
+            </Form.Item>
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <Form.Item name="autoLogoutAfterHours" label={t('admin.shifts.autoLogoutAfterHours')} rules={[{ required: true }]} style={{ flex: 1 }}>
+              <InputNumber min={1} max={24} style={{ width: '100%' }} />
+            </Form.Item>
+            <Form.Item name="alarmBeforeLogoutMinutes" label={t('admin.shifts.alarmBeforeLogoutMinutes')} rules={[{ required: true }]} style={{ flex: 1 }}>
+              <InputNumber min={0} max={60} style={{ width: '100%' }} />
             </Form.Item>
           </div>
         </Form>
@@ -394,6 +452,22 @@ export function ShiftsPage() {
             </Form.Item>
             <Form.Item name="endTime" label={t('admin.shifts.endTime')} rules={[{ required: true }]} style={{ flex: 1 }}>
               <TimePicker format="HH:mm" style={{ width: '100%' }} />
+            </Form.Item>
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <Form.Item name="breakMinutes" label={t('admin.shifts.breakMinutes')} rules={[{ required: true }]} style={{ flex: 1 }}>
+              <InputNumber min={0} max={480} style={{ width: '100%' }} />
+            </Form.Item>
+            <Form.Item name="maxOvertimeHours" label={t('admin.shifts.maxOvertimeHours')} rules={[{ required: true }]} style={{ flex: 1 }}>
+              <InputNumber min={0} max={24} style={{ width: '100%' }} />
+            </Form.Item>
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <Form.Item name="autoLogoutAfterHours" label={t('admin.shifts.autoLogoutAfterHours')} rules={[{ required: true }]} style={{ flex: 1 }}>
+              <InputNumber min={1} max={24} style={{ width: '100%' }} />
+            </Form.Item>
+            <Form.Item name="alarmBeforeLogoutMinutes" label={t('admin.shifts.alarmBeforeLogoutMinutes')} rules={[{ required: true }]} style={{ flex: 1 }}>
+              <InputNumber min={0} max={60} style={{ width: '100%' }} />
             </Form.Item>
           </div>
         </Form>

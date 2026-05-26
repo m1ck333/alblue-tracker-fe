@@ -43,6 +43,10 @@ export interface CreateShiftRequest {
   name: string;
   startTime: string;
   endTime: string;
+  breakMinutes: number;
+  maxOvertimeHours: number;
+  autoLogoutAfterHours: number;
+  alarmBeforeLogoutMinutes: number;
 }
 
 export interface UpdateShiftRequest {
@@ -50,6 +54,10 @@ export interface UpdateShiftRequest {
   startTime: string;
   endTime: string;
   isActive: boolean;
+  breakMinutes: number;
+  maxOvertimeHours: number;
+  autoLogoutAfterHours: number;
+  alarmBeforeLogoutMinutes: number;
 }
 
 // ─── Orders ──────────────────────────────────────────────

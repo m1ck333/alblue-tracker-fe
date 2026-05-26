@@ -46,6 +46,44 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    id: '2026-05-26-new-reports-and-shift-config',
+    date: '2026-05-26',
+    title: {
+      sr: 'Tri nove analize na stranici Vremena procesa + podešavanja smena',
+      en: 'Three new analyses on the Process Times page + shift settings',
+    },
+    bullets: [
+      {
+        sr: 'Nova kartica "Blokade po procesu" — pregled svih blokada po procesu sa prosečnim trajanjem u radnim satima (pauze i vikend se ne računaju).',
+        en: 'New "Blocks per Process" tab — overview of all blocks per process with average duration in working hours (breaks and weekends excluded).',
+      },
+      {
+        sr: 'Nova kartica "Trajanje izrade proizvoda" — vreme po procesu i pauze između procesa za svaku završenu narudžbinu, sa najzastupljenijom težinom.',
+        en: 'New "Product Manufacturing Time" tab — per-process duration and inter-process gaps for each completed order, with the most common complexity.',
+      },
+      {
+        sr: 'Nova kartica "Efikasnost radnog vremena" — po radniku i danu prikazuje pravo vreme rada, vreme aktivno na procesima, pauze i procenat efikasnosti (sa bojama: zeleno ≥80%, žuto 50–80%, crveno <50%).',
+        en: 'New "Work Efficiency" tab — per worker and day, shows worked time, active-on-process time, breaks, and efficiency percentage (with color coding: green ≥80%, yellow 50–80%, red <50%).',
+      },
+      {
+        sr: 'Smene (Admin → Smene) sada imaju nova podešavanja: trajanje pauze, maksimalno prekovremeno, automatska odjava i alarm pre odjave.',
+        en: 'Shifts (Admin → Shifts) now have new settings: break duration, max overtime, auto-logout, and pre-logout alarm.',
+      },
+      {
+        sr: 'Ako radnik zaboravi da se odjavi, sistem više ne računa višednevne sesije kao stvarno radno vreme — automatski se ograničava na trajanje smene + dozvoljeno prekovremeno.',
+        en: 'If a worker forgets to check out, the system no longer counts multi-day sessions as actual work time — automatically capped at shift duration + allowed overtime.',
+      },
+      {
+        sr: 'Tablet pokazuje upozorenje pred kraj smene da radnik ne zaboravi da se odjavi.',
+        en: 'Tablet shows a warning near end of shift so the worker remembers to check out.',
+      },
+      {
+        sr: 'Trend grafikon: ispravljene vrednosti MIN/MAX (sada se računaju isto kao u tabeli Vremena) i automatski se otvara sa prvim procesom + srednjom težinom umesto praznog izbora. Dodat izbor perioda (mesec / 3 meseca / 6 meseci / godina).',
+        en: 'Trend chart: MIN/MAX values fixed (now computed the same way as in the Times table) and opens automatically with the first process + medium complexity instead of an empty selection. Added period selector (month / 3 months / 6 months / year).',
+      },
+    ],
+  },
+  {
     id: '2026-05-24-bugfixes-trend-and-ordertype',
     date: '2026-05-24',
     title: {

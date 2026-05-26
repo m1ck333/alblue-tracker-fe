@@ -46,6 +46,14 @@ export interface ShiftDto {
   startTime: string;
   endTime: string;
   isActive: boolean;
+  /** Expected break duration during the shift, in minutes. */
+  breakMinutes: number;
+  /** Max overtime allowed past EndTime before auto-logout, in hours. */
+  maxOvertimeHours: number;
+  /** Cadence (hours) at which the auto-logout job ends a forgotten session. */
+  autoLogoutAfterHours: number;
+  /** How many minutes before auto-logout the tablet shows a warning. */
+  alarmBeforeLogoutMinutes: number;
   createdAt: string;
   updatedAt: string | null;
 }
@@ -246,6 +254,14 @@ export interface WorkSessionDto {
   durationMinutes: number | null;
   date: string;
   isActive: boolean;
+}
+
+export interface ActiveWorkSessionDto {
+  session: WorkSessionDto;
+  /** UTC ISO — when the tablet should start showing the auto-logout alarm. */
+  alarmAtUtc: string | null;
+  /** UTC ISO — when reports treat the session as auto-closed. */
+  logoutAtUtc: string | null;
 }
 
 // ─── Production ──────────────────────────────────────────
@@ -617,6 +633,69 @@ export interface ActiveProcessFunnelBucketDto {
 
 export interface ActiveProcessFunnelDto {
   processes: ActiveProcessFunnelBucketDto[];
+}
+
+export interface BlocksPerProcessBucketDto {
+  processId: string;
+  processCode: string;
+  processName: string;
+  sequenceOrder: number;
+  totalSubmitted: number;
+  approvedCount: number;
+  resolvedCount: number;
+  rejectedCount: number;
+  /** Average duration in WORKING HOURS — only counts time in active shift windows. */
+  averageDurationHours: number;
+}
+
+export interface BlocksPerProcessReportDto {
+  processes: BlocksPerProcessBucketDto[];
+}
+
+export interface ProductManufacturingProcessDto {
+  processId: string;
+  processCode: string;
+  processName: string;
+  startedAt: string | null;
+  completedAt: string | null;
+  /** Duration of THIS process slot, in seconds. */
+  durationSeconds: number;
+  /** Gap from this process's end to next process's start. Zero for last or overlapping. */
+  gapToNextSeconds: number;
+}
+
+export interface ProductManufacturingTimeOrderDto {
+  orderId: string;
+  orderNumber: string;
+  orderType: string;
+  productCategoryName: string;
+  /** "T" / "S" / "L" — null if order had no items with complexity set. */
+  topComplexity: string | null;
+  processes: ProductManufacturingProcessDto[];
+  /** Sum of all durations + positive inter-process gaps. Seconds. */
+  totalWithGapsSeconds: number;
+  /** Sum of all durations only. Seconds. */
+  totalWithoutGapsSeconds: number;
+}
+
+export interface ProductManufacturingTimeReportDto {
+  orders: ProductManufacturingTimeOrderDto[];
+}
+
+export interface WorkEfficiencyRowDto {
+  userId: string;
+  fullName: string;
+  /** YYYY-MM-DD */
+  date: string;
+  workedMinutes: number;
+  activeOnProcessesMinutes: number;
+  breakMinutes: number;
+  /** 0–100 */
+  efficiencyPercent: number;
+}
+
+export interface WorkEfficiencyReportDto {
+  rows: WorkEfficiencyRowDto[];
 }
 
 export interface DeliveryComplianceBucketDto {

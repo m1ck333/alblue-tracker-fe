@@ -10,6 +10,7 @@ import {
 import { tokenManager } from '@alblue/api-client';
 import { BottomNav } from '../components/BottomNav';
 import { OfflineBanner } from '../components/OfflineBanner';
+import { AutoLogoutBanner } from '../components/AutoLogoutBanner';
 import { StatusBar } from '../components/StatusBar';
 import { PullToRefresh } from '../components/PullToRefresh';
 
@@ -97,6 +98,7 @@ export function TabletLayout() {
       <StatusBar />
 
       <OfflineBanner />
+      <AutoLogoutBanner />
       <PullToRefresh>
         <main className="p-4 pb-24">
           <Outlet />

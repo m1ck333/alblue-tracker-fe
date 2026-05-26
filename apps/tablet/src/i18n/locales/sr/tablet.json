@@ -86,6 +86,10 @@
   "offline": {
     "message": "Niste povezani. Neke funkcije možda neće biti dostupne."
   },
+  "autoLogout": {
+    "warning": "Vaša smena ističe za {{minutes}} min. Odjavite se.",
+    "expired": "Vaša smena je istekla. Odjavite se."
+  },
   "notifications": {
     "prompt": "Uključite obaveštenja za nove narudžbine i blokade",
     "enable": "Uključi"
