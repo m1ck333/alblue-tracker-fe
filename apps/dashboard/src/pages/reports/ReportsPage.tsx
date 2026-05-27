@@ -2098,9 +2098,30 @@ function ProductManufacturingTimeTab() {
         />
       </div>
 
-      {/* Bar chart: per-order total time (with vs without gaps). Sorted by
-          totalWithGapsSeconds desc so the longest orders surface at the top.
-          Added on Bojan review 27.05.2026 — table-only was too dense. */}
+      <Card
+        size="small"
+        title={t('reports.manufacturingTableTitle')}
+        style={{ marginBottom: 16 }}
+      >
+        <Table
+          columns={columns}
+          dataSource={rows}
+          rowKey="orderId"
+          loading={isLoading}
+          pagination={{
+            defaultPageSize: 20,
+            showSizeChanger: true,
+            pageSizeOptions: [10, 20, 50, 100],
+          }}
+          scroll={{ x: 'max-content' }}
+          size="small"
+          bordered
+        />
+      </Card>
+
+      {/* Bar chart goes BELOW the table to match the pattern from Vremena
+          po procesu (table on top, charts beneath). Sorted by total
+          with-gaps duration desc; top 20. */}
       {(() => {
         const chartData = rows
           .slice()
@@ -2115,11 +2136,7 @@ function ProductManufacturingTimeTab() {
         if (chartData.length === 0) return null;
 
         return (
-          <Card
-            size="small"
-            title={t('reports.manufacturingChartTitle')}
-            style={{ marginBottom: 16 }}
-          >
+          <Card size="small" title={t('reports.manufacturingChartTitle')}>
             <ResponsiveContainer width="100%" height={Math.max(280, chartData.length * 28 + 80)}>
               <BarChart
                 data={chartData}
@@ -2160,23 +2177,6 @@ function ProductManufacturingTimeTab() {
           </Card>
         );
       })()}
-
-      <Card size="small" title={t('reports.manufacturingTableTitle')}>
-        <Table
-          columns={columns}
-          dataSource={rows}
-          rowKey="orderId"
-          loading={isLoading}
-          pagination={{
-            defaultPageSize: 20,
-            showSizeChanger: true,
-            pageSizeOptions: [10, 20, 50, 100],
-          }}
-          scroll={{ x: 'max-content' }}
-          size="small"
-          bordered
-        />
-      </Card>
     </>
   );
 }
@@ -2351,9 +2351,25 @@ function WorkEfficiencyTab() {
         />
       </div>
 
-      {/* Bar chart: avg efficiency % per worker over the filtered date range.
-          Bars colored using the same green/yellow/red thresholds as the
-          table cells. Added on Bojan review 27.05.2026. */}
+      <Table
+        columns={columns}
+        dataSource={rows}
+        rowKey={(r) => `${r.userId}-${r.date}`}
+        loading={isLoading}
+        pagination={{
+          defaultPageSize: 20,
+          showSizeChanger: true,
+          pageSizeOptions: [10, 20, 50, 100],
+        }}
+        size="small"
+        bordered
+        style={{ marginBottom: 16 }}
+      />
+
+      {/* Bar chart goes BELOW the table to match the pattern from Vremena
+          po procesu. Avg efficiency % per worker over the filtered date
+          range; bars colored using the same green/yellow/red thresholds
+          as the table cells. */}
       {(() => {
         const byUser = new Map<string, { fullName: string; sumPct: number; count: number }>();
         for (const r of rows) {
@@ -2375,11 +2391,7 @@ function WorkEfficiencyTab() {
           pct >= 80 ? token.colorSuccess : pct >= 50 ? token.colorWarning : token.colorError;
 
         return (
-          <Card
-            size="small"
-            title={t('reports.efficiencyChartTitle')}
-            style={{ marginBottom: 16 }}
-          >
+          <Card size="small" title={t('reports.efficiencyChartTitle')}>
             <ResponsiveContainer width="100%" height={Math.max(280, chartData.length * 32 + 80)}>
               <BarChart
                 data={chartData}
@@ -2411,20 +2423,6 @@ function WorkEfficiencyTab() {
           </Card>
         );
       })()}
-
-      <Table
-        columns={columns}
-        dataSource={rows}
-        rowKey={(r) => `${r.userId}-${r.date}`}
-        loading={isLoading}
-        pagination={{
-          defaultPageSize: 20,
-          showSizeChanger: true,
-          pageSizeOptions: [10, 20, 50, 100],
-        }}
-        size="small"
-        bordered
-      />
     </>
   );
 }
