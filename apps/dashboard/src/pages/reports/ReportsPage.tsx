@@ -51,6 +51,7 @@ import {
   Line,
   ComposedChart,
   Area,
+  ErrorBar,
   ReferenceLine,
   XAxis,
   YAxis,
@@ -58,6 +59,7 @@ import {
   Legend,
   ResponsiveContainer,
   CartesianGrid,
+  Cell,
 } from 'recharts';
 
 dayjs.extend(isoWeek);
@@ -546,12 +548,19 @@ function ProcessTimeTrendChart() {
       (data?.buckets ?? []).map((b) => {
         const min = Number(b.minMinutes.toFixed(2));
         const max = Number(b.maxMinutes.toFixed(2));
+        const avg = Number(b.trimmedMeanMinutes.toFixed(2));
+        // ErrorBar wants [downwardDelta, upwardDelta] anchored on the avg
+        // value — gives a visible vertical line from min→max per bucket
+        // even when the chart has only ONE bucket (Bojan complaint round 3,
+        // 27.05.2026: with one bucket the stacked Area degenerates to an
+        // invisible point and the band looks broken).
         return {
           bucket: dayjs(b.bucketStart).format(granularity === 'Week' ? 'DD.MM' : 'MM.YYYY'),
           min,
           max,
           range: Math.max(max - min, 0.05),
-          avg: Number(b.trimmedMeanMinutes.toFixed(2)),
+          avg,
+          errorRange: [Math.max(0, avg - min), Math.max(0, max - avg)] as [number, number],
           _count: b.count,
         };
       }),
@@ -703,7 +712,18 @@ function ProcessTimeTrendChart() {
               stroke="#1890ff"
               strokeWidth={2}
               dot={{ r: 4 }}
-            />
+              isAnimationActive={false}
+            >
+              {/* Per-bucket vertical min→max marker, anchored on avg. Works
+                  for single-bucket charts where the stacked Area would
+                  otherwise be invisible. */}
+              <ErrorBar
+                dataKey="errorRange"
+                stroke="#52c41a"
+                strokeWidth={2}
+                width={10}
+              />
+            </Line>
             {normativ != null && (
               <ReferenceLine
                 y={normativ}
@@ -1849,6 +1869,7 @@ function BlocksPerProcessTab() {
 function ProductManufacturingTimeTab() {
   const tenantId = useAuthStore((s) => s.tenantId);
   const { t } = useTranslation('dashboard');
+  const { token } = theme.useToken();
 
   const defaultRange: [dayjs.Dayjs, dayjs.Dayjs] = [dayjs().subtract(30, 'day'), dayjs()];
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>(defaultRange);
@@ -2077,6 +2098,69 @@ function ProductManufacturingTimeTab() {
         />
       </div>
 
+      {/* Bar chart: per-order total time (with vs without gaps). Sorted by
+          totalWithGapsSeconds desc so the longest orders surface at the top.
+          Added on Bojan review 27.05.2026 — table-only was too dense. */}
+      {(() => {
+        const chartData = rows
+          .slice()
+          .sort((a, b) => b.totalWithGapsSeconds - a.totalWithGapsSeconds)
+          .slice(0, 20)
+          .map((r) => ({
+            order: r.orderNumber,
+            withoutGaps: Math.round(r.totalWithoutGapsSeconds / 60),
+            withGaps: Math.round(r.totalWithGapsSeconds / 60),
+          }));
+
+        if (chartData.length === 0) return null;
+
+        return (
+          <Card
+            size="small"
+            title={t('reports.manufacturingChartTitle')}
+            style={{ marginBottom: 16 }}
+          >
+            <ResponsiveContainer width="100%" height={Math.max(280, chartData.length * 28 + 80)}>
+              <BarChart
+                data={chartData}
+                layout="vertical"
+                margin={{ top: 8, right: 24, left: 16, bottom: 8 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" tickFormatter={(v: number) => `${v} min`} />
+                <YAxis type="category" dataKey="order" width={120} />
+                <RechartsTooltip
+                  contentStyle={{
+                    backgroundColor: token.colorBgElevated,
+                    border: `1px solid ${token.colorBorderSecondary}`,
+                    borderRadius: token.borderRadiusLG,
+                    color: token.colorText,
+                  }}
+                  labelStyle={{ color: token.colorText, fontWeight: 600 }}
+                  itemStyle={{ color: token.colorText }}
+                  cursor={{ fill: token.colorFillTertiary }}
+                  formatter={(value, name) => [
+                    formatSeconds(Number(value) * 60),
+                    name === 'withoutGaps'
+                      ? t('reports.manufacturingTotalWithoutGaps')
+                      : t('reports.manufacturingTotalWithGaps'),
+                  ]}
+                />
+                <Legend
+                  formatter={(v) =>
+                    v === 'withoutGaps'
+                      ? t('reports.manufacturingTotalWithoutGaps')
+                      : t('reports.manufacturingTotalWithGaps')
+                  }
+                />
+                <Bar dataKey="withoutGaps" fill="#52c41a" maxBarSize={18} />
+                <Bar dataKey="withGaps" fill="#faad14" maxBarSize={18} />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        );
+      })()}
+
       <Card size="small" title={t('reports.manufacturingTableTitle')}>
         <Table
           columns={columns}
@@ -2266,6 +2350,67 @@ function WorkEfficiencyTab() {
           }}
         />
       </div>
+
+      {/* Bar chart: avg efficiency % per worker over the filtered date range.
+          Bars colored using the same green/yellow/red thresholds as the
+          table cells. Added on Bojan review 27.05.2026. */}
+      {(() => {
+        const byUser = new Map<string, { fullName: string; sumPct: number; count: number }>();
+        for (const r of rows) {
+          const cur = byUser.get(r.userId) ?? { fullName: r.fullName, sumPct: 0, count: 0 };
+          cur.sumPct += r.efficiencyPercent;
+          cur.count += 1;
+          byUser.set(r.userId, cur);
+        }
+        const chartData = Array.from(byUser.values())
+          .map((v) => ({
+            fullName: v.fullName,
+            avgEff: Number((v.sumPct / Math.max(1, v.count)).toFixed(1)),
+          }))
+          .sort((a, b) => b.avgEff - a.avgEff);
+
+        if (chartData.length === 0) return null;
+
+        const barColor = (pct: number) =>
+          pct >= 80 ? token.colorSuccess : pct >= 50 ? token.colorWarning : token.colorError;
+
+        return (
+          <Card
+            size="small"
+            title={t('reports.efficiencyChartTitle')}
+            style={{ marginBottom: 16 }}
+          >
+            <ResponsiveContainer width="100%" height={Math.max(280, chartData.length * 32 + 80)}>
+              <BarChart
+                data={chartData}
+                layout="vertical"
+                margin={{ top: 8, right: 24, left: 16, bottom: 8 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" domain={[0, 100]} tickFormatter={(v: number) => `${v}%`} />
+                <YAxis type="category" dataKey="fullName" width={140} />
+                <RechartsTooltip
+                  contentStyle={{
+                    backgroundColor: token.colorBgElevated,
+                    border: `1px solid ${token.colorBorderSecondary}`,
+                    borderRadius: token.borderRadiusLG,
+                    color: token.colorText,
+                  }}
+                  labelStyle={{ color: token.colorText, fontWeight: 600 }}
+                  itemStyle={{ color: token.colorText }}
+                  cursor={{ fill: token.colorFillTertiary }}
+                  formatter={(value) => [`${Number(value).toFixed(1)}%`, t('reports.efficiencyPercent')]}
+                />
+                <Bar dataKey="avgEff" maxBarSize={22}>
+                  {chartData.map((d) => (
+                    <Cell key={d.fullName} fill={barColor(d.avgEff)} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        );
+      })()}
 
       <Table
         columns={columns}

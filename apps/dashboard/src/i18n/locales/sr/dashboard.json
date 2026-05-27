@@ -557,6 +557,8 @@
     "blocksRejected": "Odbijeno",
     "blocksAvgDurationHours": "Pros. trajanje (h)",
     "manufacturingTableTitle": "Trajanje izrade proizvoda po narudžbini",
+    "manufacturingChartTitle": "Ukupno vreme izrade po narudžbini (sa i bez pauza)",
+    "efficiencyChartTitle": "Prosečna efikasnost po radniku",
     "manufacturingTopComplexity": "Najzast. težina",
     "manufacturingTotalWithGaps": "Ukupno (sa pauzama)",
     "manufacturingTotalWithoutGaps": "Ukupno (bez pauza)",

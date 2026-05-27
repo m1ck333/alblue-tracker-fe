@@ -555,6 +555,8 @@
     "blocksRejected": "Rejected",
     "blocksAvgDurationHours": "Avg duration (h)",
     "manufacturingTableTitle": "Product manufacturing time by order",
+    "manufacturingChartTitle": "Total manufacturing time per order (with and without gaps)",
+    "efficiencyChartTitle": "Average efficiency per worker",
     "manufacturingTopComplexity": "Top complexity",
     "manufacturingTotalWithGaps": "Total (with gaps)",
     "manufacturingTotalWithoutGaps": "Total (without gaps)",
