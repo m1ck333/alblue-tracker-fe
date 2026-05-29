@@ -46,6 +46,28 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    id: '2026-05-29-reports-refinements',
+    date: '2026-05-29',
+    title: {
+      sr: 'Doterivanja izveštaja: vreme procesa, blokade i lista radnika',
+      en: 'Report refinements: process time, blocks, and worker list',
+    },
+    bullets: [
+      {
+        sr: 'Tab "Trajanje izrade proizvoda": vreme procesa sada prikazuje stvarno aktivno vreme rada operatera, a ne ceo period od početka do kraja procesa.',
+        en: 'Product Manufacturing Time tab: process duration now shows the operator’s actual active working time, not the whole span from process start to finish.',
+      },
+      {
+        sr: 'Tab "Blokade po procesu": prosečno trajanje više ne uračunava blokade rešene u potpunosti van radnog vremena (0 radnih sati), pa je prosek realniji.',
+        en: 'Blocks per Process tab: the average duration no longer counts blocks resolved entirely outside working hours (0 working hours), so the average is more realistic.',
+      },
+      {
+        sr: 'Tabovi "Sati radnika" i "Efikasnost radnog vremena" sada prikazuju samo proizvodne radnike — administratori i rukovodstvo se više ne pojavljuju u listi.',
+        en: 'The Worker Hours and Work Efficiency tabs now show only production workers — administrators and management no longer appear in the list.',
+      },
+    ],
+  },
+  {
     id: '2026-05-26-new-reports-and-shift-config',
     date: '2026-05-26',
     title: {
@@ -62,8 +84,8 @@ export const changelog: ChangelogEntry[] = [
         en: 'New "Product Manufacturing Time" tab — per-process duration and inter-process gaps for each completed order, with the most common complexity.',
       },
       {
-        sr: 'Nova kartica "Efikasnost radnog vremena" — po radniku i danu prikazuje pravo vreme rada, vreme aktivno na procesima, pauze i procenat efikasnosti (sa bojama: zeleno ≥80%, žuto 50–80%, crveno <50%).',
-        en: 'New "Work Efficiency" tab — per worker and day, shows worked time, active-on-process time, breaks, and efficiency percentage (with color coding: green ≥80%, yellow 50–80%, red <50%).',
+        sr: 'Nova kartica "Efikasnost radnog vremena" — po radniku i danu prikazuje pravo vreme rada, vreme aktivno na procesima, pauze i procenat efikasnosti (sa bojama: zeleno ≥80%, žuto 60–79%, crveno <60%).',
+        en: 'New "Work Efficiency" tab — per worker and day, shows worked time, active-on-process time, breaks, and efficiency percentage (with color coding: green ≥80%, yellow 60–79%, red <60%).',
       },
       {
         sr: 'Smene (Admin → Smene) sada imaju nova podešavanja: trajanje pauze, maksimalno prekovremeno, automatska odjava i alarm pre odjave.',

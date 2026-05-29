@@ -299,9 +299,10 @@ applies the requested action.
 
 ### 3.7 Process times (reports)
 
-The `Process times` page has three tabs: **Times per process**,
-**Time tracking** and **Worker hours**. All numbers come from
-completed processes in the selected date range.
+The `Process times` page has six tabs: **Times per process**,
+**Time tracking**, **Worker hours**, **Blocks per process**,
+**Product manufacturing time** and **Work efficiency**. All numbers
+come from data in the selected date range.
 
 #### "Times per process" tab
 
@@ -387,15 +388,60 @@ dates as `DD.MM.YYYY HH:mm`. Excluded rows are skipped.
 
 #### "Worker hours" tab
 
-Cumulative work per worker over the selected period. Columns:
+Work per worker over the selected period — **only production workers**
+are shown (administrators and management are excluded). Columns:
 
 - **Worker** — first + last name
-- **Total hours** — sum of work time (based on tablet work sessions)
-- **Sessions** — how many times the worker signed in
-- **Avg per day** — average daily work time
+- **Regular hours** — work time up to the shift duration
+- **Overtime** — work time beyond the shift duration
+- **Total** — total logged work time (sum of all sign-ins that day; a
+  forgotten sign-out is automatically capped at shift duration + allowed
+  overtime)
+- **Effective** — Total minus the prescribed break (from shift settings)
+- **Active on processes** — time the worker actually worked on processes
+  (parallel work on several processes counts once)
+- **Uncovered** — Effective minus Active (time the system can't see — e.g.
+  setup, cleaning, helping)
+- **Efficiency (%)** — Active / Effective × 100 (color-coded)
 
-Click the arrow to expand a daily breakdown for that worker. Filter
-by worker, date range.
+Click the ▸ arrow to expand a daily view for that worker: Date, Sign-in,
+Sign-out and the same columns per day.
+
+Filter by worker, date range. The XLSX/CSV export lists all daily rows,
+then a "TOTAL" row per worker.
+
+#### "Blocks per process" tab
+
+Aggregate of all block requests per process over the selected period.
+Columns: Process, Submitted, Approved (approved + resolved), Resolved,
+Rejected, and **Average duration** in **working hours** — only active
+shift hours count; night and weekend don't. Blocks resolved entirely
+outside working hours (0 working hours) are excluded from the average.
+
+Two charts: average duration per process, and submitted / approved /
+rejected counts per process. Filter: date range. Export to XLSX/CSV.
+
+#### "Product manufacturing time" tab
+
+For each completed order, one row per item, with per-process duration and
+the gap between processes. **The process duration is the operator's actual
+active working time** — not the whole span from process start to finish.
+Also: the most common complexity and the complexity breakdown per item.
+
+Below the table: an averages table (with and without inter-process gaps)
+and a chart. Filters: date, complexity, product category. Export to XLSX/CSV.
+
+#### "Work efficiency" tab
+
+One row per worker over the selected period (**only production workers**).
+Columns: Worker, Logged (total), Effective, Active on processes, Uncovered,
+Efficiency (%) and Status.
+
+**Status** by efficiency: ≥80% Excellent, 60–79% Acceptable, 40–59% Below
+norm, <40% Unacceptable (colors: green ≥80%, yellow 60–79%, red <60%).
+
+Two charts: "Work-time distribution per worker" (active + uncovered) and
+"Efficiency per worker (%)". Filter by worker, date range. Export to XLSX/CSV.
 
 ### 3.8 Administration
 

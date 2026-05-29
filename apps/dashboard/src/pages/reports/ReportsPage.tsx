@@ -47,11 +47,8 @@ import isoWeek from 'dayjs/plugin/isoWeek';
 import {
   BarChart,
   Bar,
-  LineChart,
   Line,
   ComposedChart,
-  Area,
-  ErrorBar,
   ReferenceLine,
   XAxis,
   YAxis,
@@ -457,12 +454,11 @@ function ProcessAveragesTab() {
                 itemStyle={{ color: token.colorText }}
                 cursor={{ fill: token.colorFillTertiary }}
               />
-              {/* `direction: rtl` reverses the legend item flow so it reads
-                  Teško → Srednje → Lako, matching the table column order.
-                  Recharts otherwise sorts legend entries alphabetically by
-                  dataKey, which is the opposite of our Excel-inherited
-                  heaviest-first convention. */}
-              <Legend wrapperStyle={{ direction: 'rtl' }} />
+              {/* Bars are declared heaviest-first (Teško → Srednje → Lako),
+                  so the legend already reads in that order. Plain <Legend/>
+                  keeps the standard icon-then-text layout used by every other
+                  chart (the old rtl hack reversed it and dropped the gap). */}
+              <Legend />
               {/* Colors match Sale/Bojan's Excel cover page chart. */}
               <Bar dataKey="Teško" fill="#1890ff" maxBarSize={40} />
               <Bar dataKey="Srednje" fill="#52c41a" maxBarSize={40} />
@@ -481,11 +477,11 @@ function ProcessAveragesTab() {
 
 // ─── Chart: Trend prosečnog vremena po nedelji ──────────
 //
-// Per Sale/Bojan spec 22.05.2026 + clarification 23.05.2026:
-//   • Green zone = MIN/MAX per period bucket (window-clamped — same
-//     formula as the Vremena table: smallest sample ≥ μ-σ, largest
-//     ≤ μ+σ). Plotted as an Area between minMinutes/maxMinutes.
-//   • Blue line = Realni prosek (trimmed mean) per bucket.
+// Per Sale/Bojan feedback 29.05.2026: the chart shows two lines plus a
+// target, NOT a min/max band (the band was flagged as wrong — they want
+// the MAX value plotted, not a shaded range):
+//   • Max line   = window-clamped maxMinutes per period bucket.
+//   • Blue line  = Realni prosek (trimmed mean) per bucket.
 //   • Red dashed = Normativ = 85% of trimmed mean across the WHOLE
 //     filtered period (constant horizontal target).
 // Filters: Proces (single), Kompleksnost (single), Granul (week/month).
@@ -537,33 +533,14 @@ function ProcessTimeTrendChart() {
     enabled: !!tenantId && !!processId && !!complexity,
   });
 
-  // Precompute `range = max - min` so the stacked Area can reference it as
-  // a string dataKey. Recharts' Area accepts a function dataKey in some
-  // versions but stacking breaks (the green band silently doesn't render —
-  // Bojan feedback 24.05.2026). String dataKey + precomputed value is the
-  // reliable path. We keep a 0.05-min floor on range so single-sample
-  // buckets (min == max) still draw a visible tick instead of a 0-px band.
   const chartData = useMemo(
     () =>
-      (data?.buckets ?? []).map((b) => {
-        const min = Number(b.minMinutes.toFixed(2));
-        const max = Number(b.maxMinutes.toFixed(2));
-        const avg = Number(b.trimmedMeanMinutes.toFixed(2));
-        // ErrorBar wants [downwardDelta, upwardDelta] anchored on the avg
-        // value — gives a visible vertical line from min→max per bucket
-        // even when the chart has only ONE bucket (Bojan complaint round 3,
-        // 27.05.2026: with one bucket the stacked Area degenerates to an
-        // invisible point and the band looks broken).
-        return {
-          bucket: dayjs(b.bucketStart).format(granularity === 'Week' ? 'DD.MM' : 'MM.YYYY'),
-          min,
-          max,
-          range: Math.max(max - min, 0.05),
-          avg,
-          errorRange: [Math.max(0, avg - min), Math.max(0, max - avg)] as [number, number],
-          _count: b.count,
-        };
-      }),
+      (data?.buckets ?? []).map((b) => ({
+        bucket: dayjs(b.bucketStart).format(granularity === 'Week' ? 'DD.MM' : 'MM.YYYY'),
+        max: Number(b.maxMinutes.toFixed(2)),
+        avg: Number(b.trimmedMeanMinutes.toFixed(2)),
+        _count: b.count,
+      })),
     [data, granularity],
   );
 
@@ -638,26 +615,11 @@ function ProcessTimeTrendChart() {
               label={{ value: t('reports.minutesUnit'), angle: -90, position: 'insideLeft' }}
             />
             <RechartsTooltip
-              formatter={(value, name, item) => {
-                // The "range" series is the green band height (max - min);
-                // in the tooltip we want to show the actual MAX value, not
-                // the difference. Look up the original bucket from payload.
-                const payload = item?.payload as
-                  | { min: number; max: number; avg: number }
-                  | undefined;
-                if (name === 'range' && payload) {
-                  return [formatMinutes(payload.max), t('reports.max')];
-                }
-                if (name === 'min' && payload) {
-                  return [formatMinutes(payload.min), t('reports.min')];
-                }
-                if (name === 'avg' && payload) {
-                  return [formatMinutes(payload.avg), t('reports.trimmedAvg')];
-                }
-                return [
-                  formatMinutes(typeof value === 'number' ? value : Number(value)),
-                  String(name),
-                ];
+              formatter={(value, name) => {
+                const minutes = formatMinutes(typeof value === 'number' ? value : Number(value));
+                if (name === 'max') return [minutes, t('reports.max')];
+                if (name === 'avg') return [minutes, t('reports.trimmedAvg')];
+                return [minutes, String(name)];
               }}
               contentStyle={{
                 backgroundColor: token.colorBgElevated,
@@ -673,61 +635,38 @@ function ProcessTimeTrendChart() {
               formatter={(v) =>
                 v === 'avg'
                   ? t('reports.trimmedAvg')
-                  : v === 'minMaxBand' || v === 'range'
-                  ? t('reports.minMaxBand')
+                  : v === 'max'
+                  ? t('reports.max')
                   : v === 'normativ'
                   ? t('reports.normativ')
                   : v
               }
             />
-            {/* Green band between MIN and MAX. Two stacked areas:
-                  1) baseline-to-min (transparent — invisible spacer)
-                  2) min-to-(min+range) = min-to-max (visible green fill)
-                Both use string dataKeys (function dataKey is unreliable in
-                recharts when stacked — was silently failing 24.05.2026). */}
-            <Area
+            {/* Max line (Sale/Bojan 29.05.2026 — they want MAX shown, not a
+                min/max band). */}
+            <Line
               type="monotone"
-              dataKey="min"
-              stackId="band"
-              stroke="none"
-              fill="transparent"
-              legendType="none"
+              dataKey="max"
+              name="max"
+              stroke={token.colorWarning}
+              strokeWidth={2}
+              dot={{ r: 3 }}
               isAnimationActive={false}
             />
-            <Area
-              type="monotone"
-              dataKey="range"
-              name="minMaxBand"
-              stackId="band"
-              stroke="#52c41a"
-              strokeWidth={1}
-              fill="#52c41a"
-              fillOpacity={0.25}
-              isAnimationActive={false}
-            />
+            {/* Realni prosek (trimmed mean). */}
             <Line
               type="monotone"
               dataKey="avg"
               name="avg"
-              stroke="#1890ff"
+              stroke={token.colorPrimary}
               strokeWidth={2}
               dot={{ r: 4 }}
               isAnimationActive={false}
-            >
-              {/* Per-bucket vertical min→max marker, anchored on avg. Works
-                  for single-bucket charts where the stacked Area would
-                  otherwise be invisible. */}
-              <ErrorBar
-                dataKey="errorRange"
-                stroke="#52c41a"
-                strokeWidth={2}
-                width={10}
-              />
-            </Line>
+            />
             {normativ != null && (
               <ReferenceLine
                 y={normativ}
-                stroke="#ff4d4f"
+                stroke={token.colorError}
                 strokeDasharray="5 5"
                 label={{
                   value: `${t('reports.normativ')}: ${formatMinutes(normativ)}`,
@@ -1480,6 +1419,7 @@ function TimeTrackingTab() {
 function WorkerHoursTab() {
   const tenantId = useAuthStore((s) => s.tenantId);
   const { t } = useTranslation('dashboard');
+  const { token } = theme.useToken();
 
   const defaultRange: [dayjs.Dayjs, dayjs.Dayjs] = [dayjs().subtract(30, 'day'), dayjs()];
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>(defaultRange);
@@ -1524,49 +1464,54 @@ function WorkerHoursTab() {
     return `${h}h ${String(m).padStart(2, '0')}m`;
   };
 
+  const effCell = (v: number) => {
+    const color = v >= 80 ? token.colorSuccess : v >= 60 ? token.colorWarning : token.colorError;
+    return <span style={{ color, fontWeight: 600 }}>{v.toFixed(0)}%</span>;
+  };
+
+  // Per-worker totals row (the "Zbir" the Excel puts at the bottom of each
+  // worker's daily block). Daily detail is on the expand. Sale/Bojan 29.05.2026.
   const columns: ColumnsType<WorkerHoursDto> = useMemo(
     () => [
-      { title: t('reports.workerName'), dataIndex: 'fullName' },
+      { title: t('reports.workerName'), dataIndex: 'fullName', fixed: 'left', width: 180 },
+      { title: t('reports.regularHours'), dataIndex: 'regularMinutes', align: 'right', render: (v: number) => formatMinutesAsHM(v) },
+      { title: t('reports.overtimeHours'), dataIndex: 'overtimeMinutes', align: 'right', render: (v: number) => formatMinutesAsHM(v) },
       {
         title: t('reports.totalHours'),
-        dataIndex: 'totalMinutes',
-        sorter: (a, b) => a.totalMinutes - b.totalMinutes,
+        dataIndex: 'totalWorkedMinutes',
+        align: 'right',
+        sorter: (a, b) => a.totalWorkedMinutes - b.totalWorkedMinutes,
         defaultSortOrder: 'descend',
         render: (v: number) => formatMinutesAsHM(v),
       },
+      { title: t('reports.effectiveHours'), dataIndex: 'effectiveMinutes', align: 'right', render: (v: number) => formatMinutesAsHM(v) },
+      { title: t('reports.activeHours'), dataIndex: 'activeMinutes', align: 'right', render: (v: number) => formatMinutesAsHM(v) },
+      { title: t('reports.uncoveredHours'), dataIndex: 'uncoveredMinutes', align: 'right', render: (v: number) => formatMinutesAsHM(v) },
       {
-        title: t('reports.sessionCount'),
-        dataIndex: 'sessionCount',
-        sorter: (a, b) => a.sessionCount - b.sessionCount,
-      },
-      {
-        title: t('reports.avgPerDay'),
-        key: 'avg',
-        render: (_: unknown, record: WorkerHoursDto) => {
-          const days = record.dailyBreakdown.length;
-          if (days === 0) return '—';
-          return formatMinutesAsHM(record.totalMinutes / days);
-        },
+        title: t('reports.efficiencyPercent'),
+        dataIndex: 'efficiencyPercent',
+        align: 'right',
+        sorter: (a, b) => a.efficiencyPercent - b.efficiencyPercent,
+        render: (v: number) => effCell(v),
       },
     ],
-    [t],
+    [t, token],
   );
 
   const dailyColumns: ColumnsType<WorkerHoursDto['dailyBreakdown'][0]> = useMemo(
     () => [
-      {
-        title: t('reports.date'),
-        dataIndex: 'date',
-        render: (v: string) => dayjs(v).format('DD.MM.YYYY'),
-      },
-      {
-        title: t('reports.totalHours'),
-        dataIndex: 'totalMinutes',
-        render: (v: number) => formatMinutesAsHM(v),
-      },
-      { title: t('reports.sessionCount'), dataIndex: 'sessionCount' },
+      { title: t('reports.date'), dataIndex: 'date', render: (v: string) => dayjs(v).format('DD.MM.YYYY') },
+      { title: t('reports.checkIn'), dataIndex: 'firstCheckIn', render: (v: string | null) => (v ? dayjs(v).format('HH:mm') : '—') },
+      { title: t('reports.checkOut'), dataIndex: 'lastCheckOut', render: (v: string | null) => (v ? dayjs(v).format('HH:mm') : '—') },
+      { title: t('reports.regularHours'), dataIndex: 'regularMinutes', align: 'right', render: (v: number) => formatMinutesAsHM(v) },
+      { title: t('reports.overtimeHours'), dataIndex: 'overtimeMinutes', align: 'right', render: (v: number) => formatMinutesAsHM(v) },
+      { title: t('reports.totalHours'), dataIndex: 'totalWorkedMinutes', align: 'right', render: (v: number) => formatMinutesAsHM(v) },
+      { title: t('reports.effectiveHours'), dataIndex: 'effectiveMinutes', align: 'right', render: (v: number) => formatMinutesAsHM(v) },
+      { title: t('reports.activeHours'), dataIndex: 'activeMinutes', align: 'right', render: (v: number) => formatMinutesAsHM(v) },
+      { title: t('reports.uncoveredHours'), dataIndex: 'uncoveredMinutes', align: 'right', render: (v: number) => formatMinutesAsHM(v) },
+      { title: t('reports.efficiencyPercent'), dataIndex: 'efficiencyPercent', align: 'right', render: (v: number) => effCell(v) },
     ],
-    [t],
+    [t, token],
   );
 
   return (
@@ -1596,11 +1541,39 @@ function WorkerHoursTab() {
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
         <TableExportButton
-          onFetchAll={async () => data ?? []}
+          onFetchAll={async () =>
+            // Per worker: the daily rows, then a per-worker UKUPNO (Zbir) row,
+            // matching the on-screen worker totals + Excel Table 1.
+            (data ?? []).flatMap((w) => [
+              ...w.dailyBreakdown.map((d) => ({ worker: w.fullName, ...d })),
+              {
+                worker: w.fullName,
+                date: '',
+                firstCheckIn: null,
+                lastCheckOut: null,
+                regularMinutes: w.regularMinutes,
+                overtimeMinutes: w.overtimeMinutes,
+                totalWorkedMinutes: w.totalWorkedMinutes,
+                effectiveMinutes: w.effectiveMinutes,
+                activeMinutes: w.activeMinutes,
+                uncoveredMinutes: w.uncoveredMinutes,
+                efficiencyPercent: w.efficiencyPercent,
+                sessionCount: 0,
+              },
+            ])
+          }
           columns={[
-            { header: t('reports.workerName'), value: (w: WorkerHoursDto) => w.fullName, width: 24 },
-            { header: `${t('reports.totalHours')} (min)`, value: (w: WorkerHoursDto) => w.totalMinutes, align: 'right', width: 18 },
-            { header: t('reports.sessionCount'), value: (w: WorkerHoursDto) => w.sessionCount, align: 'right', width: 14 },
+            { header: t('reports.workerName'), value: (r) => r.worker, width: 22 },
+            { header: t('reports.date'), value: (r) => (r.date ? dayjs(r.date).format('DD.MM.YYYY.') : t('reports.blocksTotalRow')), width: 12 },
+            { header: t('reports.checkIn'), value: (r) => (r.firstCheckIn ? dayjs(r.firstCheckIn).format('HH:mm') : ''), align: 'center', width: 10 },
+            { header: t('reports.checkOut'), value: (r) => (r.lastCheckOut ? dayjs(r.lastCheckOut).format('HH:mm') : ''), align: 'center', width: 10 },
+            { header: `${t('reports.regularHours')} (min)`, value: (r) => r.regularMinutes, align: 'right', width: 12 },
+            { header: `${t('reports.overtimeHours')} (min)`, value: (r) => r.overtimeMinutes, align: 'right', width: 12 },
+            { header: `${t('reports.totalHours')} (min)`, value: (r) => r.totalWorkedMinutes, align: 'right', width: 12 },
+            { header: `${t('reports.effectiveHours')} (min)`, value: (r) => r.effectiveMinutes, align: 'right', width: 12 },
+            { header: `${t('reports.activeHours')} (min)`, value: (r) => r.activeMinutes, align: 'right', width: 14 },
+            { header: `${t('reports.uncoveredHours')} (min)`, value: (r) => r.uncoveredMinutes, align: 'right', width: 12 },
+            { header: t('reports.efficiencyPercent'), value: (r) => r.efficiencyPercent, align: 'right', width: 12 },
           ]}
           options={{
             fileName: `reports-worker-hours-${dayjs().format('YYYY-MM-DD')}`,
@@ -1698,10 +1671,13 @@ function BlocksPerProcessTab() {
         sorter: (a, b) => a.totalSubmitted - b.totalSubmitted,
       },
       {
+        // "Odobreno" alone = Approved-only count = (Approved+Resolved) − Resolved.
         title: t('reports.blocksApproved'),
-        dataIndex: 'approvedCount',
+        key: 'approvedAlone',
         align: 'right',
-        sorter: (a, b) => a.approvedCount - b.approvedCount,
+        sorter: (a, b) =>
+          a.approvedCount - a.resolvedCount - (b.approvedCount - b.resolvedCount),
+        render: (_: unknown, r: BlocksPerProcessBucketDto) => r.approvedCount - r.resolvedCount,
       },
       {
         title: t('reports.blocksResolved'),
@@ -1714,6 +1690,13 @@ function BlocksPerProcessTab() {
         dataIndex: 'rejectedCount',
         align: 'right',
         sorter: (a, b) => a.rejectedCount - b.rejectedCount,
+      },
+      {
+        // "Opravdane (Odob.+Rešeno)" = the justified total = ApprovedCount.
+        title: t('reports.blocksJustified'),
+        dataIndex: 'approvedCount',
+        align: 'right',
+        sorter: (a, b) => a.approvedCount - b.approvedCount,
       },
       {
         title: t('reports.blocksAvgDurationHours'),
@@ -1734,6 +1717,7 @@ function BlocksPerProcessTab() {
         avgHours: Number(r.averageDurationHours.toFixed(2)),
         submitted: r.totalSubmitted,
         approved: r.approvedCount,
+        rejected: r.rejectedCount,
       })),
     [rows],
   );
@@ -1766,14 +1750,30 @@ function BlocksPerProcessTab() {
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
         <TableExportButton
-          onFetchAll={async () => rows}
+          onFetchAll={async () => {
+            // Append the UKUPNO totals row so the export matches the on-screen table.
+            const avgs = rows.map((r) => r.averageDurationHours).filter((v) => v > 0);
+            const totalsRow: BlocksPerProcessBucketDto = {
+              processId: 'totals',
+              processCode: '',
+              processName: t('reports.blocksTotalRow'),
+              sequenceOrder: Number.MAX_SAFE_INTEGER,
+              totalSubmitted: rows.reduce((a, r) => a + r.totalSubmitted, 0),
+              approvedCount: rows.reduce((a, r) => a + r.approvedCount, 0),
+              resolvedCount: rows.reduce((a, r) => a + r.resolvedCount, 0),
+              rejectedCount: rows.reduce((a, r) => a + r.rejectedCount, 0),
+              averageDurationHours: avgs.length ? avgs.reduce((a, b) => a + b, 0) / avgs.length : 0,
+            };
+            return [...rows, totalsRow];
+          }}
           columns={[
             { header: t('reports.processCode'), value: (r: BlocksPerProcessBucketDto) => r.processCode, width: 12 },
             { header: t('reports.processName'), value: (r: BlocksPerProcessBucketDto) => r.processName, width: 24 },
             { header: t('reports.blocksSubmitted'), value: (r: BlocksPerProcessBucketDto) => r.totalSubmitted, align: 'right', width: 14 },
-            { header: t('reports.blocksApproved'), value: (r: BlocksPerProcessBucketDto) => r.approvedCount, align: 'right', width: 14 },
+            { header: t('reports.blocksApproved'), value: (r: BlocksPerProcessBucketDto) => r.approvedCount - r.resolvedCount, align: 'right', width: 14 },
             { header: t('reports.blocksResolved'), value: (r: BlocksPerProcessBucketDto) => r.resolvedCount, align: 'right', width: 14 },
             { header: t('reports.blocksRejected'), value: (r: BlocksPerProcessBucketDto) => r.rejectedCount, align: 'right', width: 14 },
+            { header: t('reports.blocksJustified'), value: (r: BlocksPerProcessBucketDto) => r.approvedCount, align: 'right', width: 18 },
             { header: t('reports.blocksAvgDurationHours'), value: (r: BlocksPerProcessBucketDto) => Number(r.averageDurationHours.toFixed(2)), align: 'right', width: 18 },
           ] satisfies ExportColumn<BlocksPerProcessBucketDto>[]}
           options={{
@@ -1797,38 +1797,72 @@ function BlocksPerProcessTab() {
           pagination={false}
           size="small"
           bordered
+          summary={(pageData) => {
+            const sum = (sel: (r: BlocksPerProcessBucketDto) => number) =>
+              pageData.reduce((acc, r) => acc + sel(r), 0);
+            const avgList = pageData.map((r) => r.averageDurationHours).filter((v) => v > 0);
+            const avg = avgList.length ? avgList.reduce((a, b) => a + b, 0) / avgList.length : 0;
+            return (
+              <Table.Summary.Row>
+                <Table.Summary.Cell index={0}>
+                  <strong>{t('reports.blocksTotalRow')}</strong>
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={1}> </Table.Summary.Cell>
+                <Table.Summary.Cell index={2} align="right">{sum((r) => r.totalSubmitted)}</Table.Summary.Cell>
+                <Table.Summary.Cell index={3} align="right">{sum((r) => r.approvedCount - r.resolvedCount)}</Table.Summary.Cell>
+                <Table.Summary.Cell index={4} align="right">{sum((r) => r.resolvedCount)}</Table.Summary.Cell>
+                <Table.Summary.Cell index={5} align="right">{sum((r) => r.rejectedCount)}</Table.Summary.Cell>
+                <Table.Summary.Cell index={6} align="right">{sum((r) => r.approvedCount)}</Table.Summary.Cell>
+                <Table.Summary.Cell index={7} align="right">{avg > 0 ? avg.toFixed(2) : '—'}</Table.Summary.Cell>
+              </Table.Summary.Row>
+            );
+          }}
         />
       </Card>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <Card size="small" title={t('reports.blocksAvgDurationChart')}>
+        <Card size="small" title={t('reports.blocksChart1Title')}>
           {allZero ? (
             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('reports.noData')} />
           ) : (
             <ResponsiveContainer width="100%" height={320}>
+              {/* Grafikon 1 — dual-axis: justified-block COUNT (left) +
+                  average duration h (right) per process. */}
               <BarChart data={chartData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="process" />
-                <YAxis allowDecimals />
+                <YAxis yAxisId="left" allowDecimals={false} />
+                <YAxis yAxisId="right" orientation="right" allowDecimals tickFormatter={(v: number) => `${v}h`} />
                 <RechartsTooltip
                   {...tooltipStyle}
                   labelFormatter={(label, payload) => {
                     const row = payload?.[0]?.payload as { process: string; processName: string } | undefined;
                     return row ? `${row.process} — ${row.processName}` : String(label);
                   }}
-                  formatter={(value) => [`${Number(value).toFixed(2)} h`, t('reports.blocksAvgDurationHours')]}
+                  formatter={(value, name) =>
+                    name === 'avgHours'
+                      ? [`${Number(value).toFixed(2)} h`, t('reports.blocksAvgDurationHours')]
+                      : [value, t('reports.blocksJustified')]
+                  }
                 />
-                <Bar dataKey="avgHours" fill="#1890ff" maxBarSize={40} />
+                <Legend
+                  formatter={(v) =>
+                    v === 'avgHours' ? t('reports.blocksAvgDurationHours') : t('reports.blocksJustified')
+                  }
+                />
+                <Bar yAxisId="left" dataKey="approved" name="approved" fill={token.colorPrimary} maxBarSize={28} />
+                <Bar yAxisId="right" dataKey="avgHours" name="avgHours" fill={token.colorWarning} maxBarSize={28} />
               </BarChart>
             </ResponsiveContainer>
           )}
         </Card>
 
-        <Card size="small" title={t('reports.blocksSubmittedVsApprovedChart')}>
+        <Card size="small" title={t('reports.blocksChart2Title')}>
           {allZero ? (
             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('reports.noData')} />
           ) : (
             <ResponsiveContainer width="100%" height={320}>
+              {/* Grafikon 2 — Poslato vs Opravdane vs Odbijeno per process. */}
               <BarChart data={chartData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="process" />
@@ -1841,16 +1875,25 @@ function BlocksPerProcessTab() {
                   }}
                   formatter={(value, name) => [
                     value,
-                    name === 'submitted' ? t('reports.blocksSubmitted') : t('reports.blocksApproved'),
+                    name === 'submitted'
+                      ? t('reports.blocksSubmitted')
+                      : name === 'approved'
+                      ? t('reports.blocksJustified')
+                      : t('reports.blocksRejected'),
                   ]}
                 />
                 <Legend
                   formatter={(v) =>
-                    v === 'submitted' ? t('reports.blocksSubmitted') : t('reports.blocksApproved')
+                    v === 'submitted'
+                      ? t('reports.blocksSubmitted')
+                      : v === 'approved'
+                      ? t('reports.blocksJustified')
+                      : t('reports.blocksRejected')
                   }
                 />
-                <Bar dataKey="submitted" fill="#faad14" maxBarSize={28} />
-                <Bar dataKey="approved" fill="#52c41a" maxBarSize={28} />
+                <Bar dataKey="submitted" fill={token.colorPrimary} maxBarSize={24} />
+                <Bar dataKey="approved" fill={token.colorSuccess} maxBarSize={24} />
+                <Bar dataKey="rejected" fill={token.colorError} maxBarSize={24} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -1913,24 +1956,36 @@ function ProductManufacturingTimeTab() {
 
   const rows = useMemo<ProductManufacturingTimeOrderDto[]>(() => data ?? [], [data]);
 
-  // Determine the union of all processes touched across the visible orders,
-  // sorted by the order in which the FIRST order encountered them. This keeps
-  // columns stable across orders even when some orders skip processes.
+  // Težina (T/S/L) filter — narrows by each row's "najzastupljenija težina"
+  // (Excel J24 filter). Drives the detail table, export and the aggregate.
+  const [tezina, setTezina] = useState<string | undefined>(undefined);
+  const filteredRows = useMemo(
+    () => (tezina ? rows.filter((r) => r.topComplexity === tezina) : rows),
+    [rows, tezina],
+  );
+
+  // Union of processes across the visible (filtered) rows, ordered by the
+  // canonical process sequence (so columns always read in workflow order,
+  // not first-seen order which can mis-order across mixed result sets).
   const processColumns = useMemo(() => {
-    const seen = new Map<string, { processId: string; processCode: string; processName: string }>();
-    rows.forEach((order) => {
+    const seen = new Map<
+      string,
+      { processId: string; processCode: string; processName: string; sequenceOrder: number }
+    >();
+    filteredRows.forEach((order) => {
       order.processes.forEach((p) => {
         if (!seen.has(p.processId)) {
           seen.set(p.processId, {
             processId: p.processId,
             processCode: p.processCode,
             processName: p.processName,
+            sequenceOrder: p.sequenceOrder,
           });
         }
       });
     });
-    return Array.from(seen.values());
-  }, [rows]);
+    return Array.from(seen.values()).sort((a, b) => a.sequenceOrder - b.sequenceOrder);
+  }, [filteredRows]);
 
   const orderTypeNameByCode = useMemo(() => {
     const map = new Map<string, string>();
@@ -1967,56 +2022,132 @@ function ProductManufacturingTimeTab() {
         align: 'center',
         render: (v: string | null) => v ?? t('reports.manufacturingNoComplexity'),
       },
+      {
+        title: t('reports.manufacturingComplexityShare'),
+        dataIndex: 'complexityShare',
+        fixed: 'left',
+        width: 130,
+        align: 'center',
+        render: (v: string | null) => v ?? '—',
+      },
     ];
 
-    const dynamic: ColumnsType<ProductManufacturingTimeOrderDto> = processColumns.flatMap((pc, idx) => [
-      {
-        title: `${pc.processCode} — ${t('reports.manufacturingProcessDuration')}`,
-        key: `proc-${pc.processId}-dur`,
-        width: 140,
-        align: 'right' as const,
-        render: (_: unknown, record: ProductManufacturingTimeOrderDto) => {
-          const proc = record.processes.find((p) => p.processId === pc.processId);
-          return proc ? formatSeconds(proc.durationSeconds) : '—';
+    // Grouped "super" columns per process (Excel: "Proces 1/2/…" spanning the
+    // sub-columns). Parent = process code+name; children = Trajanje (+ Do
+    // sledećeg procesa, except for the last process).
+    const dynamic: ColumnsType<ProductManufacturingTimeOrderDto> = processColumns.map((pc, idx) => {
+      const children: ColumnsType<ProductManufacturingTimeOrderDto> = [
+        {
+          title: t('reports.manufacturingProcessDuration'),
+          key: `proc-${pc.processId}-dur`,
+          width: 120,
+          align: 'right' as const,
+          render: (_: unknown, record: ProductManufacturingTimeOrderDto) => {
+            const proc = record.processes.find((p) => p.processId === pc.processId);
+            return proc ? formatSeconds(proc.durationSeconds) : '—';
+          },
         },
-      },
-      ...(idx < processColumns.length - 1
-        ? [
-            {
-              title: t('reports.manufacturingGapToNext'),
-              key: `proc-${pc.processId}-gap`,
-              width: 120,
-              align: 'right' as const,
-              render: (_: unknown, record: ProductManufacturingTimeOrderDto) => {
-                const proc = record.processes.find((p) => p.processId === pc.processId);
-                return proc ? formatSeconds(proc.gapToNextSeconds) : '—';
-              },
-            },
-          ]
-        : []),
-    ]);
+      ];
+      if (idx < processColumns.length - 1) {
+        children.push({
+          title: t('reports.manufacturingGapToNext'),
+          key: `proc-${pc.processId}-gap`,
+          width: 130,
+          align: 'right' as const,
+          render: (_: unknown, record: ProductManufacturingTimeOrderDto) => {
+            const proc = record.processes.find((p) => p.processId === pc.processId);
+            return proc ? formatSeconds(proc.gapToNextSeconds) : '—';
+          },
+        });
+      }
+      return { title: `${pc.processCode} — ${pc.processName}`, children };
+    });
 
-    const totals: ColumnsType<ProductManufacturingTimeOrderDto> = [
-      {
-        title: t('reports.manufacturingTotalWithoutGaps'),
-        dataIndex: 'totalWithoutGapsSeconds',
-        width: 160,
-        align: 'right',
-        sorter: (a, b) => a.totalWithoutGapsSeconds - b.totalWithoutGapsSeconds,
-        render: (v: number) => formatSeconds(v),
-      },
-      {
-        title: t('reports.manufacturingTotalWithGaps'),
-        dataIndex: 'totalWithGapsSeconds',
-        width: 160,
-        align: 'right',
-        sorter: (a, b) => a.totalWithGapsSeconds - b.totalWithGapsSeconds,
-        render: (v: number) => formatSeconds(v),
-      },
-    ];
-
-    return [...base, ...dynamic, ...totals];
+    // Per-row Total columns intentionally omitted — the Excel keeps Total
+    // only in the aggregate "Prosek" table below (Sale/Bojan 29.05.2026).
+    return [...base, ...dynamic];
   }, [processColumns, orderTypeNameByCode, t]);
+
+  // Aggregate "Prosek" table (Excel R26-28): average each process column's
+  // duration + gap-to-next across the filtered rows that include it. Two rows:
+  // "sa vremenom između procesa" (durations + gaps) and "bez" (durations only).
+  type AggRow = {
+    key: 'with' | 'without';
+    label: string;
+    dur: Record<string, number>;
+    gap: Record<string, number | null>;
+    total: number;
+  };
+
+  const aggregateRows = useMemo<AggRow[]>(() => {
+    if (filteredRows.length === 0) return [];
+    const avg = (arr: number[]) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0);
+    const dur: Record<string, number> = {};
+    const gapWith: Record<string, number | null> = {};
+    const gapWithout: Record<string, number | null> = {};
+    let totalWith = 0;
+    let totalWithout = 0;
+    processColumns.forEach((pc, idx) => {
+      const durs: number[] = [];
+      const gaps: number[] = [];
+      filteredRows.forEach((r) => {
+        const p = r.processes.find((x) => x.processId === pc.processId);
+        if (p) {
+          durs.push(p.durationSeconds);
+          gaps.push(p.gapToNextSeconds);
+        }
+      });
+      const avgDur = Math.round(avg(durs));
+      const avgGap = idx < processColumns.length - 1 ? Math.round(avg(gaps)) : 0;
+      dur[pc.processId] = avgDur;
+      gapWith[pc.processId] = idx < processColumns.length - 1 ? avgGap : null;
+      gapWithout[pc.processId] = null;
+      totalWith += avgDur + avgGap;
+      totalWithout += avgDur;
+    });
+    return [
+      { key: 'with', label: t('reports.manufacturingAvgWithGaps'), dur, gap: gapWith, total: totalWith },
+      { key: 'without', label: t('reports.manufacturingAvgWithoutGaps'), dur, gap: gapWithout, total: totalWithout },
+    ];
+  }, [filteredRows, processColumns, t]);
+
+  const aggregateColumns: ColumnsType<AggRow> = useMemo(() => {
+    const cols: ColumnsType<AggRow> = [
+      { title: t('reports.manufacturingAggregateTitle'), dataIndex: 'label', fixed: 'left', width: 280 },
+    ];
+    processColumns.forEach((pc, idx) => {
+      const children: ColumnsType<AggRow> = [
+        {
+          title: t('reports.manufacturingProcessDuration'),
+          key: `agg-dur-${pc.processId}`,
+          align: 'right',
+          width: 120,
+          render: (_: unknown, row: AggRow) => formatSeconds(row.dur[pc.processId] ?? 0),
+        },
+      ];
+      if (idx < processColumns.length - 1) {
+        children.push({
+          title: t('reports.manufacturingGapToNext'),
+          key: `agg-gap-${pc.processId}`,
+          align: 'right',
+          width: 130,
+          render: (_: unknown, row: AggRow) => {
+            const g = row.gap[pc.processId];
+            return g == null ? '—' : formatSeconds(g);
+          },
+        });
+      }
+      cols.push({ title: `${pc.processCode} — ${pc.processName}`, children });
+    });
+    cols.push({
+      title: t('reports.manufacturingTotal'),
+      key: 'agg-total',
+      align: 'right',
+      width: 160,
+      render: (_: unknown, row: AggRow) => formatSeconds(row.total),
+    });
+    return cols;
+  }, [processColumns, t]);
 
   return (
     <>
@@ -2049,16 +2180,29 @@ function ProductManufacturingTimeTab() {
             value: c.id,
           }))}
         />
+        <Select
+          placeholder={t('reports.allComplexities')}
+          value={tezina}
+          onChange={setTezina}
+          allowClear
+          style={{ width: 160 }}
+          options={[
+            { label: t('reports.complexityT'), value: 'T' },
+            { label: t('reports.complexityS'), value: 'S' },
+            { label: t('reports.complexityL'), value: 'L' },
+          ]}
+        />
       </Space>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
         <TableExportButton
-          onFetchAll={async () => rows}
+          onFetchAll={async () => filteredRows}
           columns={[
             { header: t('reports.orderNumber'), value: (r: ProductManufacturingTimeOrderDto) => r.orderNumber, width: 16 },
             { header: t('reports.orderType'), value: (r: ProductManufacturingTimeOrderDto) => orderTypeNameByCode.get(r.orderType.toLowerCase()) ?? r.orderType, width: 14 },
             { header: t('reports.productCategory'), value: (r: ProductManufacturingTimeOrderDto) => r.productCategoryName, width: 22 },
             { header: t('reports.manufacturingTopComplexity'), value: (r: ProductManufacturingTimeOrderDto) => r.topComplexity ?? '—', width: 10 },
+            { header: t('reports.manufacturingComplexityShare'), value: (r: ProductManufacturingTimeOrderDto) => r.complexityShare ?? '—', width: 16 },
             ...processColumns.flatMap((pc, idx) => {
               const dur: ExportColumn<ProductManufacturingTimeOrderDto> = {
                 header: `${pc.processCode} — ${t('reports.manufacturingProcessDuration')}`,
@@ -2081,8 +2225,6 @@ function ProductManufacturingTimeTab() {
               };
               return [dur, gap];
             }),
-            { header: t('reports.manufacturingTotalWithoutGaps'), value: (r: ProductManufacturingTimeOrderDto) => formatSeconds(r.totalWithoutGapsSeconds), align: 'right', width: 18 },
-            { header: t('reports.manufacturingTotalWithGaps'), value: (r: ProductManufacturingTimeOrderDto) => formatSeconds(r.totalWithGapsSeconds), align: 'right', width: 18 },
           ] satisfies ExportColumn<ProductManufacturingTimeOrderDto>[]}
           options={{
             fileName: `reports-product-manufacturing-time-${dayjs().format('YYYY-MM-DD')}`,
@@ -2105,8 +2247,8 @@ function ProductManufacturingTimeTab() {
       >
         <Table
           columns={columns}
-          dataSource={rows}
-          rowKey="orderId"
+          dataSource={filteredRows}
+          rowKey="orderItemId"
           loading={isLoading}
           pagination={{
             defaultPageSize: 20,
@@ -2119,64 +2261,124 @@ function ProductManufacturingTimeTab() {
         />
       </Card>
 
-      {/* Bar chart goes BELOW the table to match the pattern from Vremena
-          po procesu (table on top, charts beneath). Sorted by total
-          with-gaps duration desc; top 20. */}
-      {(() => {
-        const chartData = rows
-          .slice()
-          .sort((a, b) => b.totalWithGapsSeconds - a.totalWithGapsSeconds)
-          .slice(0, 20)
-          .map((r) => ({
-            order: r.orderNumber,
-            withoutGaps: Math.round(r.totalWithoutGapsSeconds / 60),
-            withGaps: Math.round(r.totalWithGapsSeconds / 60),
-          }));
+      {aggregateRows.length > 0 && (
+        <Card
+          size="small"
+          title={t('reports.manufacturingAggregateTitle')}
+          style={{ marginBottom: 16 }}
+          extra={
+            <TableExportButton
+              onFetchAll={async () => aggregateRows}
+              columns={[
+                { header: t('reports.manufacturingAggregateTitle'), value: (r: AggRow) => r.label, width: 30 },
+                ...processColumns.flatMap((pc, idx) => {
+                  const dur: ExportColumn<AggRow> = {
+                    header: `${pc.processCode} — ${t('reports.manufacturingProcessDuration')}`,
+                    value: (r: AggRow) => formatSeconds(r.dur[pc.processId] ?? 0),
+                    align: 'right',
+                    width: 16,
+                  };
+                  if (idx === processColumns.length - 1) return [dur];
+                  const gap: ExportColumn<AggRow> = {
+                    header: `${pc.processCode} — ${t('reports.manufacturingGapToNext')}`,
+                    value: (r: AggRow) => {
+                      const g = r.gap[pc.processId];
+                      return g == null ? '' : formatSeconds(g);
+                    },
+                    align: 'right',
+                    width: 16,
+                  };
+                  return [dur, gap];
+                }),
+                { header: t('reports.manufacturingTotal'), value: (r: AggRow) => formatSeconds(r.total), align: 'right', width: 18 },
+              ] satisfies ExportColumn<AggRow>[]}
+              options={{
+                fileName: `reports-product-manufacturing-aggregate-${dayjs().format('YYYY-MM-DD')}`,
+                title: `${t('common:appName')} — ${t('reports.manufacturingAggregateTitle')}`,
+                sheetName: t('reports.manufacturingAggregateTitle'),
+              }}
+            />
+          }
+        >
+          <Table
+            columns={aggregateColumns}
+            dataSource={aggregateRows}
+            rowKey="key"
+            pagination={false}
+            scroll={{ x: 'max-content' }}
+            size="small"
+            bordered
+          />
+        </Card>
+      )}
 
-        if (chartData.length === 0) return null;
-
-        return (
-          <Card size="small" title={t('reports.manufacturingChartTitle')}>
-            <ResponsiveContainer width="100%" height={Math.max(280, chartData.length * 28 + 80)}>
-              <BarChart
-                data={chartData}
-                layout="vertical"
-                margin={{ top: 8, right: 24, left: 16, bottom: 8 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" tickFormatter={(v: number) => `${v} min`} />
-                <YAxis type="category" dataKey="order" width={120} />
-                <RechartsTooltip
-                  contentStyle={{
-                    backgroundColor: token.colorBgElevated,
-                    border: `1px solid ${token.colorBorderSecondary}`,
-                    borderRadius: token.borderRadiusLG,
-                    color: token.colorText,
-                  }}
-                  labelStyle={{ color: token.colorText, fontWeight: 600 }}
-                  itemStyle={{ color: token.colorText }}
-                  cursor={{ fill: token.colorFillTertiary }}
-                  formatter={(value, name) => [
-                    formatSeconds(Number(value) * 60),
-                    name === 'withoutGaps'
-                      ? t('reports.manufacturingTotalWithoutGaps')
-                      : t('reports.manufacturingTotalWithGaps'),
-                  ]}
-                />
-                <Legend
-                  formatter={(v) =>
-                    v === 'withoutGaps'
-                      ? t('reports.manufacturingTotalWithoutGaps')
-                      : t('reports.manufacturingTotalWithGaps')
-                  }
-                />
-                <Bar dataKey="withoutGaps" fill="#52c41a" maxBarSize={18} />
-                <Bar dataKey="withGaps" fill="#faad14" maxBarSize={18} />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        );
-      })()}
+      {/* Composition chart (Excel chart1): the two aggregate rows as
+          horizontal stacked bars — each process is a colored duration segment
+          and the inter-process gaps are neutral spacers. Visualises how the
+          average manufacturing time breaks down by process. */}
+      {aggregateRows.length > 0 &&
+        processColumns.length > 0 &&
+        (() => {
+          // Per-process segment palette — a semantic process palette (allowed
+          // by the no-hardcoded-color rule, same exception as processStatusColors).
+          const processPalette = [
+            '#1677ff', '#52c41a', '#faad14', '#eb2f96', '#13c2c2',
+            '#722ed1', '#fa8c16', '#2f54eb', '#a0d911', '#f5222d',
+            '#531dab', '#c41d7f', '#08979c', '#d48806', '#7cb305',
+          ];
+          const chartData = aggregateRows.map((row) => {
+            const entry: Record<string, number | string> = { label: row.label };
+            processColumns.forEach((pc) => {
+              entry[`dur-${pc.processId}`] = row.dur[pc.processId] ?? 0;
+              entry[`gap-${pc.processId}`] = row.gap[pc.processId] ?? 0;
+            });
+            return entry;
+          });
+          return (
+            <Card size="small" title={t('reports.manufacturingChartTitle')}>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 24, left: 16, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" tickFormatter={(v: number) => formatSeconds(v)} />
+                  <YAxis type="category" dataKey="label" width={300} />
+                  <RechartsTooltip
+                    contentStyle={{
+                      backgroundColor: token.colorBgElevated,
+                      border: `1px solid ${token.colorBorderSecondary}`,
+                      borderRadius: token.borderRadiusLG,
+                      color: token.colorText,
+                    }}
+                    labelStyle={{ color: token.colorText, fontWeight: 600 }}
+                    itemStyle={{ color: token.colorText }}
+                    cursor={{ fill: token.colorFillTertiary }}
+                    shared={false}
+                    formatter={(value, name) => [formatSeconds(Number(value)), String(name)]}
+                  />
+                  <Legend />
+                  {processColumns.flatMap((pc, idx) => [
+                    <Bar
+                      key={`dur-${pc.processId}`}
+                      dataKey={`dur-${pc.processId}`}
+                      name={`${pc.processCode} — ${pc.processName}`}
+                      stackId="comp"
+                      fill={processPalette[idx % processPalette.length]}
+                      maxBarSize={48}
+                    />,
+                    <Bar
+                      key={`gap-${pc.processId}`}
+                      dataKey={`gap-${pc.processId}`}
+                      name={t('reports.manufacturingGapToNext')}
+                      stackId="comp"
+                      fill={token.colorFillSecondary}
+                      legendType="none"
+                      maxBarSize={48}
+                    />,
+                  ])}
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          );
+        })()}
     </>
   );
 }
@@ -2233,56 +2435,43 @@ function WorkEfficiencyTab() {
     return `${h}h ${String(min).padStart(2, '0')}m`;
   };
 
-  // Color thresholds per Bojan: ≥80 green, 50–80 yellow, <50 red.
+  // Color thresholds per Bojan (R79): ≥80 green, 60–79 yellow, <60 red.
   const effColor = (pct: number): string => {
     if (pct >= 80) return token.colorSuccessBg;
-    if (pct >= 50) return token.colorWarningBg;
+    if (pct >= 60) return token.colorWarningBg;
     return token.colorErrorBg;
   };
   const effTextColor = (pct: number): string => {
     if (pct >= 80) return token.colorSuccessText;
-    if (pct >= 50) return token.colorWarningText;
+    if (pct >= 60) return token.colorWarningText;
     return token.colorErrorText;
   };
+  // Status per R79: ≥80 Odlično, 60–79 Prihvatljivo, 40–59 Ispod norme, <40 Neprihvatljivo.
+  const statusLabel = (pct: number): string =>
+    pct >= 80
+      ? t('reports.statusExcellent')
+      : pct >= 60
+      ? t('reports.statusAcceptable')
+      : pct >= 40
+      ? t('reports.statusBelowNorm')
+      : t('reports.statusUnacceptable');
 
+  // Per-WORKER aggregate (Excel Table 2, Sale/Bojan 29.05.2026). Daily detail
+  // lives in the "Sati radnika" tab.
   const columns: ColumnsType<WorkEfficiencyRowDto> = useMemo(
     () => [
-      {
-        title: t('reports.date'),
-        dataIndex: 'date',
-        width: 130,
-        sorter: (a, b) => a.date.localeCompare(b.date),
-        defaultSortOrder: 'descend',
-        render: (d: string) => dayjs(d).format('DD.MM.YYYY'),
-      },
-      { title: t('reports.workerName'), dataIndex: 'fullName', sorter: (a, b) => a.fullName.localeCompare(b.fullName) },
-      {
-        title: t('reports.efficiencyWorked'),
-        dataIndex: 'workedMinutes',
-        align: 'right',
-        sorter: (a, b) => a.workedMinutes - b.workedMinutes,
-        render: (v: number) => formatMinutesAsHM(v),
-      },
-      {
-        title: t('reports.efficiencyActive'),
-        dataIndex: 'activeOnProcessesMinutes',
-        align: 'right',
-        sorter: (a, b) => a.activeOnProcessesMinutes - b.activeOnProcessesMinutes,
-        render: (v: number) => formatMinutesAsHM(v),
-      },
-      {
-        title: t('reports.efficiencyBreaks'),
-        dataIndex: 'breakMinutes',
-        align: 'right',
-        sorter: (a, b) => a.breakMinutes - b.breakMinutes,
-        render: (v: number) => formatMinutesAsHM(v),
-      },
+      { title: t('reports.workerName'), dataIndex: 'fullName', fixed: 'left', width: 180, sorter: (a, b) => a.fullName.localeCompare(b.fullName) },
+      { title: t('reports.loggedHours'), dataIndex: 'loggedMinutes', align: 'right', sorter: (a, b) => a.loggedMinutes - b.loggedMinutes, render: (v: number) => formatMinutesAsHM(v) },
+      { title: t('reports.effectiveHours'), dataIndex: 'effectiveMinutes', align: 'right', sorter: (a, b) => a.effectiveMinutes - b.effectiveMinutes, render: (v: number) => formatMinutesAsHM(v) },
+      { title: t('reports.activeHours'), dataIndex: 'activeOnProcessesMinutes', align: 'right', sorter: (a, b) => a.activeOnProcessesMinutes - b.activeOnProcessesMinutes, render: (v: number) => formatMinutesAsHM(v) },
+      { title: t('reports.uncoveredHours'), dataIndex: 'uncoveredMinutes', align: 'right', sorter: (a, b) => a.uncoveredMinutes - b.uncoveredMinutes, render: (v: number) => formatMinutesAsHM(v) },
       {
         title: t('reports.efficiencyPercent'),
         dataIndex: 'efficiencyPercent',
         align: 'right',
-        width: 140,
+        width: 130,
         sorter: (a, b) => a.efficiencyPercent - b.efficiencyPercent,
+        defaultSortOrder: 'descend',
         render: (v: number) => (
           <div
             style={{
@@ -2298,6 +2487,7 @@ function WorkEfficiencyTab() {
           </div>
         ),
       },
+      { title: t('reports.efficiencyStatus'), key: 'status', width: 130, render: (_: unknown, r: WorkEfficiencyRowDto) => statusLabel(r.efficiencyPercent) },
     ],
     [t, token],
   );
@@ -2331,12 +2521,13 @@ function WorkEfficiencyTab() {
         <TableExportButton
           onFetchAll={async () => rows}
           columns={[
-            { header: t('reports.date'), value: (r: WorkEfficiencyRowDto) => dayjs(r.date).format('DD.MM.YYYY.'), width: 14 },
             { header: t('reports.workerName'), value: (r: WorkEfficiencyRowDto) => r.fullName, width: 22 },
-            { header: `${t('reports.efficiencyWorked')} (min)`, value: (r: WorkEfficiencyRowDto) => r.workedMinutes, align: 'right', width: 18 },
-            { header: `${t('reports.efficiencyActive')} (min)`, value: (r: WorkEfficiencyRowDto) => r.activeOnProcessesMinutes, align: 'right', width: 18 },
-            { header: `${t('reports.efficiencyBreaks')} (min)`, value: (r: WorkEfficiencyRowDto) => r.breakMinutes, align: 'right', width: 14 },
-            { header: t('reports.efficiencyPercent'), value: (r: WorkEfficiencyRowDto) => r.efficiencyPercent, align: 'right', width: 14 },
+            { header: `${t('reports.loggedHours')} (min)`, value: (r: WorkEfficiencyRowDto) => r.loggedMinutes, align: 'right', width: 16 },
+            { header: `${t('reports.effectiveHours')} (min)`, value: (r: WorkEfficiencyRowDto) => r.effectiveMinutes, align: 'right', width: 16 },
+            { header: `${t('reports.activeHours')} (min)`, value: (r: WorkEfficiencyRowDto) => r.activeOnProcessesMinutes, align: 'right', width: 16 },
+            { header: `${t('reports.uncoveredHours')} (min)`, value: (r: WorkEfficiencyRowDto) => r.uncoveredMinutes, align: 'right', width: 14 },
+            { header: t('reports.efficiencyPercent'), value: (r: WorkEfficiencyRowDto) => r.efficiencyPercent, align: 'right', width: 12 },
+            { header: t('reports.efficiencyStatus'), value: (r: WorkEfficiencyRowDto) => statusLabel(r.efficiencyPercent), width: 16 },
           ] satisfies ExportColumn<WorkEfficiencyRowDto>[]}
           options={{
             fileName: `reports-work-efficiency-${dayjs().format('YYYY-MM-DD')}`,
@@ -2354,7 +2545,7 @@ function WorkEfficiencyTab() {
       <Table
         columns={columns}
         dataSource={rows}
-        rowKey={(r) => `${r.userId}-${r.date}`}
+        rowKey="userId"
         loading={isLoading}
         pagination={{
           defaultPageSize: 20,
@@ -2366,63 +2557,79 @@ function WorkEfficiencyTab() {
         style={{ marginBottom: 16 }}
       />
 
-      {/* Bar chart goes BELOW the table to match the pattern from Vremena
-          po procesu. Avg efficiency % per worker over the filtered date
-          range; bars colored using the same green/yellow/red thresholds
-          as the table cells. */}
-      {(() => {
-        const byUser = new Map<string, { fullName: string; sumPct: number; count: number }>();
-        for (const r of rows) {
-          const cur = byUser.get(r.userId) ?? { fullName: r.fullName, sumPct: 0, count: 0 };
-          cur.sumPct += r.efficiencyPercent;
-          cur.count += 1;
-          byUser.set(r.userId, cur);
-        }
-        const chartData = Array.from(byUser.values())
-          .map((v) => ({
-            fullName: v.fullName,
-            avgEff: Number((v.sumPct / Math.max(1, v.count)).toFixed(1)),
-          }))
-          .sort((a, b) => b.avgEff - a.avgEff);
+      {/* Two charts per Excel (Sale/Bojan 29.05.2026), below the table:
+          Grafikon 3 = stacked Aktivno vs Nepokriveno (h) per worker;
+          Grafikon 4 = Efikasnost (%) per worker, colored by threshold. */}
+      {rows.length > 0 &&
+        (() => {
+          const distData = rows.map((r) => ({
+            fullName: r.fullName,
+            active: Number((r.activeOnProcessesMinutes / 60).toFixed(2)),
+            uncovered: Number((r.uncoveredMinutes / 60).toFixed(2)),
+          }));
+          const effData = rows
+            .map((r) => ({ fullName: r.fullName, eff: r.efficiencyPercent }))
+            .slice()
+            .sort((a, b) => b.eff - a.eff);
+          const barColor = (pct: number) =>
+            pct >= 80 ? token.colorSuccess : pct >= 60 ? token.colorWarning : token.colorError;
+          const chartHeight = Math.max(280, rows.length * 36 + 80);
+          const tooltipStyle = {
+            contentStyle: {
+              backgroundColor: token.colorBgElevated,
+              border: `1px solid ${token.colorBorderSecondary}`,
+              borderRadius: token.borderRadiusLG,
+              color: token.colorText,
+            },
+            labelStyle: { color: token.colorText, fontWeight: 600 },
+            itemStyle: { color: token.colorText },
+            cursor: { fill: token.colorFillTertiary },
+          };
+          return (
+            <>
+              <Card size="small" title={t('reports.chartWorkDistribution')} style={{ marginBottom: 16 }}>
+                <ResponsiveContainer width="100%" height={chartHeight}>
+                  <BarChart data={distData} layout="vertical" margin={{ top: 8, right: 24, left: 16, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" tickFormatter={(v: number) => `${v}h`} />
+                    <YAxis type="category" dataKey="fullName" width={140} />
+                    <RechartsTooltip
+                      {...tooltipStyle}
+                      formatter={(value, name) => [
+                        `${Number(value).toFixed(2)}h`,
+                        name === 'active' ? t('reports.activeHours') : t('reports.uncoveredHours'),
+                      ]}
+                    />
+                    <Legend
+                      formatter={(v) => (v === 'active' ? t('reports.activeHours') : t('reports.uncoveredHours'))}
+                    />
+                    <Bar dataKey="active" name="active" stackId="dist" fill={token.colorSuccess} maxBarSize={24} />
+                    <Bar dataKey="uncovered" name="uncovered" stackId="dist" fill={token.colorWarning} maxBarSize={24} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Card>
 
-        if (chartData.length === 0) return null;
-
-        const barColor = (pct: number) =>
-          pct >= 80 ? token.colorSuccess : pct >= 50 ? token.colorWarning : token.colorError;
-
-        return (
-          <Card size="small" title={t('reports.efficiencyChartTitle')}>
-            <ResponsiveContainer width="100%" height={Math.max(280, chartData.length * 32 + 80)}>
-              <BarChart
-                data={chartData}
-                layout="vertical"
-                margin={{ top: 8, right: 24, left: 16, bottom: 8 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" domain={[0, 100]} tickFormatter={(v: number) => `${v}%`} />
-                <YAxis type="category" dataKey="fullName" width={140} />
-                <RechartsTooltip
-                  contentStyle={{
-                    backgroundColor: token.colorBgElevated,
-                    border: `1px solid ${token.colorBorderSecondary}`,
-                    borderRadius: token.borderRadiusLG,
-                    color: token.colorText,
-                  }}
-                  labelStyle={{ color: token.colorText, fontWeight: 600 }}
-                  itemStyle={{ color: token.colorText }}
-                  cursor={{ fill: token.colorFillTertiary }}
-                  formatter={(value) => [`${Number(value).toFixed(1)}%`, t('reports.efficiencyPercent')]}
-                />
-                <Bar dataKey="avgEff" maxBarSize={22}>
-                  {chartData.map((d) => (
-                    <Cell key={d.fullName} fill={barColor(d.avgEff)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        );
-      })()}
+              <Card size="small" title={t('reports.efficiencyChartTitle')}>
+                <ResponsiveContainer width="100%" height={chartHeight}>
+                  <BarChart data={effData} layout="vertical" margin={{ top: 8, right: 24, left: 16, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" domain={[0, 100]} tickFormatter={(v: number) => `${v}%`} />
+                    <YAxis type="category" dataKey="fullName" width={140} />
+                    <RechartsTooltip
+                      {...tooltipStyle}
+                      formatter={(value) => [`${Number(value).toFixed(1)}%`, t('reports.efficiencyPercent')]}
+                    />
+                    <Bar dataKey="eff" maxBarSize={24}>
+                      {effData.map((d) => (
+                        <Cell key={d.fullName} fill={barColor(d.eff)} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </Card>
+            </>
+          );
+        })()}
     </>
   );
 }

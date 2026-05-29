@@ -301,9 +301,10 @@ sprovodi traženu akciju.
 
 ### 3.7 Vremena procesa (izveštaji)
 
-Stranica `Vremena procesa` sadrži tri taba: **Vremena po procesu**,
-**Praćenje vremena** i **Sati radnika**. Svi podaci se računaju na
-osnovu završenih procesa u izabranom periodu.
+Stranica `Vremena procesa` sadrži šest tabova: **Vremena po procesu**,
+**Praćenje vremena**, **Sati radnika**, **Blokade po procesu**,
+**Trajanje izrade proizvoda** i **Efikasnost radnog vremena**. Svi
+podaci se računaju na osnovu podataka u izabranom periodu.
 
 #### Tab "Vremena po procesu"
 
@@ -390,17 +391,62 @@ kao `DD.MM.YYYY HH:mm`. Isključeni redovi se preskaču.
 
 #### Tab "Sati radnika"
 
-Kumulativni rad po radniku za izabran period. Kolone:
+Rad po radniku za izabran period — prikazuju se **samo proizvodni
+radnici** (administratori i rukovodstvo se ne prikazuju). Kolone:
 
 - **Radnik** — ime i prezime
-- **Ukupno sati** — sumarno radno vreme (na osnovu work sessions iz
-  tableta)
-- **Br. sesija** — koliko puta se radnik prijavljivao
-- **Prosek po danu** — prosečno radno vreme po radnom danu
+- **Redovni sati** — radno vreme do trajanja smene
+- **Prekovremeni** — radno vreme preko trajanja smene
+- **Ukupno** — ukupno prijavljeno radno vreme (zbir svih prijava u danu;
+  zaboravljena odjava se automatski ograničava na trajanje smene +
+  dozvoljeno prekovremeno)
+- **Efektivno** — Ukupno minus propisana pauza (iz podešavanja smene)
+- **Aktivno na procesima** — vreme koje je radnik stvarno radio na
+  procesima (paralelan rad na više procesa se računa jednom)
+- **Nepokriveno** — Efektivno minus Aktivno (vreme koje sistem ne vidi —
+  npr. priprema, čišćenje, pomoć)
+- **Efikasnost (%)** — Aktivno / Efektivno × 100 (obojeno)
 
-Klik na strelicu otvara dnevni breakdown za tog radnika.
+Klik na strelicu ▸ otvara dnevni prikaz za tog radnika: Datum, Prijava,
+Odjava i iste kolone po danu.
 
-Filter po radniku, datum opseg.
+Filter po radniku, datum opseg. Izvoz u XLSX/CSV daje sve dnevne redove,
+a zatim red "UKUPNO" po radniku.
+
+#### Tab "Blokade po procesu"
+
+Zbirni pregled svih zahteva za blokadu po procesu za izabran period.
+Kolone: Proces, Podneto, Odobreno (odobrene + rešene), Rešeno, Odbijeno,
+i **Prosečno trajanje** blokade u **radnim satima** — računaju se samo
+aktivni sati smene, noć i vikend se ne uračunavaju. Blokade rešene u
+potpunosti van radnog vremena (0 radnih sati) ne ulaze u prosek.
+
+Dva grafikona: prosečno trajanje po procesu i broj podnetih / odobrenih /
+odbijenih po procesu. Filter: datum opseg. Izvoz u XLSX/CSV.
+
+#### Tab "Trajanje izrade proizvoda"
+
+Za svaku završenu narudžbinu, jedan red po stavci, sa vremenom po procesu
+i pauzom između procesa. **Vreme procesa je stvarno aktivno vreme rada
+operatera** — ne ceo period od početka do kraja procesa. Pored toga:
+najzastupljenija težina i zastupljenost težina po stavci.
+
+Ispod tabele je tabela proseka (sa i bez vremena između procesa) i
+grafikon. Filteri: datum, težina, kategorija proizvoda. Izvoz u XLSX/CSV.
+
+#### Tab "Efikasnost radnog vremena"
+
+Jedan red po radniku za izabran period (**samo proizvodni radnici**).
+Kolone: Radnik, Prijavljeno (ukupno), Efektivno, Aktivno na procesima,
+Nepokriveno, Efikasnost (%) i Status.
+
+**Status** prema efikasnosti: ≥80% Odlično, 60–79% Prihvatljivo, 40–59%
+Ispod norme, <40% Neprihvatljivo (boje: zeleno ≥80%, žuto 60–79%, crveno
+<60%).
+
+Dva grafikona: "Raspodela radnog vremena po radniku" (aktivno +
+nepokriveno) i "Efikasnost po radniku (%)". Filter po radniku, datum
+opseg. Izvoz u XLSX/CSV.
 
 ### 3.8 Administracija
 

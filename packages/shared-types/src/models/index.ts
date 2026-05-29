@@ -656,6 +656,8 @@ export interface ProductManufacturingProcessDto {
   processId: string;
   processCode: string;
   processName: string;
+  /** Canonical process sequence — used to order columns consistently. */
+  sequenceOrder: number;
   startedAt: string | null;
   completedAt: string | null;
   /** Duration of THIS process slot, in seconds. */
@@ -666,11 +668,15 @@ export interface ProductManufacturingProcessDto {
 
 export interface ProductManufacturingTimeOrderDto {
   orderId: string;
+  /** One row per order ITEM — this is the unique row key. */
+  orderItemId: string;
   orderNumber: string;
   orderType: string;
   productCategoryName: string;
-  /** "T" / "S" / "L" — null if order had no items with complexity set. */
+  /** "T" / "S" / "L" — null if the item had no processes with complexity set. */
   topComplexity: string | null;
+  /** "Zastupljenost težina" — e.g. "60% / 20% / 20%". Null if no complexity set. */
+  complexityShare: string | null;
   processes: ProductManufacturingProcessDto[];
   /** Sum of all durations + positive inter-process gaps. Seconds. */
   totalWithGapsSeconds: number;
@@ -685,12 +691,13 @@ export interface ProductManufacturingTimeReportDto {
 export interface WorkEfficiencyRowDto {
   userId: string;
   fullName: string;
-  /** YYYY-MM-DD */
-  date: string;
-  workedMinutes: number;
+  /** Σ TotalWorked (Prijavljeno / ukupno). */
+  loggedMinutes: number;
+  /** Σ Effective (Efektivno). */
+  effectiveMinutes: number;
   activeOnProcessesMinutes: number;
-  breakMinutes: number;
-  /** 0–100 */
+  uncoveredMinutes: number;
+  /** 0–100, weighted (ΣActive / ΣEffective). */
   efficiencyPercent: number;
 }
 
@@ -716,14 +723,29 @@ export type ReportGranularity = 'Week' | 'Month';
 
 export interface WorkerDailyBreakdownDto {
   date: string;
-  totalMinutes: number;
+  firstCheckIn: string | null;
+  lastCheckOut: string | null;
+  regularMinutes: number;
+  overtimeMinutes: number;
+  totalWorkedMinutes: number;
+  effectiveMinutes: number;
+  activeMinutes: number;
+  uncoveredMinutes: number;
+  /** 0–100 */
+  efficiencyPercent: number;
   sessionCount: number;
 }
 
 export interface WorkerHoursDto {
   userId: string;
   fullName: string;
-  totalMinutes: number;
-  sessionCount: number;
+  regularMinutes: number;
+  overtimeMinutes: number;
+  totalWorkedMinutes: number;
+  effectiveMinutes: number;
+  activeMinutes: number;
+  uncoveredMinutes: number;
+  /** 0–100, weighted (ΣActive / ΣEffective). */
+  efficiencyPercent: number;
   dailyBreakdown: WorkerDailyBreakdownDto[];
 }
