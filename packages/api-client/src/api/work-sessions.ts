@@ -26,4 +26,11 @@ export const workSessionsApi = {
   checkOut(data: CheckOutRequest) {
     return apiClient.post<WorkSessionDto>('/work-sessions/check-out', data);
   },
+
+  /** Tablet fires this when its auto-logout timer expires (Bojan 30.05.2026).
+   *  Closes the worker's open session and marks WasAutoClosed=true so the
+   *  coordinator gets the warning and the tablet shows the re-login flow. */
+  autoCheckOut(data: CheckOutRequest) {
+    return apiClient.post<WorkSessionDto>('/work-sessions/auto-checkout', data);
+  },
 };

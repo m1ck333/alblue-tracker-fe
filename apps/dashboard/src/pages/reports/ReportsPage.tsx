@@ -1510,6 +1510,12 @@ function WorkerHoursTab() {
       { title: t('reports.activeHours'), dataIndex: 'activeMinutes', align: 'right', render: (v: number) => formatMinutesAsHM(v) },
       { title: t('reports.uncoveredHours'), dataIndex: 'uncoveredMinutes', align: 'right', render: (v: number) => formatMinutesAsHM(v) },
       { title: t('reports.efficiencyPercent'), dataIndex: 'efficiencyPercent', align: 'right', render: (v: number) => effCell(v) },
+      {
+        title: t('reports.autoLogoutApplied'),
+        dataIndex: 'autoLogoutApplied',
+        align: 'center',
+        render: (v: boolean) => (v ? <span style={{ color: token.colorWarning }}>{t('reports.autoLogoutAppliedYes')}</span> : t('reports.autoLogoutAppliedNo')),
+      },
     ],
     [t, token],
   );
@@ -1559,6 +1565,7 @@ function WorkerHoursTab() {
                 uncoveredMinutes: w.uncoveredMinutes,
                 efficiencyPercent: w.efficiencyPercent,
                 sessionCount: 0,
+                autoLogoutApplied: false,
               },
             ])
           }
@@ -1574,6 +1581,7 @@ function WorkerHoursTab() {
             { header: `${t('reports.activeHours')} (min)`, value: (r) => r.activeMinutes, align: 'right', width: 14 },
             { header: `${t('reports.uncoveredHours')} (min)`, value: (r) => r.uncoveredMinutes, align: 'right', width: 12 },
             { header: t('reports.efficiencyPercent'), value: (r) => r.efficiencyPercent, align: 'right', width: 12 },
+            { header: t('reports.autoLogoutApplied'), value: (r) => (r.date ? (r.autoLogoutApplied ? t('reports.autoLogoutAppliedYes') : t('reports.autoLogoutAppliedNo')) : ''), align: 'center', width: 12 },
           ]}
           options={{
             fileName: `reports-worker-hours-${dayjs().format('YYYY-MM-DD')}`,

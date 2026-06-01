@@ -442,8 +442,9 @@
       "activateConfirm": "Are you sure you want to activate this shift?",
       "breakMinutes": "Break (min)",
       "maxOvertimeHours": "Max overtime (h)",
-      "autoLogoutAfterHours": "Auto-logout after (h)",
-      "alarmBeforeLogoutMinutes": "Alarm before logout (min)"
+      "autoLogoutAfterHours": "Auto-logout overtime (h)",
+      "alarmBeforeLogoutMinutes": "Alarm before logout (min)",
+      "autoLogoutRegularHours": "Auto-logout regular (h)"
     }
   },
   "notifications": {
@@ -488,6 +489,9 @@
     "uncoveredHours": "Uncovered",
     "loggedHours": "Logged (total)",
     "efficiencyStatus": "Status",
+    "autoLogoutApplied": "Auto-logout",
+    "autoLogoutAppliedYes": "YES ⚠",
+    "autoLogoutAppliedNo": "No",
     "statusExcellent": "Excellent",
     "statusAcceptable": "Acceptable",
     "statusBelowNorm": "Below norm",

@@ -393,7 +393,10 @@ are shown (administrators and management are excluded). Columns:
 
 - **Worker** — first + last name
 - **Regular hours** — work time up to the shift duration
-- **Overtime** — work time beyond the shift duration
+- **Overtime** — work time beyond the shift duration. In the **per-worker
+  total** tiny daily overruns (≤30 min) are excluded (so 10-ish minutes
+  earlier or later don't add to the overtime total), but they still show
+  in the daily view.
 - **Total** — total logged work time (sum of all sign-ins that day; a
   forgotten sign-out is automatically capped at shift duration + allowed
   overtime)
@@ -405,7 +408,9 @@ are shown (administrators and management are excluded). Columns:
 - **Efficiency (%)** — Active / Effective × 100 (color-coded)
 
 Click the ▸ arrow to expand a daily view for that worker: Date, Sign-in,
-Sign-out and the same columns per day.
+Sign-out, the same columns per day, and an **"Auto-logout"** column
+(YES ⚠ / No) marking the days when the system auto-closed the session
+(the worker didn't sign out before the per-shift auto-logout time).
 
 Filter by worker, date range. The XLSX/CSV export lists all daily rows,
 then a "TOTAL" row per worker.
@@ -454,7 +459,7 @@ Open to Admin and Manager roles.
 | **Product categories** | Combinations of processes with dependencies typical for a product type. |
 | **Order types** | Standard, Complaint etc. "Manual process selection" toggle. |
 | **Special request types** | Per-item process modifiers (add/remove/only listed). |
-| **Shifts** | Define work shifts. |
+| **Shifts** | Define work shifts. Per-shift settings: break, max overtime, **auto-logout overtime** (per session), alarm before logout, and **auto-logout regular (h)** — the time after which the system automatically closes a worker's session (e.g. 8.5h for an 8h shift with 30 min grace). |
 
 ### 3.9 Coordinator dashboard
 
@@ -517,6 +522,26 @@ first sign-in (the system asks for permission).
 2. **Check-in** — choose the process you'll work on today (e.g.
    PRESSING). Only processes you're registered for appear.
 3. From the moment of check-in the system tracks your shift hours.
+
+#### Auto-logout and overtime
+
+When the allowed work time expires (configured per shift, e.g. 8.5h),
+the tablet automatically closes the session and shows a **"You have been
+auto-logged-out"** screen with a **"Log in again"** button.
+
+- Tapping the button returns you to the login screen.
+- For **overtime work**, log in again — the system uses a separate
+  countdown until the next auto-logout (e.g. 2h per overtime session).
+- A **warning** banner ("Your shift expires in X min. Please check
+  out.") appears at the top of the tablet a few minutes before
+  auto-logout.
+- If the tablet is turned off or goes offline, the system still
+  auto-closes the session the next time it talks to the server — the
+  recorded sign-out time matches the actual expiry, not when the system
+  noticed.
+
+The coordinator sees an "Auto-logout — Worker X has been auto-logged-out"
+notification as soon as it happens.
 
 ### 4.3 Queue
 

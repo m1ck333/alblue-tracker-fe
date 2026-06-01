@@ -444,8 +444,9 @@
       "activateConfirm": "Da li ste sigurni da želite da aktivirate ovu smenu?",
       "breakMinutes": "Pauza (min)",
       "maxOvertimeHours": "Max prekovremeno (h)",
-      "autoLogoutAfterHours": "Auto-odjava nakon (h)",
-      "alarmBeforeLogoutMinutes": "Alarm pre odjave (min)"
+      "autoLogoutAfterHours": "Auto-odjava prekovremeno (h)",
+      "alarmBeforeLogoutMinutes": "Alarm pre odjave (min)",
+      "autoLogoutRegularHours": "Auto-odjava redovan rad (h)"
     }
   },
   "notifications": {
@@ -490,6 +491,9 @@
     "uncoveredHours": "Nepokriveno",
     "loggedHours": "Prijavljeno (ukupno)",
     "efficiencyStatus": "Status",
+    "autoLogoutApplied": "Auto-odjava",
+    "autoLogoutAppliedYes": "DA ⚠",
+    "autoLogoutAppliedNo": "Ne",
     "statusExcellent": "Odlično",
     "statusAcceptable": "Prihvatljivo",
     "statusBelowNorm": "Ispod norme",

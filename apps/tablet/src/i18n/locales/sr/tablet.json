@@ -88,7 +88,10 @@
   },
   "autoLogout": {
     "warning": "Vaša smena ističe za {{minutes}} min. Odjavite se.",
-    "expired": "Vaša smena je istekla. Odjavite se."
+    "expired": "Vaša smena je istekla. Odjavite se.",
+    "loggedOutTitle": "Automatski ste odjavljeni",
+    "loggedOutBody": "Vaša radna sesija je automatski zatvorena jer je dostignuto vreme za odjavu. Za prekovremeni rad prijavite se ponovo.",
+    "loginAgain": "Prijavi se ponovo"
   },
   "notifications": {
     "prompt": "Uključite obaveštenja za nove narudžbine i blokade",

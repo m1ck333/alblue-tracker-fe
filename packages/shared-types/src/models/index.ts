@@ -54,6 +54,10 @@ export interface ShiftDto {
   autoLogoutAfterHours: number;
   /** How many minutes before auto-logout the tablet shows a warning. */
   alarmBeforeLogoutMinutes: number;
+  /** Hard auto-logout for the REGULAR shift session, in minutes from check-in
+   *  (Bojan 29.05.2026). Time between shift duration and this cap counts as
+   *  overtime within the same session. 0 = legacy behaviour. */
+  autoLogoutRegularMinutes: number;
   createdAt: string;
   updatedAt: string | null;
 }
@@ -734,6 +738,9 @@ export interface WorkerDailyBreakdownDto {
   /** 0–100 */
   efficiencyPercent: number;
   sessionCount: number;
+  /** True when the day's total worked exceeded the shift's
+   *  AutoLogoutRegularMinutes cap (Bojan Excel v2 column M). */
+  autoLogoutApplied: boolean;
 }
 
 export interface WorkerHoursDto {

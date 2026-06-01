@@ -85,6 +85,8 @@ export function ShiftsPage() {
     maxOvertimeHours: number;
     autoLogoutAfterHours: number;
     alarmBeforeLogoutMinutes: number;
+    // UI input is in HOURS (decimal, e.g. 8.5); stored as minutes BE-side.
+    autoLogoutRegularHours: number;
   };
 
   const createMutation = useMutation({
@@ -97,6 +99,7 @@ export function ShiftsPage() {
         maxOvertimeHours: values.maxOvertimeHours,
         autoLogoutAfterHours: values.autoLogoutAfterHours,
         alarmBeforeLogoutMinutes: values.alarmBeforeLogoutMinutes,
+        autoLogoutRegularMinutes: Math.round(values.autoLogoutRegularHours * 60),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
@@ -118,6 +121,7 @@ export function ShiftsPage() {
         maxOvertimeHours: values.maxOvertimeHours,
         autoLogoutAfterHours: values.autoLogoutAfterHours,
         alarmBeforeLogoutMinutes: values.alarmBeforeLogoutMinutes,
+        autoLogoutRegularMinutes: Math.round(values.autoLogoutRegularHours * 60),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
@@ -139,6 +143,7 @@ export function ShiftsPage() {
         maxOvertimeHours: shift.maxOvertimeHours,
         autoLogoutAfterHours: shift.autoLogoutAfterHours,
         alarmBeforeLogoutMinutes: shift.alarmBeforeLogoutMinutes,
+        autoLogoutRegularMinutes: shift.autoLogoutRegularMinutes,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
@@ -160,6 +165,7 @@ export function ShiftsPage() {
         maxOvertimeHours: shift.maxOvertimeHours,
         autoLogoutAfterHours: shift.autoLogoutAfterHours,
         alarmBeforeLogoutMinutes: shift.alarmBeforeLogoutMinutes,
+        autoLogoutRegularMinutes: shift.autoLogoutRegularMinutes,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
@@ -180,6 +186,7 @@ export function ShiftsPage() {
       maxOvertimeHours: shift.maxOvertimeHours,
       autoLogoutAfterHours: shift.autoLogoutAfterHours,
       alarmBeforeLogoutMinutes: shift.alarmBeforeLogoutMinutes,
+      autoLogoutRegularHours: shift.autoLogoutRegularMinutes / 60,
     });
   };
 
@@ -374,6 +381,7 @@ export function ShiftsPage() {
             maxOvertimeHours: 6,
             autoLogoutAfterHours: 2,
             alarmBeforeLogoutMinutes: 5,
+            autoLogoutRegularHours: 0,
           }}
         >
           <Form.Item name="name" label={t('common:labels.name')} rules={[{ required: true }]}>
@@ -403,6 +411,9 @@ export function ShiftsPage() {
               <InputNumber min={0} max={60} style={{ width: '100%' }} />
             </Form.Item>
           </div>
+          <Form.Item name="autoLogoutRegularHours" label={t('admin.shifts.autoLogoutRegularHours')} rules={[{ required: true }]}>
+            <InputNumber min={0} max={24} step={0.5} precision={2} style={{ width: '100%' }} />
+          </Form.Item>
         </Form>
       </Drawer>
 
@@ -470,6 +481,9 @@ export function ShiftsPage() {
               <InputNumber min={0} max={60} style={{ width: '100%' }} />
             </Form.Item>
           </div>
+          <Form.Item name="autoLogoutRegularHours" label={t('admin.shifts.autoLogoutRegularHours')} rules={[{ required: true }]}>
+            <InputNumber min={0} max={24} step={0.5} precision={2} style={{ width: '100%' }} />
+          </Form.Item>
         </Form>
         {editShift?.updatedAt && (
           <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>

@@ -46,6 +46,44 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    id: '2026-06-02-auto-logout',
+    date: '2026-06-02',
+    title: {
+      sr: 'Automatska odjava radnika + obaveštenje koordinatoru',
+      en: 'Automatic worker auto-logout + coordinator notification',
+    },
+    bullets: [
+      {
+        sr: 'Smene (Admin → Smene) imaju novo podešavanje "Auto-odjava redovan rad (h)" — vreme nakon koga se radnikova sesija automatski zatvara (npr. 8.5h za smenu 8h sa 30 min produžetka).',
+        en: 'Shifts (Admin → Shifts) have a new setting "Auto-logout regular (h)" — the time after which a worker\'s session is automatically closed (e.g. 8.5h for an 8h shift with 30 min grace).',
+      },
+      {
+        sr: 'Tablet: kada vreme istekne, sesija se automatski zatvara i prikazuje se ekran "Automatski ste odjavljeni" sa dugmetom za ponovnu prijavu (za prekovremeni rad).',
+        en: 'Tablet: when the time expires, the session is automatically closed and a "You have been auto-logged-out" screen appears with a re-login button (for overtime work).',
+      },
+      {
+        sr: 'Prekovremeni rad: ponovna prijava nakon auto-odjave koristi posebno vreme (npr. 2h po sesiji) umesto regularnog ograničenja.',
+        en: 'Overtime: re-login after auto-logout uses a separate limit (e.g. 2h per session) instead of the regular cap.',
+      },
+      {
+        sr: 'Ako tablet bude isključen ili offline, sistem će na sledeći upit ipak automatski zatvoriti zaboravljenu sesiju, sa pravim vremenom isteka.',
+        en: 'If the tablet goes offline, the system still auto-closes the forgotten session on the next request, using the actual expiry time.',
+      },
+      {
+        sr: 'Sati radnika: nova kolona "Auto-odjava" u dnevnom prikazu (DA ⚠ / Ne) — pokazuje dane u kojima je auto-odjava primenjena.',
+        en: 'Worker Hours: new "Auto-logout" column in the daily view (YES ⚠ / No) — shows the days when auto-logout was applied.',
+      },
+      {
+        sr: 'Ukupni prekovremeni rad po radniku više ne uračunava sitne dnevne prelaze (≤30 min) — kako se "10-ak min ranije ili kasnije" ne bi tretiralo kao prekovremeno.',
+        en: 'Per-worker total overtime no longer counts tiny daily overruns (≤30 min) — so "10-ish min earlier or later" isn\'t treated as overtime.',
+      },
+      {
+        sr: 'Koordinator/menadžer/administrator dobija obaveštenje "Auto-odjava — Radnik X automatski je odjavljen" čim se auto-odjava aktivira (vidljivo u listi obaveštenja).',
+        en: 'Coordinator/manager/administrator receives an "Auto-logout — Worker X has been auto-logged-out" notification as soon as auto-logout fires (visible in the notification list).',
+      },
+    ],
+  },
+  {
     id: '2026-05-29-reports-refinements',
     date: '2026-05-29',
     title: {

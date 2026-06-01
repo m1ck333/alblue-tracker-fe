@@ -8,6 +8,7 @@ export const SignalREvents = {
   BlockRequestApproved: 'BlockRequestApproved',
   WorkerCheckedIn: 'WorkerCheckedIn',
   WorkerCheckedOut: 'WorkerCheckedOut',
+  WorkerAutoLoggedOut: 'WorkerAutoLoggedOut',
   DeadlineWarning: 'DeadlineWarning',
   ProcessReadyForQueue: 'ProcessReadyForQueue',
   ProcessDefinitionUpdated: 'ProcessDefinitionUpdated',

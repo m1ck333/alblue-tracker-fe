@@ -396,7 +396,10 @@ radnici** (administratori i rukovodstvo se ne prikazuju). Kolone:
 
 - **Radnik** — ime i prezime
 - **Redovni sati** — radno vreme do trajanja smene
-- **Prekovremeni** — radno vreme preko trajanja smene
+- **Prekovremeni** — radno vreme preko trajanja smene. U **ukupnom zbiru po
+  radniku** sitni dnevni prelazi (≤30 min) se ne uračunavaju (npr. 10-ak min
+  ranije ili kasnije ne ulaze u zbirne prekovremene sate), ali se prikazuju
+  u dnevnom prikazu.
 - **Ukupno** — ukupno prijavljeno radno vreme (zbir svih prijava u danu;
   zaboravljena odjava se automatski ograničava na trajanje smene +
   dozvoljeno prekovremeno)
@@ -408,7 +411,9 @@ radnici** (administratori i rukovodstvo se ne prikazuju). Kolone:
 - **Efikasnost (%)** — Aktivno / Efektivno × 100 (obojeno)
 
 Klik na strelicu ▸ otvara dnevni prikaz za tog radnika: Datum, Prijava,
-Odjava i iste kolone po danu.
+Odjava, iste kolone po danu, i kolona **"Auto-odjava"** (DA ⚠ / Ne) koja
+pokazuje dane u kojima je sistem automatski zatvorio sesiju (radnik nije
+ručno odjavio se pre vremena za auto-odjavu — podešava se po smeni).
 
 Filter po radniku, datum opseg. Izvoz u XLSX/CSV daje sve dnevne redove,
 a zatim red "UKUPNO" po radniku.
@@ -459,7 +464,7 @@ Otvoreno za uloge Admin i Manager.
 | **Kategorije proizvoda** | Kombinacije procesa sa zavisnostima tipičnim za tip proizvoda. |
 | **Tipovi narudžbina** | Standardna, Reklamacija itd. Prekidač "Ručni izbor procesa". |
 | **Tipovi specijalnih zahteva** | Modifikatori procesa po stavki (dodaj/ukloni/samo navedene). |
-| **Smene** | Definisanje radnih smena. |
+| **Smene** | Definisanje radnih smena. Podešavanja po smeni: pauza, max prekovremeno, **auto-odjava prekovremeno** (po sesiji), alarm pre odjave, i **auto-odjava redovan rad (h)** — vreme posle koga sistem automatski zatvara radnikovu sesiju (npr. 8.5h za smenu od 8h sa 30 min produžetka). |
 
 ### 3.9 Kontrolna tabla koordinatora
 
@@ -523,6 +528,25 @@ prijave (sistem traži dozvolu).
 2. **Check-in** — bira se proces na kome ćeš danas raditi (npr.
    PRESOVANJE). Vide se samo procesi za koje si registrovan u sistemu.
 3. Od trenutka check-in-a sistem prati vreme tvoje smene.
+
+#### Auto-odjava i prekovremeni rad
+
+Kada istekne dozvoljeno vreme rada (podešava se po smeni, npr. 8.5h),
+tablet automatski zatvara sesiju i prikazuje ekran **"Automatski ste
+odjavljeni"** sa dugmetom **"Prijavi se ponovo"**.
+
+- Pritiskom na dugme vraćaš se na ekran za prijavu.
+- Za **prekovremeni rad** prijavi se ponovo — sistem koristi posebno
+  vreme do sledeće auto-odjave (npr. 2h po ulasku u prekovremeni).
+- Pre auto-odjave, na vrhu tableta se pojavljuje **upozorenje** ("Vaša
+  smena ističe za X min. Odjavite se.") nekoliko minuta ranije.
+- Ako iz bilo kog razloga tablet bude isključen ili offline, sistem će
+  ipak automatski zatvoriti sesiju kada se sledeći put obrati serveru —
+  vreme odjave odgovara stvarnom isteku, ne trenutku kada je sistem
+  primetio.
+
+Koordinator vidi obaveštenje "Auto-odjava — Radnik X automatski je
+odjavljen" čim se desi.
 
 ### 4.3 Red čekanja (Queue)
 
