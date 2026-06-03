@@ -16,6 +16,13 @@ import { workSessionsApi } from '@alblue/api-client';
 // The server-side lazy safety net catches forgotten cases the moment any
 // other call hits /current, so the only way to stay "checked in" past
 // the cap is to actually be on the tablet AND have it offline.
+//
+// Refresh-after-auto-logout (Milos 03.06.2026 polish): the overlay state is
+// persisted to sessionStorage so a page refresh while auto-logged-out keeps
+// the blocker up. Cleared when the worker taps "Prijavi se ponovo" so the
+// next login lands cleanly. sessionStorage (per-tab) is the right scope —
+// a fresh tab is a fresh session.
+const AUTO_LOGOUT_FLAG = 'tablet.autoLoggedOut';
 
 export function AutoLogoutBanner() {
   const { t } = useTranslation('tablet');
@@ -26,7 +33,9 @@ export function AutoLogoutBanner() {
   const queryClient = useQueryClient();
 
   const [now, setNow] = useState(() => Date.now());
-  const [autoLoggedOut, setAutoLoggedOut] = useState(false);
+  const [autoLoggedOut, setAutoLoggedOut] = useState(
+    () => typeof window !== 'undefined' && sessionStorage.getItem(AUTO_LOGOUT_FLAG) === '1',
+  );
   const firedRef = useRef(false);
 
   // Tick once a minute so the visible "X min preostalo" updates without
@@ -64,18 +73,45 @@ export function AutoLogoutBanner() {
   const logoutAt = data?.logoutAtUtc ? new Date(data.logoutAtUtc).getTime() : null;
   const expired = logoutAt !== null && now >= logoutAt;
 
+  // Persist + restore the auto-logged-out blocker across refresh.
+  const markAutoLoggedOut = () => {
+    if (typeof window !== 'undefined') sessionStorage.setItem(AUTO_LOGOUT_FLAG, '1');
+    setAutoLoggedOut(true);
+  };
+  const clearAutoLoggedOut = () => {
+    if (typeof window !== 'undefined') sessionStorage.removeItem(AUTO_LOGOUT_FLAG);
+    setAutoLoggedOut(false);
+  };
+
   // Fire auto-checkout exactly once when the cap is hit.
   useEffect(() => {
     if (expired && !firedRef.current && user?.id) {
       firedRef.current = true;
       autoCheckOut.mutate(undefined, {
-        onSettled: () => setAutoLoggedOut(true),
+        onSettled: () => markAutoLoggedOut(),
       });
     }
     // We intentionally exclude `autoCheckOut` from deps — mutating once is the
     // whole point. firedRef guards re-entry.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expired, user?.id]);
+
+  // Refresh-after-auto-logout safety net: detect transitions from "had a
+  // session" → "no session" in the same tab (e.g. the BG service closed the
+  // session while this tab's countdown was paused). A bare `data === null`
+  // check would false-positive on fresh logins before the first process is
+  // started (per no-explicit-check-in flow), so we only trigger after we've
+  // observed an active session at least once in this mount.
+  const hadSessionRef = useRef(false);
+  useEffect(() => {
+    if (!isAuthenticated || autoLoggedOut) return;
+    if (data) {
+      hadSessionRef.current = true;
+    } else if (data === null && hadSessionRef.current) {
+      markAutoLoggedOut();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, isAuthenticated, autoLoggedOut]);
 
   // Full-screen blocker after auto-logout — worker must tap to re-login.
   if (autoLoggedOut) {
@@ -91,6 +127,7 @@ export function AutoLogoutBanner() {
           <button
             type="button"
             onClick={() => {
+              clearAutoLoggedOut();
               logout();
               navigate('/login', { replace: true });
             }}
