@@ -29,6 +29,14 @@ export function TabletLoginPage() {
 
       setSettingUp(true);
 
+      // Clear any leftover auto-logout flag from a prior session in this
+      // tab. AutoLogoutBanner persists the flag to sessionStorage so a
+      // refresh-while-blocker-up keeps the blocker; without clearing here
+      // a fresh login in the same tab would still hit the blocker (Bojan
+      // 04.06.2026 — tablet showed login screen while dashboard showed
+      // workers as still logged in).
+      if (typeof window !== 'undefined') sessionStorage.removeItem('tablet.autoLoggedOut');
+
       // Check in (tenant derived from JWT)
       try {
         await workSessionsApi.checkIn({ userId: user.id });
