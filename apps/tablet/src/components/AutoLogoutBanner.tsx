@@ -24,6 +24,31 @@ import { workSessionsApi } from '@alblue/api-client';
 // a fresh tab is a fresh session.
 const AUTO_LOGOUT_FLAG = 'tablet.autoLoggedOut';
 
+// Audible alarm — short beep when the warning banner first appears, longer
+// beep + repeats when the auto-logout modal fires. Web Audio API needs no
+// permission and works on any tablet that's already had user interaction.
+// Bojan/Sale 06.06.2026: visual-only banner was missed during noisy shifts.
+function beep(durationMs: number, frequency = 880, volume = 0.4): void {
+  try {
+    const AudioCtx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = frequency;
+    gain.gain.value = volume;
+    osc.start();
+    window.setTimeout(() => {
+      try { osc.stop(); ctx.close(); } catch { /* already torn down */ }
+    }, durationMs);
+  } catch {
+    // Audio not available — fall back to silent (visual banner still shows).
+  }
+}
+
 export function AutoLogoutBanner() {
   const { t } = useTranslation('tablet');
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -87,6 +112,9 @@ export function AutoLogoutBanner() {
   useEffect(() => {
     if (expired && !firedRef.current && user?.id) {
       firedRef.current = true;
+      // 1.2s lower-pitched tone for the "logged out" moment — distinct from
+      // the higher warning beep so workers can tell them apart.
+      beep(1200, 440, 0.5);
       autoCheckOut.mutate(undefined, {
         onSettled: () => markAutoLoggedOut(),
       });
@@ -95,6 +123,18 @@ export function AutoLogoutBanner() {
     // whole point. firedRef guards re-entry.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expired, user?.id]);
+
+  // Single short beep the first time the warning banner enters the "X min
+  // preostalo" state for this session. Re-arms when the worker logs out and
+  // back in (component unmounts/remounts).
+  const warnedRef = useRef(false);
+  const inWarningWindow = alarmAt !== null && logoutAt !== null && now >= alarmAt && now < logoutAt;
+  useEffect(() => {
+    if (inWarningWindow && !warnedRef.current) {
+      warnedRef.current = true;
+      beep(300, 880, 0.35);
+    }
+  }, [inWarningWindow]);
 
   // Refresh-after-auto-logout safety net: detect transitions from "had a
   // session" → "no session" in the same tab (e.g. the BG service closed the

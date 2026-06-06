@@ -48,6 +48,7 @@ import {
   BarChart,
   Bar,
   Line,
+  Area,
   ComposedChart,
   ReferenceLine,
   XAxis,
@@ -538,6 +539,11 @@ function ProcessTimeTrendChart() {
       (data?.buckets ?? []).map((b) => ({
         bucket: dayjs(b.bucketStart).format(granularity === 'Week' ? 'DD.MM' : 'MM.YYYY'),
         max: Number(b.maxMinutes.toFixed(2)),
+        min: Number(b.minMinutes.toFixed(2)),
+        // Range tuple [min, max] drives the colored band Area. Recharts
+        // renders a tuple dataKey as a vertical band per bucket. Bojan/Sale
+        // 06.06.2026: bring back the min-max range visualisation.
+        range: [Number(b.minMinutes.toFixed(2)), Number(b.maxMinutes.toFixed(2))],
         avg: Number(b.trimmedMeanMinutes.toFixed(2)),
         _count: b.count,
       })),
@@ -616,8 +622,17 @@ function ProcessTimeTrendChart() {
             />
             <RechartsTooltip
               formatter={(value, name) => {
+                // The range Area dataKey is a tuple [min, max]; render that
+                // as a single "min–max" string in the tooltip to make the
+                // band's bounds explicit. Other lines stay numeric.
+                if (name === 'range' && Array.isArray(value)) {
+                  const lo = formatMinutes(Number(value[0]));
+                  const hi = formatMinutes(Number(value[1]));
+                  return [`${lo} – ${hi}`, `${t('reports.min')} – ${t('reports.max')}`];
+                }
                 const minutes = formatMinutes(typeof value === 'number' ? value : Number(value));
                 if (name === 'max') return [minutes, t('reports.max')];
+                if (name === 'min') return [minutes, t('reports.min')];
                 if (name === 'avg') return [minutes, t('reports.trimmedAvg')];
                 return [minutes, String(name)];
               }}
@@ -637,18 +652,43 @@ function ProcessTimeTrendChart() {
                   ? t('reports.trimmedAvg')
                   : v === 'max'
                   ? t('reports.max')
+                  : v === 'min'
+                  ? t('reports.min')
+                  : v === 'range'
+                  ? `${t('reports.min')} – ${t('reports.max')}`
                   : v === 'normativ'
                   ? t('reports.normativ')
                   : v
               }
             />
-            {/* Max line (Sale/Bojan 29.05.2026 — they want MAX shown, not a
-                min/max band). */}
+            {/* Min-Max colored band (Bojan/Sale 06.06.2026 — back to showing
+                the range visually). The `range` tuple drives a vertical band
+                between min and max per bucket. */}
+            <Area
+              type="monotone"
+              dataKey="range"
+              name="range"
+              stroke="none"
+              fill={token.colorSuccessBg}
+              fillOpacity={0.5}
+              isAnimationActive={false}
+            />
+            {/* Max line. */}
             <Line
               type="monotone"
               dataKey="max"
               name="max"
               stroke={token.colorWarning}
+              strokeWidth={2}
+              dot={{ r: 3 }}
+              isAnimationActive={false}
+            />
+            {/* Min line — Bojan/Sale 06.06.2026 wanted min back. */}
+            <Line
+              type="monotone"
+              dataKey="min"
+              name="min"
+              stroke={token.colorSuccess}
               strokeWidth={2}
               dot={{ r: 3 }}
               isAnimationActive={false}
@@ -2581,7 +2621,10 @@ function WorkEfficiencyTab() {
             .sort((a, b) => b.eff - a.eff);
           const barColor = (pct: number) =>
             pct >= 80 ? token.colorSuccess : pct >= 60 ? token.colorWarning : token.colorError;
-          const chartHeight = Math.max(280, rows.length * 36 + 80);
+          // Vertical bars (Excel-match) per Bojan/Sale 06.06.2026 — earlier
+          // approved horizontal-bar deviation (29.05) reversed. Height stays
+          // fixed since the X axis grows with worker count, not the bar count.
+          const chartHeight = 360;
           const tooltipStyle = {
             contentStyle: {
               backgroundColor: token.colorBgElevated,
@@ -2597,10 +2640,16 @@ function WorkEfficiencyTab() {
             <>
               <Card size="small" title={t('reports.chartWorkDistribution')} style={{ marginBottom: 16 }}>
                 <ResponsiveContainer width="100%" height={chartHeight}>
-                  <BarChart data={distData} layout="vertical" margin={{ top: 8, right: 24, left: 16, bottom: 8 }}>
+                  <BarChart data={distData} margin={{ top: 8, right: 24, left: 16, bottom: 48 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" tickFormatter={(v: number) => `${v}h`} />
-                    <YAxis type="category" dataKey="fullName" width={140} />
+                    <XAxis
+                      dataKey="fullName"
+                      angle={-30}
+                      textAnchor="end"
+                      height={60}
+                      interval={0}
+                    />
+                    <YAxis tickFormatter={(v: number) => `${v}h`} />
                     <RechartsTooltip
                       {...tooltipStyle}
                       formatter={(value, name) => [
@@ -2611,23 +2660,29 @@ function WorkEfficiencyTab() {
                     <Legend
                       formatter={(v) => (v === 'active' ? t('reports.activeHours') : t('reports.uncoveredHours'))}
                     />
-                    <Bar dataKey="active" name="active" stackId="dist" fill={token.colorSuccess} maxBarSize={24} />
-                    <Bar dataKey="uncovered" name="uncovered" stackId="dist" fill={token.colorWarning} maxBarSize={24} />
+                    <Bar dataKey="active" name="active" stackId="dist" fill={token.colorSuccess} maxBarSize={48} />
+                    <Bar dataKey="uncovered" name="uncovered" stackId="dist" fill={token.colorWarning} maxBarSize={48} />
                   </BarChart>
                 </ResponsiveContainer>
               </Card>
 
               <Card size="small" title={t('reports.efficiencyChartTitle')}>
                 <ResponsiveContainer width="100%" height={chartHeight}>
-                  <BarChart data={effData} layout="vertical" margin={{ top: 8, right: 24, left: 16, bottom: 8 }}>
+                  <BarChart data={effData} margin={{ top: 8, right: 24, left: 16, bottom: 48 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" domain={[0, 100]} tickFormatter={(v: number) => `${v}%`} />
-                    <YAxis type="category" dataKey="fullName" width={140} />
+                    <XAxis
+                      dataKey="fullName"
+                      angle={-30}
+                      textAnchor="end"
+                      height={60}
+                      interval={0}
+                    />
+                    <YAxis domain={[0, 100]} tickFormatter={(v: number) => `${v}%`} />
                     <RechartsTooltip
                       {...tooltipStyle}
                       formatter={(value) => [`${Number(value).toFixed(1)}%`, t('reports.efficiencyPercent')]}
                     />
-                    <Bar dataKey="eff" maxBarSize={24}>
+                    <Bar dataKey="eff" maxBarSize={48}>
                       {effData.map((d) => (
                         <Cell key={d.fullName} fill={barColor(d.eff)} />
                       ))}
