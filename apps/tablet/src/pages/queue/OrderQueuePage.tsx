@@ -68,18 +68,15 @@ export function OrderQueuePage() {
     refetchInterval: 120_000,
   });
 
-  // Fetch process definitions for all assigned processes to get sub-process names
-  const allProcessIds = useMemo(() => {
-    const ids = new Set<string>();
-    for (const g of queueGroups ?? []) ids.add(g.processId);
-    for (const g of activeGroups ?? []) ids.add(g.processId);
-    return Array.from(ids);
-  }, [queueGroups, activeGroups]);
-
+  // Fetch process definitions ONCE for the whole tenant — replaces the
+  // per-processId N+1 (Sentry digest 06.06.2026 flagged ~22/wk hits).
+  // ProcessDto already includes its sub-processes inline; we just need the
+  // names + sequenceOrder for display, so getAll(pageSize=200, isActive=true)
+  // gets everything in a single request.
   const { data: processDefinitions } = useQuery({
-    queryKey: ['processes-batch', ...allProcessIds],
-    queryFn: () => Promise.all(allProcessIds.map((id) => processesApi.getById(id).then((r) => r.data))),
-    enabled: allProcessIds.length > 0,
+    queryKey: ['tablet-process-definitions', tenantId],
+    queryFn: () => processesApi.getAll({ isActive: true, pageSize: 200 }).then((r) => r.data.items),
+    enabled: !!tenantId,
     staleTime: 5 * 60_000,
   });
 

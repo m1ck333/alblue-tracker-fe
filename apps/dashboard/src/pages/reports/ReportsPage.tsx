@@ -614,9 +614,9 @@ function ProcessTimeTrendChart() {
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('reports.noData')} />
       ) : (
         <ResponsiveContainer width="100%" height={320}>
-          <ComposedChart data={chartData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+          <ComposedChart data={chartData} margin={{ top: 8, right: 40, left: 8, bottom: 8 }}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="bucket" />
+            <XAxis dataKey="bucket" padding={{ left: 16, right: 16 }} />
             <YAxis
               label={{ value: t('reports.minutesUnit'), angle: -90, position: 'insideLeft' }}
             />
