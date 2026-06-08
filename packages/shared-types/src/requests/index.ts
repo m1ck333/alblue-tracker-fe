@@ -30,6 +30,9 @@ export interface UpdateUserRequest {
   isActive: boolean;
   canIncludeWithdrawnInAnalysis: boolean;
   processIds?: string[];
+  /** Extra roles beyond the primary. Null = leave existing; non-null
+   *  array (incl. empty) = replace. Saša 08.06.2026. */
+  additionalRoles?: UserRole[];
 }
 
 export interface ChangePasswordRequest {

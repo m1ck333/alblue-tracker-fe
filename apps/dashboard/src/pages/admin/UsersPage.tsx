@@ -129,6 +129,10 @@ export function UsersPage() {
         isActive: values.isActive as boolean,
         canIncludeWithdrawnInAnalysis: values.canIncludeWithdrawnInAnalysis as boolean,
         processIds: values.role === UserRole.Department && (values.processIds as string[])?.length ? values.processIds as string[] : undefined,
+        // Saša 08.06.2026 — extra roles beyond primary (e.g. Coordinator +
+        // Magacioner). Send the array unconditionally so clearing is
+        // explicit; BE keys off non-null to know "user touched this field".
+        additionalRoles: (values.additionalRoles as UserRole[] | undefined) ?? [],
       });
       const newPassword = (values.newPassword as string)?.trim();
       if (newPassword) {
@@ -161,6 +165,7 @@ export function UsersPage() {
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role,
+      additionalRoles: user.additionalRoles ?? [],
       processIds: user.processes?.map((p) => p.processId) ?? [],
       isActive: user.isActive,
       canIncludeWithdrawnInAnalysis: user.canIncludeWithdrawnInAnalysis,
@@ -469,6 +474,32 @@ export function UsersPage() {
               options={assignableRoles.map((r) => ({ label: tEnum('UserRole', r), value: r }))}
               onChange={() => editForm.setFieldValue('processIds', undefined)}
             />
+          </Form.Item>
+          {/* Saša 08.06.2026 — extra roles a user holds in addition to the
+              primary. Same SuperAdmin-only gate as primary role. Filtering
+              the picker excludes the primary role + SuperAdmin to keep
+              "additional" meaningful. */}
+          <Form.Item
+            name="additionalRoles"
+            label={t('admin.users.additionalRoles', { defaultValue: 'Dodatne uloge' })}
+            tooltip={t('admin.users.additionalRolesHint', { defaultValue: 'Uloge koje korisnik ima POREDA primarne. Npr. Koordinator + Magacioner.' })}
+          >
+            <Form.Item noStyle shouldUpdate={(prev, cur) => prev.role !== cur.role}>
+              {({ getFieldValue }) => {
+                const primary = getFieldValue('role') as UserRole | undefined;
+                const options = assignableRoles
+                  .filter((r) => r !== UserRole.SuperAdmin && r !== primary)
+                  .map((r) => ({ label: tEnum('UserRole', r), value: r }));
+                return (
+                  <Select
+                    mode="multiple"
+                    disabled={!isSuperAdmin}
+                    options={options}
+                    placeholder={t('admin.users.additionalRolesPlaceholder', { defaultValue: 'Bez dodatnih uloga' })}
+                  />
+                );
+              }}
+            </Form.Item>
           </Form.Item>
           <Form.Item noStyle shouldUpdate={(prev, cur) => prev.role !== cur.role}>
             {({ getFieldValue }) =>
