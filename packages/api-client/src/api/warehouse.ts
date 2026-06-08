@@ -25,6 +25,8 @@ export interface GetStockHistoryParams {
   to?: string;
   page?: number;
   pageSize?: number;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
 }
 
 export const warehouseApi = {
