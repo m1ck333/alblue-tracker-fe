@@ -99,7 +99,9 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
           </Form.Item>
         </Space>
 
-        <Text strong>{t('warehouse.lines')}</Text>
+        <div style={{ marginTop: 8 }}>
+          <Text strong>{t('warehouse.lines')}</Text>
+        </div>
         <Form.List name="lines">
           {(fields, { add, remove }) => (
             <>
