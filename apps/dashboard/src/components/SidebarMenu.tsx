@@ -21,6 +21,8 @@ import {
   ExportOutlined,
   HistoryOutlined,
   BlockOutlined,
+  InfoCircleOutlined,
+  BookOutlined,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@alblue/auth';
@@ -124,6 +126,18 @@ export function SidebarMenu({ collapsed: _collapsed }: SidebarMenuProps) {
         },
         { key: '/admin/shifts', icon: <ClockCircleOutlined />, label: t('nav.shifts') },
       ].filter(Boolean),
+    },
+    // Info group — Uputstvo + Šta je novo. Was a custom Popover in
+    // SidebarFooter; moved here 08.06.2026 (Milos) so the flyout / inline
+    // expansion matches every other top-level menu group with children.
+    {
+      key: 'info',
+      icon: <InfoCircleOutlined />,
+      label: t('nav.info'),
+      children: [
+        { key: '/tutorial', icon: <BookOutlined />, label: t('nav.tutorial') },
+        { key: '/whats-new', icon: <HistoryOutlined />, label: t('nav.whatsNew') },
+      ],
     },
   ].filter(Boolean) as Parameters<typeof Menu>[0]['items'];
 
