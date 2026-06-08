@@ -245,41 +245,25 @@ export function MaterialsPage() {
               width: 110,
               render: (v: boolean) => v ? <Tag color="green">{t('materials.statusActive')}</Tag> : <Tag>{t('materials.statusInactive')}</Tag>,
             },
-            {
-              title: '',
-              width: 200,
-              fixed: 'right' as const,
-              render: (_, m) => (
-                <Space>
-                  <Button size="small" onClick={(e) => {
-                    e.stopPropagation();
-                    setEditing(m);
-                    editForm.setFieldsValue({
-                      name: m.name,
-                      unit: m.unit,
-                      category: m.category,
-                      minQuantity: m.minQuantity,
-                      maxQuantity: m.maxQuantity,
-                      dimensionX: m.dimensionX,
-                      dimensionY: m.dimensionY,
-                      dimensionZ: m.dimensionZ,
-                      location: m.location,
-                      notes: m.notes,
-                    });
-                  }}>{t('common:actions.edit', { defaultValue: 'Edit' })}</Button>
-                  {m.isActive ? (
-                    <Popconfirm title={t('materials.deactivateConfirm')} onConfirm={() => setActiveMutation.mutate({ id: m.id, isActive: false })}>
-                      <Button size="small" danger onClick={(e) => e.stopPropagation()}>{t('materials.deactivate')}</Button>
-                    </Popconfirm>
-                  ) : (
-                    <Button size="small" onClick={(e) => { e.stopPropagation(); setActiveMutation.mutate({ id: m.id, isActive: true }); }}>
-                      {t('materials.activate')}
-                    </Button>
-                  )}
-                </Space>
-              ),
-            },
           ]}
+          onRow={(record) => ({
+            onClick: () => {
+              setEditing(record);
+              editForm.setFieldsValue({
+                name: record.name,
+                unit: record.unit,
+                category: record.category,
+                minQuantity: record.minQuantity,
+                maxQuantity: record.maxQuantity,
+                dimensionX: record.dimensionX,
+                dimensionY: record.dimensionY,
+                dimensionZ: record.dimensionZ,
+                location: record.location,
+                notes: record.notes,
+              });
+            },
+            style: { cursor: 'pointer' },
+          })}
         />
       </div>
 
@@ -346,6 +330,31 @@ export function MaterialsPage() {
         onClose={() => guardedEditClose(() => setEditing(null))}
         width={540}
         destroyOnClose
+        extra={
+          editing ? (
+            <Space>
+              {editing.isActive ? (
+                <Popconfirm
+                  title={t('materials.deactivateConfirm')}
+                  onConfirm={() => setActiveMutation.mutate({ id: editing.id, isActive: false }, { onSuccess: () => setEditing(null) })}
+                  okText={t('common:actions.confirm', { defaultValue: 'Da' })}
+                  cancelText={t('common:actions.no', { defaultValue: 'Ne' })}
+                >
+                  <Button danger loading={setActiveMutation.isPending}>{t('materials.deactivate')}</Button>
+                </Popconfirm>
+              ) : (
+                <Button
+                  type="primary"
+                  ghost
+                  loading={setActiveMutation.isPending}
+                  onClick={() => setActiveMutation.mutate({ id: editing.id, isActive: true }, { onSuccess: () => setEditing(null) })}
+                >
+                  {t('materials.activate')}
+                </Button>
+              )}
+            </Space>
+          ) : null
+        }
       >
         <Form<Omit<CreateMaterialRequest, 'code'>>
           form={editForm}
