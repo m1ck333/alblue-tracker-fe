@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
 import { Typography, Form, Input, InputNumber, DatePicker, Button, Table, Select, Space, App, Popconfirm } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { warehouseApi, materialsApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
+import { useTranslation } from '@alblue/i18n';
 import { StockMovementType } from '@alblue/shared-types';
 import dayjs from 'dayjs';
 
@@ -29,33 +29,24 @@ interface EntryFormShape {
   lines: LineFormShape[];
 }
 
-/**
- * Magacin → Ulaz/Izlaz. Saša 08.06.2026 Excel ("Ulaz" + "Izlaz" sheets).
- * Same shape — only the document-reference label and the create direction
- * differ. type prop drives both.
- */
 export function StockEntryPage({ type }: { type: StockMovementType }) {
   const tenantId = useAuthStore((s) => s.tenantId);
   const queryClient = useQueryClient();
   const { message } = App.useApp();
+  const { t } = useTranslation('dashboard');
   const [form] = Form.useForm<EntryFormShape>();
 
-  const isUlaz = type === StockMovementType.Inflow;
-  const docLabel = isUlaz ? 'Broj prijemnice' : 'Broj narudžbenice';
-  const title = isUlaz ? 'Ulaz materijala (prijemnica)' : 'Izlaz materijala (po narudžbenici)';
-  const submitLabel = isUlaz ? 'Sačuvaj prijemnicu' : 'Sačuvaj izlaz';
+  const isInflow = type === StockMovementType.Inflow;
+  const docLabel = isInflow ? t('warehouse.documentReferenceInflow') : t('warehouse.documentReferenceOutflow');
+  const docPlaceholder = isInflow ? t('warehouse.documentReferenceInflowPlaceholder') : t('warehouse.documentReferenceOutflowPlaceholder');
+  const title = isInflow ? t('warehouse.inflowTitle') : t('warehouse.outflowTitle');
+  const submitLabel = isInflow ? t('warehouse.saveInflow') : t('warehouse.saveOutflow');
 
   const { data: materials } = useQuery({
-    queryKey: ['materials-for-magacin', tenantId],
+    queryKey: ['materials-for-warehouse', tenantId],
     queryFn: () => materialsApi.getAll({ isActive: true, pageSize: 500 }).then((r) => r.data.items),
     enabled: !!tenantId,
   });
-
-  const materialMap = useMemo(() => {
-    const m = new Map<string, typeof materials extends (infer U)[] | undefined ? U : never>();
-    (materials ?? []).forEach((mat) => m.set(mat.id, mat));
-    return m;
-  }, [materials]);
 
   const materialOptions = (materials ?? []).map((m) => ({
     label: `${m.code} — ${m.name}`,
@@ -77,18 +68,18 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
         })),
       }),
     onSuccess: () => {
-      message.success(isUlaz ? 'Ulaz sačuvan.' : 'Izlaz sačuvan.');
+      message.success(isInflow ? t('warehouse.inflowSaved') : t('warehouse.outflowSaved'));
       form.resetFields();
       form.setFieldsValue({ movementDate: dayjs(), lines: [{}] });
-      queryClient.invalidateQueries({ queryKey: ['magacin-stanje'] });
-      queryClient.invalidateQueries({ queryKey: ['magacin-istorija'] });
+      queryClient.invalidateQueries({ queryKey: ['warehouse-stock'] });
+      queryClient.invalidateQueries({ queryKey: ['warehouse-history'] });
     },
-    onError: (err) => message.error(getErrorMessage(err, 'Greška pri snimanju.')),
+    onError: (err) => message.error(getErrorMessage(err, t('warehouse.saveError'))),
   });
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200 }}>
-      <Title level={3}>{title}</Title>
+    <div style={{ padding: 0, maxWidth: 1200 }}>
+      <Title level={4}>{title}</Title>
 
       <Form<EntryFormShape>
         form={form}
@@ -97,18 +88,18 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
         onFinish={(values) => mutation.mutate(values)}
       >
         <Space wrap style={{ marginBottom: 16 }}>
-          <Form.Item label={docLabel} name="documentReference" required rules={[{ required: true, message: `${docLabel} je obavezan.` }]}>
-            <Input placeholder={isUlaz ? '2026/043' : 'ORD-2026-006'} style={{ width: 220 }} maxLength={50} />
+          <Form.Item label={docLabel} name="documentReference" required rules={[{ required: true, message: t('warehouse.documentReferenceRequired') }]}>
+            <Input placeholder={docPlaceholder} style={{ width: 220 }} maxLength={50} />
           </Form.Item>
-          <Form.Item label="Datum" name="movementDate" required>
+          <Form.Item label={t('warehouse.date')} name="movementDate" required>
             <DatePicker format="DD.MM.YYYY" style={{ width: 160 }} />
           </Form.Item>
-          <Form.Item label="Napomena (zaglavlje)" name="notes">
+          <Form.Item label={t('warehouse.headerNotes')} name="notes">
             <Input style={{ width: 320 }} />
           </Form.Item>
         </Space>
 
-        <Text strong>Stavke materijala</Text>
+        <Text strong>{t('warehouse.lines')}</Text>
         <Form.List name="lines">
           {(fields, { add, remove }) => (
             <>
@@ -119,42 +110,42 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
                 dataSource={fields.map((f) => ({ ...f, key: f.key }))}
                 columns={[
                   {
-                    title: 'Materijal',
+                    title: t('warehouse.name'),
                     width: 280,
                     render: (_, field) => (
-                      <Form.Item name={[field.name, 'materialId']} noStyle rules={[{ required: true, message: 'Izaberi materijal' }]}>
-                        <Select showSearch optionFilterProp="label" options={materialOptions} placeholder="Izaberi…" style={{ width: '100%' }} />
+                      <Form.Item name={[field.name, 'materialId']} noStyle rules={[{ required: true, message: t('warehouse.lineMaterialRequired') }]}>
+                        <Select showSearch optionFilterProp="label" options={materialOptions} placeholder={t('warehouse.selectMaterial')} style={{ width: '100%' }} />
                       </Form.Item>
                     ),
                   },
                   {
-                    title: 'Količina',
+                    title: t('warehouse.quantity'),
                     width: 110,
                     render: (_, field) => (
-                      <Form.Item name={[field.name, 'quantity']} noStyle rules={[{ required: true, message: 'Količina' }]}>
+                      <Form.Item name={[field.name, 'quantity']} noStyle rules={[{ required: true, message: t('warehouse.lineQuantityRequired') }]}>
                         <InputNumber min={0.001} step={1} style={{ width: '100%' }} />
                       </Form.Item>
                     ),
                   },
                   {
-                    title: isUlaz ? 'Cena po JM' : 'Cena po JM (opciono)',
-                    width: 140,
+                    title: isInflow ? t('warehouse.unitPrice') : t('warehouse.unitPriceOptional'),
+                    width: 160,
                     render: (_, field) => (
-                      <Form.Item name={[field.name, 'unitPrice']} noStyle rules={isUlaz ? [{ required: true, message: 'Cena' }] : undefined}>
+                      <Form.Item name={[field.name, 'unitPrice']} noStyle rules={isInflow ? [{ required: true }] : undefined}>
                         <InputNumber
                           min={0}
                           step={1}
                           style={{ width: '100%' }}
-                          placeholder={isUlaz ? '' : 'Preuzima poslednju'}
+                          placeholder={isInflow ? '' : t('warehouse.unitPriceFallbackHint')}
                         />
                       </Form.Item>
                     ),
                   },
                   {
-                    title: 'Napomena',
+                    title: t('warehouse.notes'),
                     render: (_, field) => (
                       <Form.Item name={[field.name, 'notes']} noStyle>
-                        <Input placeholder="—" />
+                        <Input placeholder={t('warehouse.lineNotesPlaceholder')} />
                       </Form.Item>
                     ),
                   },
@@ -163,14 +154,14 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
                     width: 50,
                     render: (_, field) =>
                       fields.length > 1 ? (
-                        <Popconfirm title="Ukloni stavku?" onConfirm={() => remove(field.name)}>
+                        <Popconfirm title={t('warehouse.removeLine')} onConfirm={() => remove(field.name)}>
                           <Button danger size="small" icon={<DeleteOutlined />} />
                         </Popconfirm>
                       ) : null,
                   },
                 ]}
               />
-              <Button onClick={() => add({})} icon={<PlusOutlined />}>Dodaj stavku</Button>
+              <Button onClick={() => add({})} icon={<PlusOutlined />}>{t('warehouse.addLine')}</Button>
             </>
           )}
         </Form.List>

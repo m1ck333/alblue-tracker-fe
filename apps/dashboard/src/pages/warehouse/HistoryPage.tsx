@@ -1,21 +1,22 @@
 import { useState } from 'react';
-import { Typography, Table, Tag, Space, DatePicker, Select, Input } from 'antd';
+import { Typography, Table, Tag, Space, DatePicker, Select, Input, Empty } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 import { warehouseApi, materialsApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
+import { useTranslation } from '@alblue/i18n';
 import { StockMovementType } from '@alblue/shared-types';
 import type { StockMovementDto } from '@alblue/shared-types';
+import { useTableHeight } from '../../hooks/useTableHeight';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
-/**
- * Magacin → Istorija transakcija. Paginated log of all Ulaz/Izlaz with
- * type/date/material/doc-ref filters.
- */
 export function HistoryPage() {
   const tenantId = useAuthStore((s) => s.tenantId);
+  const { t } = useTranslation('dashboard');
+  const { ref: tableWrapperRef, height: tableBodyHeight } = useTableHeight();
+
   const [type, setType] = useState<StockMovementType | undefined>();
   const [materialId, setMaterialId] = useState<string | undefined>();
   const [docRef, setDocRef] = useState('');
@@ -24,14 +25,14 @@ export function HistoryPage() {
   const [pageSize, setPageSize] = useState(50);
 
   const { data: materials } = useQuery({
-    queryKey: ['materials-for-istorija', tenantId],
+    queryKey: ['materials-for-history', tenantId],
     queryFn: () => materialsApi.getAll({ pageSize: 500 }).then((r) => r.data.items),
     enabled: !!tenantId,
   });
 
   const { data, isLoading } = useQuery({
     queryKey: [
-      'magacin-istorija', tenantId, type, materialId, docRef,
+      'warehouse-history', tenantId, type, materialId, docRef,
       dateRange[0]?.format('YYYY-MM-DD'), dateRange[1]?.format('YYYY-MM-DD'),
       page, pageSize,
     ],
@@ -51,17 +52,19 @@ export function HistoryPage() {
   });
 
   return (
-    <div style={{ padding: 24 }}>
-      <Title level={3}>Istorija transakcija</Title>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+        <Title level={4} style={{ margin: 0 }}>{t('warehouse.historyTitle')}</Title>
+      </div>
 
-      <Space wrap style={{ marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         <Select
           allowClear
-          placeholder="Tip"
-          style={{ width: 120 }}
+          placeholder={t('warehouse.type')}
+          style={{ width: 140 }}
           options={[
-            { label: 'Inflow', value: StockMovementType.Inflow },
-            { label: 'Outflow', value: StockMovementType.Outflow },
+            { label: t('warehouse.inflowLabel'), value: StockMovementType.Inflow },
+            { label: t('warehouse.outflowLabel'), value: StockMovementType.Outflow },
           ]}
           value={type}
           onChange={(v) => { setType(v); setPage(1); }}
@@ -70,7 +73,7 @@ export function HistoryPage() {
           allowClear
           showSearch
           optionFilterProp="label"
-          placeholder="Svi materijali"
+          placeholder={t('warehouse.allMaterials')}
           style={{ width: 260 }}
           options={(materials ?? []).map((m) => ({ label: `${m.code} — ${m.name}`, value: m.id }))}
           value={materialId}
@@ -78,8 +81,8 @@ export function HistoryPage() {
         />
         <Input
           allowClear
-          placeholder="Broj prijemnice / narudžbenice"
-          style={{ width: 240 }}
+          placeholder={t('warehouse.documentReferenceSearch')}
+          style={{ width: 260 }}
           value={docRef}
           onChange={(e) => setDocRef(e.target.value)}
         />
@@ -88,70 +91,73 @@ export function HistoryPage() {
           value={dateRange}
           onChange={(v) => { setDateRange((v ?? [null, null]) as [dayjs.Dayjs | null, dayjs.Dayjs | null]); setPage(1); }}
         />
-      </Space>
+      </div>
 
-      <Table<StockMovementDto>
-        loading={isLoading}
-        dataSource={data?.items}
-        rowKey="id"
-        size="middle"
-        scroll={{ x: 1300 }}
-        pagination={{
-          current: page,
-          pageSize,
-          total: data?.totalCount,
-          showSizeChanger: true,
-          onChange: (p, ps) => { setPage(p); setPageSize(ps); },
-        }}
-        columns={[
-          {
-            title: 'Datum',
-            dataIndex: 'movementDate',
-            width: 130,
-            render: (v: string) => dayjs(v).format('DD.MM.YYYY HH:mm'),
-          },
-          {
-            title: 'Tip',
-            dataIndex: 'type',
-            width: 90,
-            render: (v: 'Inflow' | 'Outflow') =>
-              v === 'Inflow' ? <Tag color="green">Ulaz</Tag> : <Tag color="orange">Izlaz</Tag>,
-          },
-          { title: 'Kod', dataIndex: 'materialCode', width: 90 },
-          { title: 'Naziv', dataIndex: 'materialName', width: 240 },
-          { title: 'JM', dataIndex: 'unit', width: 60 },
-          {
-            title: 'Količina',
-            width: 100,
-            align: 'right' as const,
-            render: (_, r) => {
-              const sign = r.type === 'Outflow' ? '-' : '+';
-              return `${sign}${r.quantity.toLocaleString('sr-RS')}`;
+      <div ref={tableWrapperRef} style={{ flex: 1, minHeight: 0 }}>
+        <Table<StockMovementDto>
+          loading={isLoading}
+          dataSource={data?.items}
+          rowKey="id"
+          size="middle"
+          scroll={{ x: 'max-content', y: tableBodyHeight }}
+          pagination={{
+            current: page,
+            pageSize,
+            total: data?.totalCount,
+            showSizeChanger: true,
+            onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+          }}
+          locale={{ emptyText: <Empty description={t('warehouse.historyEmpty')} image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
+          columns={[
+            {
+              title: t('warehouse.movementDate'),
+              dataIndex: 'movementDate',
+              width: 140,
+              render: (v: string) => dayjs(v).format('DD.MM.YYYY HH:mm'),
             },
-          },
-          { title: 'Kategorija', dataIndex: 'category', width: 140 },
-          { title: 'Prijemnica / Narudžbenica', dataIndex: 'documentReference', width: 200 },
-          {
-            title: 'Cena po JM',
-            dataIndex: 'unitPrice',
-            width: 110,
-            align: 'right' as const,
-            render: (v: number) => v.toLocaleString('sr-RS', { minimumFractionDigits: 2 }),
-          },
-          {
-            title: 'Ukupno',
-            dataIndex: 'totalPrice',
-            width: 120,
-            align: 'right' as const,
-            render: (v: number) => v.toLocaleString('sr-RS', { minimumFractionDigits: 2 }),
-          },
-          {
-            title: 'Napomena',
-            dataIndex: 'notes',
-            render: (v: string | null) => v || '—',
-          },
-        ]}
-      />
+            {
+              title: t('warehouse.type'),
+              dataIndex: 'type',
+              width: 100,
+              render: (v: 'Inflow' | 'Outflow') =>
+                v === 'Inflow' ? <Tag color="green">{t('warehouse.inflowLabel')}</Tag> : <Tag color="orange">{t('warehouse.outflowLabel')}</Tag>,
+            },
+            { title: t('warehouse.code'), dataIndex: 'materialCode', width: 100 },
+            { title: t('warehouse.name'), dataIndex: 'materialName', width: 240 },
+            { title: t('warehouse.unit'), dataIndex: 'unit', width: 60 },
+            {
+              title: t('warehouse.quantity'),
+              width: 110,
+              align: 'right' as const,
+              render: (_, r) => {
+                const sign = r.type === 'Outflow' ? '-' : '+';
+                return `${sign}${r.quantity.toLocaleString('sr-RS')}`;
+              },
+            },
+            { title: t('warehouse.category'), dataIndex: 'category', width: 140 },
+            { title: t('warehouse.documentReference'), dataIndex: 'documentReference', width: 200 },
+            {
+              title: t('warehouse.unitPrice'),
+              dataIndex: 'unitPrice',
+              width: 120,
+              align: 'right' as const,
+              render: (v: number) => v.toLocaleString('sr-RS', { minimumFractionDigits: 2 }),
+            },
+            {
+              title: t('warehouse.total'),
+              dataIndex: 'totalPrice',
+              width: 130,
+              align: 'right' as const,
+              render: (v: number) => v.toLocaleString('sr-RS', { minimumFractionDigits: 2 }),
+            },
+            {
+              title: t('warehouse.notes'),
+              dataIndex: 'notes',
+              render: (v: string | null) => v || '—',
+            },
+          ]}
+        />
+      </div>
     </div>
   );
 }
