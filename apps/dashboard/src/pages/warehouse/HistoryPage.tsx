@@ -121,12 +121,13 @@ export function HistoryPage() {
               dataIndex: 'type',
               width: 100,
               fixed: 'left' as const,
+              align: 'center' as const,
               render: (v: 'Inflow' | 'Outflow') =>
                 v === 'Inflow' ? <Tag color="green">{t('warehouse.inflowLabel')}</Tag> : <Tag color="orange">{t('warehouse.outflowLabel')}</Tag>,
             },
             { title: t('warehouse.code'), dataIndex: 'materialCode', width: 100, fixed: 'left' as const },
             { title: t('warehouse.name'), dataIndex: 'materialName', width: 240, fixed: 'left' as const },
-            { title: t('warehouse.unit'), dataIndex: 'unit', width: 60 },
+            { title: t('warehouse.unit'), dataIndex: 'unit', width: 60, align: 'center' as const },
             {
               title: t('warehouse.quantity'),
               width: 110,

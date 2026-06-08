@@ -226,7 +226,7 @@ export function MaterialsPage() {
           columns={[
             { title: t('materials.code'), dataIndex: 'code', width: 110, sorter: true, fixed: 'left' },
             { title: t('materials.name'), dataIndex: 'name', width: 260, sorter: true, fixed: 'left' },
-            { title: t('materials.unit'), dataIndex: 'unit', width: 70 },
+            { title: t('materials.unit'), dataIndex: 'unit', width: 70, align: 'center' as const },
             { title: t('materials.category'), dataIndex: 'category', width: 160, sorter: true },
             {
               title: t('materials.dimensions'),
@@ -243,6 +243,7 @@ export function MaterialsPage() {
               title: t('materials.status'),
               dataIndex: 'isActive',
               width: 110,
+              align: 'center' as const,
               render: (v: boolean) => v ? <Tag color="green">{t('materials.statusActive')}</Tag> : <Tag>{t('materials.statusInactive')}</Tag>,
             },
           ]}

@@ -136,8 +136,8 @@ export function StockPage() {
           columns={[
             { title: t('warehouse.code'), dataIndex: 'code', width: 110, fixed: 'left' },
             { title: t('warehouse.name'), dataIndex: 'name', width: 240, fixed: 'left' },
-            { title: t('materials.status'), dataIndex: 'status', width: 140, render: statusTag },
-            { title: t('warehouse.unit'), dataIndex: 'unit', width: 70 },
+            { title: t('materials.status'), dataIndex: 'status', width: 140, align: 'center' as const, render: statusTag },
+            { title: t('warehouse.unit'), dataIndex: 'unit', width: 70, align: 'center' as const },
             { title: t('warehouse.category'), dataIndex: 'category', width: 160 },
             {
               title: t('warehouse.quantity'),
