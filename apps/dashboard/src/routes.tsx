@@ -21,10 +21,11 @@ import { TenantsPage } from './pages/admin/TenantsPage';
 import { ShiftsPage } from './pages/admin/ShiftsPage';
 import { MaterialsPage } from './pages/admin/MaterialsPage';
 import { ReportsPage } from './pages/reports/ReportsPage';
-import { StanjePage } from './pages/magacin/StanjePage';
-import { StockEntryPage } from './pages/magacin/StockEntryPage';
-import { IstorijaPage } from './pages/magacin/IstorijaPage';
+import { StockPage } from './pages/warehouse/StockPage';
+import { StockEntryPage } from './pages/warehouse/StockEntryPage';
+import { HistoryPage } from './pages/warehouse/HistoryPage';
 import { StockMovementType } from '@alblue/shared-types';
+import { NotFoundPage } from './pages/not-found/NotFoundPage';
 import { RoleRedirect } from './components/RoleRedirect';
 
 export function AppRoutes() {
@@ -171,40 +172,41 @@ export function AppRoutes() {
 
         {/* Magacin (warehouse) — Saša 08.06.2026 */}
         <Route
-          path="/magacin/stanje"
+          path="/warehouse/stock"
           element={
             <RequireRole roles={[UserRole.Admin, UserRole.Manager, UserRole.Coordinator, UserRole.SuperAdmin, UserRole.Magacioner]}>
-              <StanjePage />
+              <StockPage />
             </RequireRole>
           }
         />
         <Route
-          path="/magacin/ulaz"
+          path="/warehouse/inflow"
           element={
             <RequireRole roles={[UserRole.Admin, UserRole.Manager, UserRole.SuperAdmin, UserRole.Magacioner]}>
-              <StockEntryPage type={StockMovementType.Ulaz} />
+              <StockEntryPage type={StockMovementType.Inflow} />
             </RequireRole>
           }
         />
         <Route
-          path="/magacin/izlaz"
+          path="/warehouse/outflow"
           element={
             <RequireRole roles={[UserRole.Admin, UserRole.Manager, UserRole.SuperAdmin, UserRole.Magacioner]}>
-              <StockEntryPage type={StockMovementType.Izlaz} />
+              <StockEntryPage type={StockMovementType.Outflow} />
             </RequireRole>
           }
         />
         <Route
-          path="/magacin/istorija"
+          path="/warehouse/history"
           element={
             <RequireRole roles={[UserRole.Admin, UserRole.Manager, UserRole.Coordinator, UserRole.SuperAdmin, UserRole.Magacioner]}>
-              <IstorijaPage />
+              <HistoryPage />
             </RequireRole>
           }
         />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

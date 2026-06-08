@@ -799,7 +799,7 @@ export interface StockMovementDto {
   dimensionX: number | null;
   dimensionY: number | null;
   dimensionZ: number | null;
-  type: 'Ulaz' | 'Izlaz';
+  type: 'Inflow' | 'Outflow';
   quantity: number;
   unitPrice: number;
   totalPrice: number;
@@ -809,7 +809,7 @@ export interface StockMovementDto {
   createdAt: string;
 }
 
-export interface StanjeRowDto {
+export interface StockBalanceRowDto {
   materialId: string;
   code: string;
   name: string;
@@ -823,7 +823,7 @@ export interface StanjeRowDto {
   totalValue: number;
   minQuantity: number;
   maxQuantity: number;
-  status: 'Ok' | 'IspodMin' | 'IznadMax';
+  status: 'Ok' | 'BelowMin' | 'AboveMax';
   location: string | null;
   notes: string | null;
 }

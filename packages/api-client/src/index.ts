@@ -24,5 +24,5 @@ export { reportsApi } from './api/reports';
 export type { TimeTrackingQuery, WorkerHoursQuery } from './api/reports';
 export { materialsApi } from './api/materials';
 export type { CreateMaterialRequest, UpdateMaterialRequest, GetMaterialsParams } from './api/materials';
-export { magacinApi } from './api/magacin';
-export type { StockEntryLineRequest, CreateStockEntryRequest, GetIstorijaParams } from './api/magacin';
+export { warehouseApi } from './api/warehouse';
+export type { StockEntryLineRequest, CreateStockEntryRequest, GetStockHistoryParams } from './api/warehouse';

@@ -82,12 +82,12 @@ export enum UserRole {
 }
 
 export enum StockMovementType {
-  Ulaz = 'Ulaz',
-  Izlaz = 'Izlaz',
+  Inflow = 'Inflow',
+  Outflow = 'Outflow',
 }
 
 export enum StockStatus {
   Ok = 'Ok',
-  IspodMin = 'IspodMin',
-  IznadMax = 'IznadMax',
+  BelowMin = 'BelowMin',
+  AboveMax = 'AboveMax',
 }

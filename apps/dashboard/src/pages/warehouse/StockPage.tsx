@@ -1,16 +1,16 @@
 import { useMemo, useState } from 'react';
 import { Typography, Table, Tag, Space, Input, Select, Empty } from 'antd';
 import { useQuery } from '@tanstack/react-query';
-import { magacinApi } from '@alblue/api-client';
+import { warehouseApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
-import type { StanjeRowDto } from '@alblue/shared-types';
+import type { StockBalanceRowDto } from '@alblue/shared-types';
 
 const { Title } = Typography;
 
-function statusTag(status: StanjeRowDto['status']) {
+function statusTag(status: StockBalanceRowDto['status']) {
   switch (status) {
-    case 'IspodMin': return <Tag color="red">⚠ ISPOD MIN</Tag>;
-    case 'IznadMax': return <Tag color="orange">↑ IZNAD MAX</Tag>;
+    case 'BelowMin': return <Tag color="red">⚠ ISPOD MIN</Tag>;
+    case 'AboveMax': return <Tag color="orange">↑ IZNAD MAX</Tag>;
     default: return <Tag color="green">✓ OK</Tag>;
   }
 }
@@ -19,15 +19,15 @@ function statusTag(status: StanjeRowDto['status']) {
  * Magacin → Stanje. Read-only view of current inventory + status flags.
  * Rows sorted by status first (warnings on top — Saša Excel pattern).
  */
-export function StanjePage() {
+export function StockPage() {
   const tenantId = useAuthStore((s) => s.tenantId);
   const [search, setSearch] = useState('');
   const [category, setKategorija] = useState<string | undefined>();
-  const [statusFilter, setStatusFilter] = useState<StanjeRowDto['status'] | undefined>();
+  const [statusFilter, setStatusFilter] = useState<StockBalanceRowDto['status'] | undefined>();
 
   const { data, isLoading } = useQuery({
     queryKey: ['magacin-stanje', tenantId],
-    queryFn: () => magacinApi.getStanje().then((r) => r.data),
+    queryFn: () => warehouseApi.getStockBalances().then((r) => r.data),
     enabled: !!tenantId,
     refetchInterval: 30_000,
   });
@@ -74,16 +74,16 @@ export function StanjePage() {
           placeholder="Svi statusi"
           style={{ width: 180 }}
           options={[
-            { label: '⚠ ISPOD MIN', value: 'IspodMin' },
-            { label: '↑ IZNAD MAX', value: 'IznadMax' },
+            { label: '⚠ ISPOD MIN', value: 'BelowMin' },
+            { label: '↑ IZNAD MAX', value: 'AboveMax' },
             { label: '✓ OK', value: 'Ok' },
           ]}
           value={statusFilter}
-          onChange={(v) => setStatusFilter(v as StanjeRowDto['status'] | undefined)}
+          onChange={(v) => setStatusFilter(v as StockBalanceRowDto['status'] | undefined)}
         />
       </Space>
 
-      <Table<StanjeRowDto>
+      <Table<StockBalanceRowDto>
         loading={isLoading}
         dataSource={filtered}
         rowKey="materialId"

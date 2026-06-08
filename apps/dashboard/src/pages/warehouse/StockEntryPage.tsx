@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Typography, Form, Input, InputNumber, DatePicker, Button, Table, Select, Space, App, Popconfirm } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { magacinApi, materialsApi } from '@alblue/api-client';
+import { warehouseApi, materialsApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
 import { StockMovementType } from '@alblue/shared-types';
 import dayjs from 'dayjs';
@@ -40,7 +40,7 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
   const { message } = App.useApp();
   const [form] = Form.useForm<EntryFormShape>();
 
-  const isUlaz = type === StockMovementType.Ulaz;
+  const isUlaz = type === StockMovementType.Inflow;
   const docLabel = isUlaz ? 'Broj prijemnice' : 'Broj narudžbenice';
   const title = isUlaz ? 'Ulaz materijala (prijemnica)' : 'Izlaz materijala (po narudžbenici)';
   const submitLabel = isUlaz ? 'Sačuvaj prijemnicu' : 'Sačuvaj izlaz';
@@ -64,7 +64,7 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
 
   const mutation = useMutation({
     mutationFn: (values: EntryFormShape) =>
-      magacinApi.createEntry({
+      warehouseApi.createEntry({
         type,
         documentReference: values.documentReference!.trim(),
         movementDate: values.movementDate.toISOString(),

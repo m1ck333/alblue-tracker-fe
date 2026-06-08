@@ -96,14 +96,14 @@ export function SidebarMenu({ collapsed: _collapsed }: SidebarMenuProps) {
       label: t('nav.reports'),
     },
     canReadMagacin && {
-      key: 'magacin',
+      key: 'warehouse',
       icon: <InboxOutlined />,
-      label: t('nav.magacin'),
+      label: t('nav.warehouse'),
       children: [
-        { key: '/magacin/stanje', icon: <DatabaseOutlined />, label: t('nav.stanje') },
-        isMagacionerOrAdmin && { key: '/magacin/ulaz', icon: <ImportOutlined />, label: t('nav.ulaz') },
-        isMagacionerOrAdmin && { key: '/magacin/izlaz', icon: <ExportOutlined />, label: t('nav.izlaz') },
-        { key: '/magacin/istorija', icon: <HistoryOutlined />, label: t('nav.istorija') },
+        { key: '/warehouse/stock', icon: <DatabaseOutlined />, label: t('nav.stock') },
+        isMagacionerOrAdmin && { key: '/warehouse/inflow', icon: <ImportOutlined />, label: t('nav.inflow') },
+        isMagacionerOrAdmin && { key: '/warehouse/outflow', icon: <ExportOutlined />, label: t('nav.outflow') },
+        { key: '/warehouse/history', icon: <HistoryOutlined />, label: t('nav.history') },
       ].filter(Boolean),
     },
     isAdminOrManager && {

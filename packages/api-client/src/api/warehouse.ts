@@ -1,5 +1,5 @@
 import { apiClient } from '../axios-instance';
-import type { StanjeRowDto, StockMovementDto, PagedResult } from '@alblue/shared-types';
+import type { StockBalanceRowDto, StockMovementDto, PagedResult } from '@alblue/shared-types';
 import type { StockMovementType } from '@alblue/shared-types';
 
 export interface StockEntryLineRequest {
@@ -17,7 +17,7 @@ export interface CreateStockEntryRequest {
   lines: StockEntryLineRequest[];
 }
 
-export interface GetIstorijaParams {
+export interface GetStockHistoryParams {
   type?: StockMovementType;
   materialId?: string;
   docRef?: string;
@@ -27,11 +27,11 @@ export interface GetIstorijaParams {
   pageSize?: number;
 }
 
-export const magacinApi = {
-  getStanje() {
-    return apiClient.get<StanjeRowDto[]>('/magacin/stanje');
+export const warehouseApi = {
+  getStockBalances() {
+    return apiClient.get<StockBalanceRowDto[]>('/magacin/stanje');
   },
-  getIstorija(params: GetIstorijaParams = {}) {
+  getStockHistory(params: GetStockHistoryParams = {}) {
     return apiClient.get<PagedResult<StockMovementDto>>('/magacin/istorija', { params });
   },
   createEntry(data: CreateStockEntryRequest) {

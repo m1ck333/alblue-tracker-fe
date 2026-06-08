@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Typography, Table, Tag, Space, DatePicker, Select, Input } from 'antd';
 import { useQuery } from '@tanstack/react-query';
-import { magacinApi, materialsApi } from '@alblue/api-client';
+import { warehouseApi, materialsApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
 import { StockMovementType } from '@alblue/shared-types';
 import type { StockMovementDto } from '@alblue/shared-types';
@@ -14,7 +14,7 @@ const { RangePicker } = DatePicker;
  * Magacin → Istorija transakcija. Paginated log of all Ulaz/Izlaz with
  * type/date/material/doc-ref filters.
  */
-export function IstorijaPage() {
+export function HistoryPage() {
   const tenantId = useAuthStore((s) => s.tenantId);
   const [type, setType] = useState<StockMovementType | undefined>();
   const [materialId, setMaterialId] = useState<string | undefined>();
@@ -36,8 +36,8 @@ export function IstorijaPage() {
       page, pageSize,
     ],
     queryFn: () =>
-      magacinApi
-        .getIstorija({
+      warehouseApi
+        .getStockHistory({
           type,
           materialId,
           docRef: docRef || undefined,
@@ -60,8 +60,8 @@ export function IstorijaPage() {
           placeholder="Tip"
           style={{ width: 120 }}
           options={[
-            { label: 'Ulaz', value: StockMovementType.Ulaz },
-            { label: 'Izlaz', value: StockMovementType.Izlaz },
+            { label: 'Inflow', value: StockMovementType.Inflow },
+            { label: 'Outflow', value: StockMovementType.Outflow },
           ]}
           value={type}
           onChange={(v) => { setType(v); setPage(1); }}
@@ -114,8 +114,8 @@ export function IstorijaPage() {
             title: 'Tip',
             dataIndex: 'type',
             width: 90,
-            render: (v: 'Ulaz' | 'Izlaz') =>
-              v === 'Ulaz' ? <Tag color="green">Ulaz</Tag> : <Tag color="orange">Izlaz</Tag>,
+            render: (v: 'Inflow' | 'Outflow') =>
+              v === 'Inflow' ? <Tag color="green">Ulaz</Tag> : <Tag color="orange">Izlaz</Tag>,
           },
           { title: 'Kod', dataIndex: 'materialCode', width: 90 },
           { title: 'Naziv', dataIndex: 'materialName', width: 240 },
@@ -125,7 +125,7 @@ export function IstorijaPage() {
             width: 100,
             align: 'right' as const,
             render: (_, r) => {
-              const sign = r.type === 'Izlaz' ? '-' : '+';
+              const sign = r.type === 'Outflow' ? '-' : '+';
               return `${sign}${r.quantity.toLocaleString('sr-RS')}`;
             },
           },
