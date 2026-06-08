@@ -58,6 +58,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   Cell,
+  LabelList,
 } from 'recharts';
 
 dayjs.extend(isoWeek);
@@ -2375,17 +2376,25 @@ function ProductManufacturingTimeTab() {
             '#531dab', '#c41d7f', '#08979c', '#d48806', '#7cb305',
           ];
           const chartData = aggregateRows.map((row) => {
-            const entry: Record<string, number | string> = { label: row.label };
+            const entry: Record<string, number | string> = {
+              label: row.label,
+              // Saša 08.06.2026 (Bug 3): show the row total at the end
+              // of the horizontal bar. Read via LabelList on the last
+              // Bar — see comment below.
+              total: row.total,
+            };
             processColumns.forEach((pc) => {
               entry[`dur-${pc.processId}`] = row.dur[pc.processId] ?? 0;
               entry[`gap-${pc.processId}`] = row.gap[pc.processId] ?? 0;
             });
             return entry;
           });
+          // Width budget for the right-side total label — increase the
+          // chart's right margin so the label has room to render.
           return (
             <Card size="small" title={t('reports.manufacturingChartTitle')}>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 24, left: 16, bottom: 8 }}>
+                <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 80, left: 16, bottom: 8 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" tickFormatter={(v: number) => formatSeconds(v)} />
                   <YAxis type="category" dataKey="label" width={300} />
@@ -2403,25 +2412,43 @@ function ProductManufacturingTimeTab() {
                     formatter={(value, name) => [formatSeconds(Number(value)), String(name)]}
                   />
                   <Legend />
-                  {processColumns.flatMap((pc, idx) => [
-                    <Bar
-                      key={`dur-${pc.processId}`}
-                      dataKey={`dur-${pc.processId}`}
-                      name={`${pc.processCode} — ${pc.processName}`}
-                      stackId="comp"
-                      fill={processPalette[idx % processPalette.length]}
-                      maxBarSize={48}
-                    />,
-                    <Bar
-                      key={`gap-${pc.processId}`}
-                      dataKey={`gap-${pc.processId}`}
-                      name={t('reports.manufacturingGapToNext')}
-                      stackId="comp"
-                      fill={token.colorFillSecondary}
-                      legendType="none"
-                      maxBarSize={48}
-                    />,
-                  ])}
+                  {processColumns.flatMap((pc, idx) => {
+                    const isLast = idx === processColumns.length - 1;
+                    return [
+                      <Bar
+                        key={`dur-${pc.processId}`}
+                        dataKey={`dur-${pc.processId}`}
+                        name={`${pc.processCode} — ${pc.processName}`}
+                        stackId="comp"
+                        fill={processPalette[idx % processPalette.length]}
+                        maxBarSize={48}
+                      >
+                        {/* Saša 08.06.2026 (Bug 3): show row total at end
+                            of bar. Attached to the very last stack segment
+                            (the duration of the last process; gap-after for
+                            the last process is skipped above). */}
+                        {isLast ? (
+                          <LabelList
+                            dataKey="total"
+                            position="right"
+                            formatter={(value) => formatSeconds(Number(value))}
+                            style={{ fill: token.colorText, fontSize: 12, fontWeight: 600 }}
+                          />
+                        ) : null}
+                      </Bar>,
+                      !isLast ? (
+                        <Bar
+                          key={`gap-${pc.processId}`}
+                          dataKey={`gap-${pc.processId}`}
+                          name={t('reports.manufacturingGapToNext')}
+                          stackId="comp"
+                          fill={token.colorFillSecondary}
+                          legendType="none"
+                          maxBarSize={48}
+                        />
+                      ) : null,
+                    ];
+                  })}
                 </BarChart>
               </ResponsiveContainer>
             </Card>

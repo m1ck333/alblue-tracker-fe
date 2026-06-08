@@ -12,7 +12,8 @@
     "password": "Lozinka",
     "signingIn": "Prijavljivanje...",
     "signIn": "PRIJAVI SE",
-    "failed": "Prijava nije uspela"
+    "failed": "Prijava nije uspela",
+    "overtimeExhausted": "Maksimalno dozvoljeno prekovremeno radno vreme za danas je iskorišćeno. Prijava nije moguća."
   },
   "queue": {
     "title": "Red narudžbina",

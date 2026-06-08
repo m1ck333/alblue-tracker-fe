@@ -12,7 +12,8 @@
     "password": "Password",
     "signingIn": "Signing in...",
     "signIn": "SIGN IN",
-    "failed": "Login failed"
+    "failed": "Login failed",
+    "overtimeExhausted": "You have reached the maximum overtime allowed for today. Login is not possible."
   },
   "queue": {
     "title": "Order Queue",
