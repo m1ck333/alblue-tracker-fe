@@ -190,12 +190,16 @@ export function SpecialRequestTypesPage() {
       dataIndex: 'code',
       sorter: true,
       sortOrder: sortBy === 'code' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
+      fixed: 'left' as const,
+      width: 120,
     },
     {
       title: t('common:labels.name'),
       dataIndex: 'name',
       sorter: true,
       sortOrder: sortBy === 'name' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
+      fixed: 'left' as const,
+      width: 240,
     },
     { title: t('common:labels.description'), dataIndex: 'description', ellipsis: true },
     {

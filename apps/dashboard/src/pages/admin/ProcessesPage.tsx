@@ -335,6 +335,7 @@ export function ProcessesPage() {
       title: '',
       dataIndex: 'dragHandle',
       width: 40,
+      fixed: 'left' as const,
       render: () => <DragHandle />,
     },
     {
@@ -342,12 +343,16 @@ export function ProcessesPage() {
       dataIndex: 'code',
       sorter: true,
       sortOrder: sortBy === 'code' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
+      fixed: 'left' as const,
+      width: 120,
     },
     {
       title: t('common:labels.name'),
       dataIndex: 'name',
       sorter: true,
       sortOrder: sortBy === 'name' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
+      fixed: 'left' as const,
+      width: 240,
     },
     {
       title: t('admin.processes.sequenceOrder'),

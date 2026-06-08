@@ -99,12 +99,14 @@ export function ChangeRequestsPage() {
       title: t('common:labels.status'),
       dataIndex: 'status',
       width: 110,
+      fixed: 'left' as const,
       render: (s: RequestStatus) => <StatusBadge status={s} />,
     },
     {
       title: t('common:labels.orderNumber'),
       dataIndex: 'orderNumber',
       width: 140,
+      fixed: 'left' as const,
       render: (orderNumber: string | null, record: ChangeRequestDto) =>
         orderNumber ? (
           <Button type="link" size="small" style={{ padding: 0 }} onClick={(e) => { e.stopPropagation(); navigate(`/orders?detail=${record.orderId}`); }}>

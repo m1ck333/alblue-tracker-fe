@@ -113,17 +113,19 @@ export function HistoryPage() {
               title: t('warehouse.movementDate'),
               dataIndex: 'movementDate',
               width: 140,
+              fixed: 'left' as const,
               render: (v: string) => dayjs(v).format('DD.MM.YYYY HH:mm'),
             },
             {
               title: t('warehouse.type'),
               dataIndex: 'type',
               width: 100,
+              fixed: 'left' as const,
               render: (v: 'Inflow' | 'Outflow') =>
                 v === 'Inflow' ? <Tag color="green">{t('warehouse.inflowLabel')}</Tag> : <Tag color="orange">{t('warehouse.outflowLabel')}</Tag>,
             },
-            { title: t('warehouse.code'), dataIndex: 'materialCode', width: 100 },
-            { title: t('warehouse.name'), dataIndex: 'materialName', width: 240 },
+            { title: t('warehouse.code'), dataIndex: 'materialCode', width: 100, fixed: 'left' as const },
+            { title: t('warehouse.name'), dataIndex: 'materialName', width: 240, fixed: 'left' as const },
             { title: t('warehouse.unit'), dataIndex: 'unit', width: 60 },
             {
               title: t('warehouse.quantity'),

@@ -138,6 +138,8 @@ export function OrderTypesPage() {
       dataIndex: 'name',
       sorter: true,
       sortOrder: sortBy === 'name' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
+      fixed: 'left' as const,
+      width: 240,
     },
     {
       title: t('admin.orderTypes.allowsManualProcesses'),

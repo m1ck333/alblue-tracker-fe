@@ -178,6 +178,8 @@ export function UsersPage() {
       dataIndex: 'fullName',
       sorter: true,
       sortOrder: sortBy === 'lastName' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
+      fixed: 'left' as const,
+      width: 220,
     },
     {
       title: t('common:labels.email'),

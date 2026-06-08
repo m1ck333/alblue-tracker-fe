@@ -1019,6 +1019,7 @@ export function OrderListPage() {
         title: t('common:labels.priority'),
         dataIndex: 'priority',
         width: 70,
+        fixed: 'left',
         sorter: true,
         sortOrder: sortBy === 'priority' ? (sortDirection === 'desc' ? 'descend' : 'ascend') : null,
       },
@@ -1026,6 +1027,7 @@ export function OrderListPage() {
         title: t('orders.orderNumber'),
         dataIndex: 'orderNumber',
         width: 160,
+        fixed: 'left',
         sorter: true,
         sortOrder: sortBy === 'orderNumber' ? (sortDirection === 'desc' ? 'descend' : 'ascend') : null,
         render: (text: string, record: OrderMasterViewDto) => (
