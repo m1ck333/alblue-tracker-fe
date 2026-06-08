@@ -32,11 +32,23 @@ export interface UserDto {
   lastName: string;
   fullName: string;
   role: UserRole;
+  /** Extra roles beyond the primary `role`. Saša 08.06.2026 — a user can be
+   *  e.g. Coordinator (primary) + Magacioner (additional). Use `hasRole`
+   *  helper instead of comparing `role` directly when checking permissions. */
+  additionalRoles: UserRole[];
   processes: { processId: string }[];
   canIncludeWithdrawnInAnalysis: boolean;
   isActive: boolean;
   createdAt: string;
   updatedAt: string | null;
+}
+
+/** Check if user has the given role (primary or additional). Preferred over
+ *  raw `user.role === X` so the Magacin module multi-role policy is honored. */
+export function hasRole(user: Pick<UserDto, 'role' | 'additionalRoles'> | null | undefined, role: UserRole): boolean {
+  if (!user) return false;
+  if (user.role === role) return true;
+  return user.additionalRoles?.includes(role) ?? false;
 }
 
 export interface ShiftDto {

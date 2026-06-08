@@ -15,10 +15,16 @@ import {
   BankOutlined,
   ClockCircleOutlined,
   BarChartOutlined,
+  InboxOutlined,
+  DatabaseOutlined,
+  ImportOutlined,
+  ExportOutlined,
+  HistoryOutlined,
+  BlockOutlined,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@alblue/auth';
-import { UserRole, RequestStatus } from '@alblue/shared-types';
+import { UserRole, RequestStatus, hasRole } from '@alblue/shared-types';
 import { blockRequestsApi } from '@alblue/api-client';
 import { useTranslation } from '@alblue/i18n';
 
@@ -38,6 +44,13 @@ export function SidebarMenu({ collapsed: _collapsed }: SidebarMenuProps) {
     role === UserRole.Coordinator || role === UserRole.Manager || role === UserRole.Admin || role === UserRole.SuperAdmin;
   const isAdminOrManager = role === UserRole.Admin || role === UserRole.Manager || role === UserRole.SuperAdmin;
   const isSales = role === UserRole.SalesManager;
+  // Magacin gating — Saša 08.06.2026: read access (Stanje/Istorija) for
+  // management AND Magacioner role; write access (Ulaz/Izlaz/Materijali)
+  // for management + Magacioner. Magacioner can be either the primary role
+  // or an additional role on a user with another primary (e.g. Coordinator
+  // + Magacioner).
+  const isMagacionerOrAdmin = isAdminOrManager || hasRole(user, UserRole.Magacioner);
+  const canReadMagacin = isCoordOrAbove || hasRole(user, UserRole.Magacioner);
 
   const { data: pendingBlockCount } = useQuery({
     queryKey: ['block-requests-pending-count', tenantId],
@@ -82,6 +95,17 @@ export function SidebarMenu({ collapsed: _collapsed }: SidebarMenuProps) {
       icon: <BarChartOutlined />,
       label: t('nav.reports'),
     },
+    canReadMagacin && {
+      key: 'magacin',
+      icon: <InboxOutlined />,
+      label: t('nav.magacin'),
+      children: [
+        { key: '/magacin/stanje', icon: <DatabaseOutlined />, label: t('nav.stanje') },
+        isMagacionerOrAdmin && { key: '/magacin/ulaz', icon: <ImportOutlined />, label: t('nav.ulaz') },
+        isMagacionerOrAdmin && { key: '/magacin/izlaz', icon: <ExportOutlined />, label: t('nav.izlaz') },
+        { key: '/magacin/istorija', icon: <HistoryOutlined />, label: t('nav.istorija') },
+      ].filter(Boolean),
+    },
     isAdminOrManager && {
       key: 'admin',
       icon: <SettingOutlined />,
@@ -92,6 +116,7 @@ export function SidebarMenu({ collapsed: _collapsed }: SidebarMenuProps) {
         { key: '/admin/product-categories', icon: <AppstoreOutlined />, label: t('nav.categories') },
         { key: '/admin/order-types', icon: <ProfileOutlined />, label: t('nav.orderTypes') },
         { key: '/admin/special-request-types', icon: <TagOutlined />, label: t('nav.specialRequests') },
+        { key: '/admin/materials', icon: <BlockOutlined />, label: t('nav.materials') },
         role === UserRole.SuperAdmin && {
           key: '/admin/tenants',
           icon: <BankOutlined />,
