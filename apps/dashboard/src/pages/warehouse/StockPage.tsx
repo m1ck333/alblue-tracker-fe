@@ -134,9 +134,9 @@ export function StockPage() {
           pagination={{ pageSize: 50, showSizeChanger: true }}
           locale={{ emptyText: <Empty description={t('warehouse.stockEmpty')} image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
           columns={[
-            { title: t('materials.status'), dataIndex: 'status', width: 140, render: statusTag, fixed: 'left' },
             { title: t('warehouse.code'), dataIndex: 'code', width: 110, fixed: 'left' },
             { title: t('warehouse.name'), dataIndex: 'name', width: 240, fixed: 'left' },
+            { title: t('materials.status'), dataIndex: 'status', width: 140, render: statusTag },
             { title: t('warehouse.unit'), dataIndex: 'unit', width: 70 },
             { title: t('warehouse.category'), dataIndex: 'category', width: 160 },
             {
