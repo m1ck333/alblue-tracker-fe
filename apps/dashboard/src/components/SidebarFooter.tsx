@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Badge, Button, Popover, List, Typography, Space, Empty, Tooltip, Divider, Segmented, theme } from 'antd';
+import { Badge, Button, Popover, List, Menu, Typography, Space, Empty, Tooltip, Divider, Segmented, theme } from 'antd';
 import {
   BellOutlined,
   UserOutlined,
@@ -11,7 +11,11 @@ import {
   DeleteOutlined,
   ClearOutlined,
   EyeInvisibleOutlined,
+  InfoCircleOutlined,
+  BookOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationsApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
@@ -46,9 +50,27 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
   const { token } = theme.useToken();
   const themeMode = useThemeStore((s) => s.mode);
   const setThemeMode = useThemeStore((s) => s.setMode);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [page, setPage] = useState(1);
+
+  // Info group rendered as a real antd Menu so the flyout (collapsed) and
+  // inline-expansion (expanded) behaviour matches every other parent item
+  // in SidebarMenu — Milos 08.06.2026 asked for the footer to use the same
+  // UI as the upper part instead of the custom Popover+Tooltip it had.
+  const infoMenuItems = [
+    {
+      key: 'info',
+      icon: <InfoCircleOutlined />,
+      label: t('nav.info'),
+      children: [
+        { key: '/tutorial', icon: <BookOutlined />, label: t('nav.tutorial') },
+        { key: '/whats-new', icon: <HistoryOutlined />, label: t('nav.whatsNew') },
+      ],
+    },
+  ];
 
   const { data: count } = useQuery({
     queryKey: ['notifications', 'unread-count', userId],
@@ -255,11 +277,22 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
 
   return (
     <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 4, paddingBottom: 4 }}>
-      {/* Info menu (Uputstvo + Šta je novo) moved into SidebarMenu so its
-          flyout matches every other top-level menu group with children
-          (Milos 08.06.2026). Notifications + Profile stay here — they have
-          unique popover content (notif list, theme/language/logout) that
-          doesn't fit the antd Menu submenu pattern. */}
+      {/* Info: same antd Menu component as SidebarMenu, so flyout (collapsed)
+          and inline expansion (expanded) match the upper menu groups. Just
+          this one group; Notifications + Profile below keep custom Popovers
+          because their content (notif list with actions, theme/lang/logout)
+          doesn't fit the antd submenu pattern. */}
+      <Menu
+        theme="dark"
+        mode="inline"
+        inlineCollapsed={collapsed}
+        items={infoMenuItems}
+        selectedKeys={[location.pathname]}
+        onClick={({ key }) => {
+          if (key.startsWith('/')) navigate(key);
+        }}
+        style={{ border: 'none', background: 'transparent' }}
+      />
       <Popover
         content={notificationsContent}
         trigger="click"
