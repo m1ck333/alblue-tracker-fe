@@ -78,4 +78,16 @@ export enum UserRole {
   Coordinator = 'Coordinator',
   SalesManager = 'SalesManager',
   Department = 'Department',
+  Magacioner = 'Magacioner',
+}
+
+export enum StockMovementType {
+  Ulaz = 'Ulaz',
+  Izlaz = 'Izlaz',
+}
+
+export enum StockStatus {
+  Ok = 'Ok',
+  IspodMin = 'IspodMin',
+  IznadMax = 'IznadMax',
 }

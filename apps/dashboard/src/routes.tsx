@@ -19,7 +19,12 @@ import { SpecialRequestTypesPage } from './pages/admin/SpecialRequestTypesPage';
 import { OrderTypesPage } from './pages/admin/OrderTypesPage';
 import { TenantsPage } from './pages/admin/TenantsPage';
 import { ShiftsPage } from './pages/admin/ShiftsPage';
+import { MaterialsPage } from './pages/admin/MaterialsPage';
 import { ReportsPage } from './pages/reports/ReportsPage';
+import { StanjePage } from './pages/magacin/StanjePage';
+import { StockEntryPage } from './pages/magacin/StockEntryPage';
+import { IstorijaPage } from './pages/magacin/IstorijaPage';
+import { StockMovementType } from '@alblue/shared-types';
 import { RoleRedirect } from './components/RoleRedirect';
 
 export function AppRoutes() {
@@ -152,6 +157,48 @@ export function AppRoutes() {
           element={
             <RequireRole roles={[UserRole.Admin, UserRole.Manager, UserRole.SuperAdmin]}>
               <ShiftsPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/admin/materials"
+          element={
+            <RequireRole roles={[UserRole.Admin, UserRole.Manager, UserRole.SuperAdmin, UserRole.Magacioner]}>
+              <MaterialsPage />
+            </RequireRole>
+          }
+        />
+
+        {/* Magacin (warehouse) — Saša 08.06.2026 */}
+        <Route
+          path="/magacin/stanje"
+          element={
+            <RequireRole roles={[UserRole.Admin, UserRole.Manager, UserRole.Coordinator, UserRole.SuperAdmin, UserRole.Magacioner]}>
+              <StanjePage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/magacin/ulaz"
+          element={
+            <RequireRole roles={[UserRole.Admin, UserRole.Manager, UserRole.SuperAdmin, UserRole.Magacioner]}>
+              <StockEntryPage type={StockMovementType.Ulaz} />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/magacin/izlaz"
+          element={
+            <RequireRole roles={[UserRole.Admin, UserRole.Manager, UserRole.SuperAdmin, UserRole.Magacioner]}>
+              <StockEntryPage type={StockMovementType.Izlaz} />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/magacin/istorija"
+          element={
+            <RequireRole roles={[UserRole.Admin, UserRole.Manager, UserRole.Coordinator, UserRole.SuperAdmin, UserRole.Magacioner]}>
+              <IstorijaPage />
             </RequireRole>
           }
         />

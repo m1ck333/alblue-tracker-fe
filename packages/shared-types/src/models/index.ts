@@ -756,3 +756,62 @@ export interface WorkerHoursDto {
   efficiencyPercent: number;
   dailyBreakdown: WorkerDailyBreakdownDto[];
 }
+
+// ─── Magacin (warehouse) — Saša 08.06.2026 ─────────────────────────────────
+
+export interface MaterialDto {
+  id: string;
+  code: string;
+  name: string;
+  unit: string;
+  category: string;
+  minQuantity: number;
+  maxQuantity: number;
+  dimensionX: number | null;
+  dimensionY: number | null;
+  dimensionZ: number | null;
+  location: string | null;
+  notes: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface StockMovementDto {
+  id: string;
+  materialId: string;
+  materialCode: string;
+  materialName: string;
+  unit: string;
+  category: string;
+  dimensionX: number | null;
+  dimensionY: number | null;
+  dimensionZ: number | null;
+  type: 'Ulaz' | 'Izlaz';
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  movementDate: string;
+  documentReference: string;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface StanjeRowDto {
+  materialId: string;
+  code: string;
+  name: string;
+  unit: string;
+  category: string;
+  dimensionX: number | null;
+  dimensionY: number | null;
+  dimensionZ: number | null;
+  quantity: number;
+  latestUnitPrice: number;
+  totalValue: number;
+  minQuantity: number;
+  maxQuantity: number;
+  status: 'Ok' | 'IspodMin' | 'IznadMax';
+  location: string | null;
+  notes: string | null;
+}
