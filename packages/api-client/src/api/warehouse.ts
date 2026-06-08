@@ -29,12 +29,12 @@ export interface GetStockHistoryParams {
 
 export const warehouseApi = {
   getStockBalances() {
-    return apiClient.get<StockBalanceRowDto[]>('/magacin/stanje');
+    return apiClient.get<StockBalanceRowDto[]>('/warehouse/stock');
   },
   getStockHistory(params: GetStockHistoryParams = {}) {
-    return apiClient.get<PagedResult<StockMovementDto>>('/magacin/istorija', { params });
+    return apiClient.get<PagedResult<StockMovementDto>>('/warehouse/history', { params });
   },
   createEntry(data: CreateStockEntryRequest) {
-    return apiClient.post<StockMovementDto[]>('/magacin/entries', data);
+    return apiClient.post<StockMovementDto[]>('/warehouse/entries', data);
   },
 };
