@@ -21,10 +21,40 @@ import { notificationsApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
 import { useTranslation } from '@alblue/i18n';
 import type { NotificationDto } from '@alblue/shared-types';
+import { NotificationType } from '@alblue/shared-types';
 import { useThemeStore } from '../stores/theme-store';
 
 const { Text } = Typography;
 const PAGE_SIZE = 15;
+
+/**
+ * Map BE notification types to FE i18n template paths. If the type has a
+ * template AND the notification carries structured params, render via i18n
+ * (so it follows the active locale). Otherwise we fall back to the
+ * BE-provided title/message (legacy / unmapped types).
+ */
+const NOTIFICATION_TEMPLATE_KEY: Partial<Record<NotificationType, string>> = {
+  [NotificationType.MaterialLowStock]: 'notifications.templates.materialLowStock',
+};
+
+function renderNotificationText(
+  n: NotificationDto,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): { title: string; message: string } {
+  const templatePath = NOTIFICATION_TEMPLATE_KEY[n.type];
+  if (templatePath && n.paramsJson) {
+    try {
+      const params = JSON.parse(n.paramsJson) as Record<string, unknown>;
+      return {
+        title: t(`${templatePath}.title`, params),
+        message: t(`${templatePath}.message`, params),
+      };
+    } catch {
+      // Bad JSON — fall through to BE strings rather than crashing.
+    }
+  }
+  return { title: n.title, message: n.message };
+}
 
 function formatTimeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -159,7 +189,9 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
             </Button>
           </div>
         ) : null}
-        renderItem={(item: NotificationDto) => (
+        renderItem={(item: NotificationDto) => {
+          const { title, message } = renderNotificationText(item, t);
+          return (
           <List.Item
             style={{
               background: item.isRead ? undefined : token.colorPrimaryBg,
@@ -197,10 +229,10 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
             ]}
           >
             <List.Item.Meta
-              title={<Text strong={!item.isRead} style={{ fontSize: 13 }}>{item.title}</Text>}
+              title={<Text strong={!item.isRead} style={{ fontSize: 13 }}>{title}</Text>}
               description={
                 <Space direction="vertical" size={0}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>{item.message}</Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>{message}</Text>
                   <Text type="secondary" style={{ fontSize: 11 }}>
                     {t('notifications.timeAgo', { time: formatTimeAgo(item.createdAt) })}
                   </Text>
@@ -208,7 +240,8 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
               }
             />
           </List.Item>
-        )}
+          );
+        }}
       />
     </div>
   );

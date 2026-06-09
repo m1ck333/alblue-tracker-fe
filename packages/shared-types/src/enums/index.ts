@@ -56,6 +56,7 @@ export enum NotificationType {
   ProcessBlocked = 'ProcessBlocked',
   OrderActivated = 'OrderActivated',
   WorkerAutoLoggedOut = 'WorkerAutoLoggedOut',
+  MaterialLowStock = 'MaterialLowStock',
 }
 
 export enum HistoryAction {

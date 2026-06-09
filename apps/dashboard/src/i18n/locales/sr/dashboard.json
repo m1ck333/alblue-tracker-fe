@@ -467,7 +467,13 @@
     "timeAgo": "pre {{time}}",
     "loadMore": "Učitaj još",
     "delete": "Obriši",
-    "markUnread": "Označi kao nepročitano"
+    "markUnread": "Označi kao nepročitano",
+    "templates": {
+      "materialLowStock": {
+        "title": "Materijal ispod minimuma: {{code}} — {{name}}",
+        "message": "Stanje materijala „{{code}} — {{name}}\" je palo ispod minimuma ({{onHand}} {{unit}}, min {{min}} {{unit}})."
+      }
+    }
   },
   "attachments": {
     "title": "Dokumenti",

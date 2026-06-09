@@ -465,7 +465,13 @@
     "timeAgo": "{{time}} ago",
     "loadMore": "Load more",
     "delete": "Delete",
-    "markUnread": "Mark unread"
+    "markUnread": "Mark unread",
+    "templates": {
+      "materialLowStock": {
+        "title": "Material below minimum: {{code}} — {{name}}",
+        "message": "Stock of material \"{{code}} — {{name}}\" has fallen below minimum ({{onHand}} {{unit}}, min {{min}} {{unit}})."
+      }
+    }
   },
   "attachments": {
     "title": "Attachments",

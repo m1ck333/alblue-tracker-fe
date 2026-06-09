@@ -258,6 +258,13 @@ export interface NotificationDto {
   referenceId: string | null;
   isRead: boolean;
   createdAt: string;
+  /**
+   * Optional JSON payload with structured params (e.g.
+   * '{"code":"100","name":"Profil AL","onHand":2,"min":5,"unit":"kom"}').
+   * FE renders via i18n template keyed on `type` using these params;
+   * falls back to `title` / `message` when missing.
+   */
+  paramsJson: string | null;
 }
 
 // ─── Work Sessions ───────────────────────────────────────
