@@ -154,12 +154,15 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
                   {
                     title: '',
                     width: 50,
+                    align: 'center' as const,
                     render: (_, field) =>
                       fields.length > 1 ? (
                         <Popconfirm title={t('warehouse.removeLine')} onConfirm={() => remove(field.name)}>
                           <Button danger size="small" icon={<DeleteOutlined />} />
                         </Popconfirm>
-                      ) : null,
+                      ) : (
+                        <Button danger size="small" icon={<DeleteOutlined />} disabled />
+                      ),
                   },
                 ]}
               />
