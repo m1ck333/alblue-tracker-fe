@@ -644,6 +644,7 @@
     "saveError": "Failed to save material.",
     "unitPlaceholder": "pcs, m2, kg...",
     "categoryPlaceholder": "Profile, Sheet, Glass...",
+    "duplicate": "Duplicate",
     "validation": {
       "codeRequired": "Code is required.",
       "nameRequired": "Name is required.",

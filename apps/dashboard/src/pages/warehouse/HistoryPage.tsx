@@ -70,6 +70,9 @@ export function HistoryPage() {
     { header: t('warehouse.documentReference'), value: (r) => r.documentReference, width: 24 },
     { header: t('warehouse.unitPrice'), value: (r) => r.unitPrice, width: 14 },
     { header: t('warehouse.total'), value: (r) => r.totalPrice, width: 14 },
+    { header: t('materials.dimX'), value: (r) => r.dimensionX ?? '', width: 10 },
+    { header: t('materials.dimY'), value: (r) => r.dimensionY ?? '', width: 10 },
+    { header: t('materials.dimZ'), value: (r) => r.dimensionZ ?? '', width: 10 },
     { header: t('warehouse.notes'), value: (r) => r.notes ?? '', width: 28 },
   ];
 
@@ -271,6 +274,27 @@ export function HistoryPage() {
               sorter: true,
               sortOrder: sortOrder('totalPrice'),
               render: (v: number) => v.toLocaleString('sr-RS', { minimumFractionDigits: 2 }),
+            },
+            {
+              title: t('materials.dimX'),
+              dataIndex: 'dimensionX',
+              width: 80,
+              align: 'right' as const,
+              render: (v: number | null) => (v == null ? '—' : v.toLocaleString('sr-RS')),
+            },
+            {
+              title: t('materials.dimY'),
+              dataIndex: 'dimensionY',
+              width: 80,
+              align: 'right' as const,
+              render: (v: number | null) => (v == null ? '—' : v.toLocaleString('sr-RS')),
+            },
+            {
+              title: t('materials.dimZ'),
+              dataIndex: 'dimensionZ',
+              width: 80,
+              align: 'right' as const,
+              render: (v: number | null) => (v == null ? '—' : v.toLocaleString('sr-RS')),
             },
             {
               title: t('warehouse.notes'),

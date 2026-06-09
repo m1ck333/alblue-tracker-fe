@@ -75,6 +75,10 @@ export function StockPage() {
     { header: t('warehouse.unitPrice'), value: (r) => r.latestUnitPrice, align: 'right', width: 14 },
     { header: t('warehouse.totalValue'), value: (r) => r.totalValue, align: 'right', width: 14 },
     { header: t('warehouse.location'), value: (r) => r.location ?? '', width: 14 },
+    { header: t('materials.dimX'), value: (r) => r.dimensionX ?? '', align: 'right', width: 10 },
+    { header: t('materials.dimY'), value: (r) => r.dimensionY ?? '', align: 'right', width: 10 },
+    { header: t('materials.dimZ'), value: (r) => r.dimensionZ ?? '', align: 'right', width: 10 },
+    { header: t('warehouse.notes'), value: (r) => r.notes ?? '', width: 24 },
   ];
 
   return (
@@ -206,6 +210,35 @@ export function StockPage() {
               dataIndex: 'location',
               width: 120,
               sorter: (a, b) => (a.location ?? '').localeCompare(b.location ?? '', 'sr-RS'),
+              render: (v: string | null) => v || '—',
+            },
+            {
+              title: t('materials.dimX'),
+              dataIndex: 'dimensionX',
+              width: 80,
+              align: 'right' as const,
+              sorter: (a, b) => (a.dimensionX ?? 0) - (b.dimensionX ?? 0),
+              render: (v: number | null) => (v == null ? '—' : v.toLocaleString('sr-RS')),
+            },
+            {
+              title: t('materials.dimY'),
+              dataIndex: 'dimensionY',
+              width: 80,
+              align: 'right' as const,
+              sorter: (a, b) => (a.dimensionY ?? 0) - (b.dimensionY ?? 0),
+              render: (v: number | null) => (v == null ? '—' : v.toLocaleString('sr-RS')),
+            },
+            {
+              title: t('materials.dimZ'),
+              dataIndex: 'dimensionZ',
+              width: 80,
+              align: 'right' as const,
+              sorter: (a, b) => (a.dimensionZ ?? 0) - (b.dimensionZ ?? 0),
+              render: (v: number | null) => (v == null ? '—' : v.toLocaleString('sr-RS')),
+            },
+            {
+              title: t('warehouse.notes'),
+              dataIndex: 'notes',
               render: (v: string | null) => v || '—',
             },
           ]}

@@ -349,6 +349,28 @@ export function MaterialsPage() {
         extra={
           editing ? (
             <Space>
+              <Button
+                onClick={() => {
+                  const src = editing;
+                  setEditing(null);
+                  createForm.resetFields();
+                  createForm.setFieldsValue({
+                    name: src.name,
+                    unit: src.unit,
+                    category: src.category,
+                    minQuantity: src.minQuantity,
+                    maxQuantity: src.maxQuantity,
+                    dimensionX: src.dimensionX ?? undefined,
+                    dimensionY: src.dimensionY ?? undefined,
+                    dimensionZ: src.dimensionZ ?? undefined,
+                    location: src.location ?? undefined,
+                    notes: src.notes ?? undefined,
+                  });
+                  setCreateOpen(true);
+                }}
+              >
+                {t('materials.duplicate')}
+              </Button>
               {editing.isActive ? (
                 <Popconfirm
                   title={t('materials.deactivateConfirm')}
