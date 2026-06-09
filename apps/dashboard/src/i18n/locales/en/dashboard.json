@@ -645,6 +645,22 @@
     "unitPlaceholder": "pcs, m2, kg...",
     "categoryPlaceholder": "Profile, Sheet, Glass...",
     "duplicate": "Duplicate",
+    "import": {
+      "button": "Import from Excel",
+      "title": "Import materials from Excel",
+      "dropHint": "Drop a .xlsx file here or click to pick one",
+      "formatHint": "Headers: Code, Name, Unit, Category, Min, Max, Dim X/Y/Z, Location, Notes",
+      "missingHeaders": "Missing required headers",
+      "validCount": "Ready: {{n}}",
+      "errorCount": "Errors: {{n}}",
+      "pickAnother": "Pick another file",
+      "parseError": "Error",
+      "parseFailed": "Could not read the Excel file.",
+      "save": "Import ({{n}})",
+      "failed": "Import failed.",
+      "allOk": "All materials imported successfully.",
+      "resultSummary": "Imported: {{c}} • Errors: {{e}}"
+    },
     "validation": {
       "codeRequired": "Code is required.",
       "nameRequired": "Name is required.",

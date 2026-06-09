@@ -23,6 +23,6 @@ export { pushApi } from './api/push';
 export { reportsApi } from './api/reports';
 export type { TimeTrackingQuery, WorkerHoursQuery } from './api/reports';
 export { materialsApi } from './api/materials';
-export type { CreateMaterialRequest, UpdateMaterialRequest, GetMaterialsParams } from './api/materials';
+export type { CreateMaterialRequest, UpdateMaterialRequest, GetMaterialsParams, ImportMaterialsRequest, ImportMaterialItem, ImportMaterialsResult } from './api/materials';
 export { warehouseApi } from './api/warehouse';
 export type { StockEntryLineRequest, CreateStockEntryRequest, GetStockHistoryParams } from './api/warehouse';

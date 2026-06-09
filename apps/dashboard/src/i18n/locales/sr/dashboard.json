@@ -647,6 +647,22 @@
     "unitPlaceholder": "kom, m2, kg...",
     "categoryPlaceholder": "Profil, Lim, Staklo...",
     "duplicate": "Dupliraj",
+    "import": {
+      "button": "Uvoz iz Excela",
+      "title": "Uvoz materijala iz Excela",
+      "dropHint": "Prevuci .xlsx fajl ovde ili klikni za izbor",
+      "formatHint": "Zaglavlja: Kod, Naziv, Jedinica mere, Kategorija, Min, Max, Dimenzija X/Y/Z, Pozicija, Napomena",
+      "missingHeaders": "Nedostaju obavezna zaglavlja",
+      "validCount": "Spremno: {{n}}",
+      "errorCount": "Greške: {{n}}",
+      "pickAnother": "Drugi fajl",
+      "parseError": "Greška",
+      "parseFailed": "Nije moguće pročitati Excel fajl.",
+      "save": "Uvezi ({{n}})",
+      "failed": "Uvoz nije uspeo.",
+      "allOk": "Svi materijali uspešno uvezeni.",
+      "resultSummary": "Uvezeno: {{c}} • Greške: {{e}}"
+    },
     "validation": {
       "codeRequired": "Kod je obavezan.",
       "nameRequired": "Naziv je obavezan.",

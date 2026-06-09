@@ -46,4 +46,30 @@ export const materialsApi = {
   deactivate(id: string) {
     return apiClient.post(`/materials/${id}/deactivate`);
   },
+  import(data: ImportMaterialsRequest) {
+    return apiClient.post<ImportMaterialsResult>('/materials/import', data);
+  },
 };
+
+export interface ImportMaterialsRequest {
+  items: ImportMaterialItem[];
+}
+
+export interface ImportMaterialItem {
+  code: string;
+  name: string;
+  unit: string;
+  category: string;
+  minQuantity: number;
+  maxQuantity: number;
+  dimensionX: number | null;
+  dimensionY: number | null;
+  dimensionZ: number | null;
+  location: string | null;
+  notes: string | null;
+}
+
+export interface ImportMaterialsResult {
+  created: number;
+  errors: Array<{ rowIndex: number; code: string; reason: string }>;
+}

@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   Typography, Table, Button, Drawer, Form, Input, InputNumber, Select, Tag, Space, App, Popconfirm, Empty,
 } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { materialsApi } from '@alblue/api-client';
 import type { CreateMaterialRequest } from '@alblue/api-client';
@@ -12,6 +11,8 @@ import type { MaterialDto } from '@alblue/shared-types';
 import { useTableHeight } from '../../hooks/useTableHeight';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
 import { TableExportButton } from '../../components/TableExportButton';
+import { MaterialsImportModal } from './MaterialsImportModal';
+import { ImportOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ExportColumn } from '../../utils/exportTable';
 import dayjs from 'dayjs';
 
@@ -40,6 +41,7 @@ export function MaterialsPage() {
   const { ref: tableWrapperRef, height: tableBodyHeight } = useTableHeight();
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<MaterialDto | null>(null);
   const [createForm] = Form.useForm<CreateMaterialRequest>();
   const [editForm] = Form.useForm<Omit<CreateMaterialRequest, 'code'>>();
@@ -157,6 +159,9 @@ export function MaterialsPage() {
               sheetName: t('materials.title'),
             }}
           />
+          <Button icon={<ImportOutlined />} onClick={() => setImportOpen(true)}>
+            {t('materials.import.button', { defaultValue: 'Uvoz iz Excela' })}
+          </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => { createForm.resetFields(); setCreateOpen(true); }}>
             {t('materials.newMaterial')}
           </Button>
@@ -454,6 +459,8 @@ export function MaterialsPage() {
           </Button>
         </Form>
       </Drawer>
+
+      <MaterialsImportModal open={importOpen} onClose={() => setImportOpen(false)} />
     </div>
   );
 }
