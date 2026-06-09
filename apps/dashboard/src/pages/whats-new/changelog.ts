@@ -46,6 +46,48 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    id: '2026-06-09-magacin',
+    date: '2026-06-09',
+    title: {
+      sr: 'Magacin — evidencija materijala, prijemnica i izdavanja',
+      en: 'Warehouse — material catalog, receipts, and issues',
+    },
+    bullets: [
+      {
+        sr: 'Nova grupa u meniju "Magacin" sa stranicama Stanje, Ulaz, Izlaz i Istorija transakcija.',
+        en: 'New "Warehouse" menu group with Stock, Inflow, Outflow, and Transaction History pages.',
+      },
+      {
+        sr: 'Administracija → Materijali: lista svih materijala koji se vode u magacinu. Svaki materijal ima jedinstven kod, naziv, jedinicu mere, kategoriju, opcione dimenzije, min/max količinu, poziciju i napomenu. Pretraga po kodu/nazivu, filter po kategoriji i statusu, izvoz u Excel.',
+        en: 'Administration → Materials: catalog of every material tracked in the warehouse. Each one has a unique code, name, unit of measure, category, optional dimensions, min/max quantity, location, and notes. Search by code/name, filter by category and status, Excel export.',
+      },
+      {
+        sr: 'Magacin → Stanje: trenutne količine po materijalu, status zaliha (⚠ ISPOD MIN / U OKVIRU / PREKO MAX), poslednja unesena cena, ukupna vrednost. Sve kolone su sortabilne, kod i naziv ostaju zalepljeni levo pri skrolovanju.',
+        en: 'Warehouse → Stock: per-material on-hand quantity, stock status (⚠ BELOW MIN / OK / ABOVE MAX), latest unit price, total value. All columns sortable, code and name stay pinned left when scrolling.',
+      },
+      {
+        sr: 'Magacin → Ulaz (prijemnica): jedan dokument može sadržati više različitih materijala. Cena po jedinici mere je obavezna na Ulazu i postaje važeća cena tog materijala za buduće Izlaze.',
+        en: 'Warehouse → Inflow (receipt): one document can hold multiple materials. Unit price is required and becomes the active price of that material for any later Outflow.',
+      },
+      {
+        sr: 'Magacin → Izlaz (po narudžbenici): isto kao Ulaz, ali Cena po JM je opciona — sistem automatski preuzima poslednju unesenu cenu. Ako se traži više nego što ima na stanju, izdavanje se odbija sa porukom "Nedovoljno na stanju za KOD — NAZIV: trenutno X JM, traženo Y JM".',
+        en: 'Warehouse → Outflow (by order number): same as Inflow, but unit price is optional — the system reuses the latest known price. If the requested quantity exceeds on-hand, the issue is rejected with "Insufficient stock for CODE — NAME: currently X UoM, requested Y UoM".',
+      },
+      {
+        sr: 'Magacin → Istorija transakcija: pregled svih Ulaza i Izlaza sa filterima (tip, materijal, kategorija, broj prijemnice/narudžbenice, datumski opseg). Kolone sortabilne, izvoz u Excel.',
+        en: 'Warehouse → Transaction History: every Inflow / Outflow with filters (type, material, category, receipt/order number, date range). Sortable columns, Excel export.',
+      },
+      {
+        sr: 'Nova uloga "Magacioner" — može se dodeliti korisniku pored postojeće uloge (npr. koordinator + magacioner istovremeno). Magacioner ima pristup svim Magacin stranicama i može da unosi Ulaze i Izlaze, ali ne menja Listu materijala.',
+        en: 'New "Warehouse worker" role — can be assigned alongside an existing role (e.g. coordinator + warehouse worker at once). The warehouse worker has access to every warehouse page and can record receipts and issues, but cannot edit the Materials list.',
+      },
+      {
+        sr: 'Detaljno uputstvo: pogledati novu sekciju 3.11 Magacin u Uputstvu.',
+        en: 'Full walkthrough: see the new section 3.11 Warehouse in the Tutorial.',
+      },
+    ],
+  },
+  {
     id: '2026-06-02-auto-logout',
     date: '2026-06-02',
     title: {

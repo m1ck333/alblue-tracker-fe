@@ -503,6 +503,125 @@ Actions:
 Push notifications (browser and mobile) are set up automatically on
 first sign-in (the system asks for permission).
 
+### 3.11 Warehouse
+
+Open for roles Admin, Manager, Coordinator, SuperAdmin, and **Warehouse
+worker** (Magacioner). Warehouse worker is a separate role that can be
+assigned alongside another (e.g. coordinator + warehouse worker at
+once). The warehouse worker has access to every warehouse page and
+can record receipts (Ulaz) and issues (Izlaz), but cannot edit the
+Materials list.
+
+The warehouse module covers the basics — what materials exist, how
+much is currently on hand, who received what, who issued what, at what
+price. Automatic material reservation per order comes in a later phase.
+
+#### Materials (Administration → Materials)
+
+The catalog of every material tracked. Each material has:
+
+- **Code** — unique identifier (e.g. `100`, `AL-1234`). Must be unique
+  within the company.
+- **Name** — descriptive name (e.g. "AL 6-chamber profile").
+- **Unit of measure (UoM)** — pcs, m, m2, kg…
+- **Category** — free text used to group items (Profile, Sheet, Glass,
+  Frame…). Used as a filter across every warehouse page.
+- **Dimensions X / Y / Z** — optional, in millimeters.
+- **Min quantity** — low-stock threshold. When on-hand falls below it,
+  the row shows a red **⚠ BELOW MIN** badge.
+- **Max quantity** — upper threshold. When on-hand goes above it, the
+  row shows **ABOVE MAX**. Must be ≥ Min (validated).
+- **Location** — free text for the physical spot in the warehouse
+  (e.g. `R1-P3`).
+- **Notes** — free text.
+
+Actions:
+- **New material** (top right) opens the side panel for entry.
+- **Click a row** opens the side panel pre-filled for edit. The
+  top-right of the panel hosts **Deactivate** / **Activate** — a
+  deactivated material disappears from Stock and can't be selected on
+  receipt / issue forms, but existing history stays visible.
+- **Search** by code or name, filter by category and status (active /
+  inactive), filter by created date.
+- **Export** (top right) — downloads an Excel of the current filtered
+  view.
+
+#### Warehouse stock (Warehouse → Stock)
+
+A table of every active material with the current on-hand quantity.
+Columns are sortable. Code and Name stay pinned left during horizontal
+scroll.
+
+| Column | Content |
+|---|---|
+| Code / Name | From the Materials list. |
+| Status | **⚠ BELOW MIN** (red) / **OK** (green) / **ABOVE MAX** (orange). |
+| Quantity | Current on-hand (all receipts minus all issues for that material). |
+| Min / Max | From the Materials list. |
+| Unit price | The unit price from the most recent receipt. |
+| Total value | Quantity × Unit price. |
+| Location | From the Materials list. |
+
+Filters above the table: search by code/name, category, stock status.
+**Export** downloads the current view as Excel.
+
+#### Receipt (Warehouse → Inflow)
+
+Form to receive new quantities into the warehouse. One receipt can
+contain multiple different materials.
+
+Header fields:
+- **Receipt number** — free text (e.g. `2026/043`).
+- **Date** — defaults to today.
+- **Header notes** — free text for the whole receipt.
+
+Material lines (the table below, **Add line** for a new row):
+- **Name** — selected from the Materials list. Typing filters by code
+  or name.
+- **Quantity** — required, positive number.
+- **Unit price** — required for receipts. Becomes the active unit
+  price of that material for any later issue.
+- **Notes** — optional, per line.
+- The red **trash** button removes a line (disabled when only one row
+  remains — at least one line is required).
+
+**Save receipt** stores all lines at once. After save:
+- Stock increases by the entered quantities.
+- Status recomputes (e.g. from **⚠ BELOW MIN** back to **OK**).
+- The history page shows one **Inflow** row per line.
+
+#### Issue (Warehouse → Outflow)
+
+Same as Receipt, with differences:
+- **Order number** instead of Receipt number — free text reference to
+  an MES order (e.g. `ORD-2026-006`).
+- **Unit price** is **optional**. If left empty, the system uses the
+  last-known unit price for that material from prior receipts. If the
+  material has never been received, the unit price is required.
+- The system checks on-hand quantity. If the requested amount exceeds
+  what's available, it returns an error "Insufficient stock for 'CODE
+  — NAME': currently X UoM, requested Y UoM." and nothing is saved.
+
+After save:
+- Stock decreases by the entered quantities.
+- Status updates accordingly.
+- The history page shows one **Outflow** row per line, with a negative
+  quantity (e.g. -4 pcs).
+
+#### Transaction history (Warehouse → History)
+
+A chronological view of every receipt and issue. Columns are sortable.
+
+Filters above the table:
+- **Type** — Inflow / Outflow.
+- **Material** — limits to a single material.
+- **Category** — limits to one material category.
+- **Receipt / Order number** — search by document.
+- **Date range**.
+
+**Export** downloads every row matching the filter (up to 10,000), with
+a header that lists the active filters.
+
 ---
 
 ## 4. Tablet app

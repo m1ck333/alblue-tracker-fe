@@ -508,6 +508,125 @@ Akcije:
 Push obaveštenja (browser i mobile) se podešavaju automatski kod prve
 prijave (sistem traži dozvolu).
 
+### 3.11 Magacin
+
+Otvoreno za uloge Admin, Manager, Coordinator, SuperAdmin i
+**Magacioner**. Magacioner je posebna uloga koja se može dodeliti
+nekom korisniku pored njegove glavne uloge (npr. koordinator + magacioner
+istovremeno). Magacioner ima pristup svim stranicama Magacina i može da
+unosi Ulaze i Izlaze, ali ne menja Listu materijala.
+
+Magacin pokriva osnovnu evidenciju materijala — definisanje šta sve
+ima u magacinu, kolika je trenutna količina, ko je šta primio, ko je
+šta izdao, sa kojom cenom. Automatsko rezervisanje materijala po
+narudžbenicama dolazi u kasnijoj fazi.
+
+#### Materijali (Administracija → Materijali)
+
+Lista svih materijala koji se vode u magacinu. Svaki materijal ima:
+
+- **Kod** — jedinstveni identifikator (npr. `100`, `AL-1234`). Mora biti
+  jedinstven u okviru firme.
+- **Naziv** — opisni naziv (npr. „Profil AL 6 komora").
+- **Jedinica mere (JM)** — kom, m, m2, kg…
+- **Kategorija** — slobodan tekst za grupisanje (Profil, Lim, Staklo,
+  Štok…). Koristi se kao filter na svim Magacin stranama.
+- **Dimenzije X / Y / Z** — opcione, u milimetrima.
+- **Min količina** — donja granica zaliha. Kad stanje padne ispod,
+  pojavi se crveno upozorenje **⚠ ISPOD MIN**.
+- **Max količina** — gornja granica. Kad stanje pređe, pojavi se
+  upozorenje **PREKO MAX**. Mora biti ≥ Min (sistem to proverava).
+- **Pozicija** — slobodan tekst za fizičko mesto u magacinu (npr.
+  `R1-P3`).
+- **Napomena** — slobodan tekst.
+
+Akcije:
+- **Novi materijal** (gore desno) otvara desni panel za unos.
+- **Klik na red** otvara desni panel za izmenu, sa popunjenim poljima.
+  U gornjem desnom uglu panela su **Deaktiviraj** / **Aktiviraj** —
+  deaktiviran materijal nestaje sa Stanja i ne može da se izabere u
+  Ulaz/Izlaz formama, ali postojeća istorija ostaje vidljiva.
+- **Pretraga** po kodu ili nazivu, filter po kategoriji i statusu
+  (aktivan / neaktivan), filter po datumu kreiranja.
+- **Izvezi** (gore desno) — preuzima Excel sa trenutnim filterima.
+
+#### Stanje magacina (Magacin → Stanje)
+
+Tabela sa svim aktivnim materijalima i njihovim trenutnim količinama.
+Kolone su sortabilne klikom na zaglavlje. Kod i Naziv ostaju zalepljeni
+levo pri horizontalnom skrolovanju.
+
+| Kolona | Sadržaj |
+|---|---|
+| Kod / Naziv | Iz Liste materijala. |
+| Status | **⚠ ISPOD MIN** (crveno) / **U OKVIRU** (zeleno) / **PREKO MAX** (narandžasto). |
+| Količina | Trenutno stanje (sve Ulaze minus svi Izlazi za taj materijal). |
+| Min / Max | Iz Liste materijala. |
+| Cena po JM | Cena iz poslednje Ulazne prijemnice. |
+| Ukupna cena | Količina × Cena po JM. |
+| Pozicija | Iz Liste materijala. |
+
+Filteri iznad tabele: pretraga po kodu/nazivu, kategorija, status
+zaliha. **Izvezi** preuzima Excel sa trenutnim prikazom.
+
+#### Ulaz materijala — prijemnica (Magacin → Ulaz)
+
+Forma za prijem novih količina u magacin. Jedna prijemnica može da
+sadrži više različitih materijala.
+
+Polja u zaglavlju:
+- **Broj prijemnice** — slobodan tekst (npr. `2026/043`).
+- **Datum** — podrazumevano danas.
+- **Napomena (zaglavlje)** — slobodan tekst za celu prijemnicu.
+
+Stavke materijala (tabela ispod, **Dodaj stavku** za novi red):
+- **Naziv** — bira se iz Liste materijala. Kucanje filtrira po kodu ili
+  nazivu.
+- **Količina** — obavezna, pozitivan broj.
+- **Cena po JM** — obavezna na Ulazu. Postaje važeća cena tog
+  materijala za sve naredne izlaze.
+- **Napomena** — opciona, po stavci.
+- Crveno dugme **kanta** uklanja stavku (disabled kad ima samo jedan
+  red — mora postojati bar jedna stavka).
+
+**Sačuvaj prijemnicu** snima sve stavke odjednom. Nakon snimanja:
+- Stanje se uvećava za unete količine.
+- Status se preračunava (npr. iz **⚠ ISPOD MIN** u **U OKVIRU**).
+- U Istoriji se pojavi po jedan red **Ulaz** za svaku stavku.
+
+#### Izlaz materijala — po narudžbenici (Magacin → Izlaz)
+
+Isto kao Ulaz, ali sa razlikama:
+- **Broj narudžbenice** umesto Broja prijemnice — slobodan tekst
+  referenca na MES narudžbinu (npr. `ORD-2026-006`).
+- **Cena po JM** je **opciona**. Ako se ne unese, sistem automatski
+  preuzima poslednju unesenu cenu za taj materijal sa prethodnih
+  Ulaza. Ako materijal nikada nije imao Ulaz, traži cenu obavezno.
+- Sistem proverava da li ima dovoljno na stanju. Ako se traži
+  količina veća od trenutne, javlja grešku „Nedovoljno na stanju za
+  'KOD — NAZIV': trenutno X JM, traženo Y JM." i ništa se ne snima.
+
+Nakon snimanja:
+- Stanje se umanjuje za unete količine.
+- Status se ažurira.
+- U Istoriji se pojavi po jedan red **Izlaz** za svaku stavku, sa
+  negativnom količinom (npr. -4 kom).
+
+#### Istorija transakcija (Magacin → Istorija)
+
+Hronološki pregled svih Ulaza i Izlaza. Kolone su sortabilne.
+
+Filteri iznad tabele:
+- **Tip** — Ulaz / Izlaz.
+- **Materijal** — sa svim Ulazima/Izlazima jednog materijala.
+- **Kategorija** — kategorija materijala.
+- **Broj prijemnice/narudžbenice** — pretraga po dokumentu.
+- **Datumski opseg**.
+
+**Izvezi** preuzima Excel sa svim redovima koji odgovaraju filteru
+(do 10.000 redova), sa zaglavljem koje navodi koji su filteri bili
+primenjeni.
+
 ---
 
 ## 4. Tablet aplikacija
