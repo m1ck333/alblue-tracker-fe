@@ -650,7 +650,8 @@
       "codeRequired": "Kod je obavezan.",
       "nameRequired": "Naziv je obavezan.",
       "unitRequired": "Jedinica mere je obavezna.",
-      "categoryRequired": "Kategorija je obavezna."
+      "categoryRequired": "Kategorija je obavezna.",
+      "maxLtMin": "Max ne sme biti manji od Min."
     }
   },
   "warehouse": {

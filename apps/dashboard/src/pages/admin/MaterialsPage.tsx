@@ -298,7 +298,22 @@ export function MaterialsPage() {
             <Form.Item label={t('materials.min')} name="minQuantity" style={{ flex: 1 }} rules={[{ required: true }]}>
               <InputNumber min={0} style={{ width: '100%' }} />
             </Form.Item>
-            <Form.Item label={t('materials.max')} name="maxQuantity" style={{ flex: 1 }} rules={[{ required: true }]}>
+            <Form.Item
+              label={t('materials.max')}
+              name="maxQuantity"
+              style={{ flex: 1 }}
+              dependencies={['minQuantity']}
+              rules={[
+                { required: true },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    const min = getFieldValue('minQuantity');
+                    if (value == null || min == null || value >= min) return Promise.resolve();
+                    return Promise.reject(new Error(t('materials.validation.maxLtMin')));
+                  },
+                }),
+              ]}
+            >
               <InputNumber min={0} style={{ width: '100%' }} />
             </Form.Item>
           </Space.Compact>
@@ -376,7 +391,22 @@ export function MaterialsPage() {
             <Form.Item label={t('materials.min')} name="minQuantity" style={{ flex: 1 }} rules={[{ required: true }]}>
               <InputNumber min={0} style={{ width: '100%' }} />
             </Form.Item>
-            <Form.Item label={t('materials.max')} name="maxQuantity" style={{ flex: 1 }} rules={[{ required: true }]}>
+            <Form.Item
+              label={t('materials.max')}
+              name="maxQuantity"
+              style={{ flex: 1 }}
+              dependencies={['minQuantity']}
+              rules={[
+                { required: true },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    const min = getFieldValue('minQuantity');
+                    if (value == null || min == null || value >= min) return Promise.resolve();
+                    return Promise.reject(new Error(t('materials.validation.maxLtMin')));
+                  },
+                }),
+              ]}
+            >
               <InputNumber min={0} style={{ width: '100%' }} />
             </Form.Item>
           </Space.Compact>

@@ -648,7 +648,8 @@
       "codeRequired": "Code is required.",
       "nameRequired": "Name is required.",
       "unitRequired": "Unit is required.",
-      "categoryRequired": "Category is required."
+      "categoryRequired": "Category is required.",
+      "maxLtMin": "Max cannot be less than Min."
     }
   },
   "warehouse": {

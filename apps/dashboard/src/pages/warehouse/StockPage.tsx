@@ -134,25 +134,63 @@ export function StockPage() {
           pagination={{ pageSize: 50, showSizeChanger: true }}
           locale={{ emptyText: <Empty description={t('warehouse.stockEmpty')} image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
           columns={[
-            { title: t('warehouse.code'), dataIndex: 'code', width: 110, fixed: 'left' },
-            { title: t('warehouse.name'), dataIndex: 'name', width: 240, fixed: 'left' },
-            { title: t('materials.status'), dataIndex: 'status', width: 140, align: 'center' as const, render: statusTag },
+            {
+              title: t('warehouse.code'),
+              dataIndex: 'code',
+              width: 110,
+              fixed: 'left',
+              sorter: (a, b) => a.code.localeCompare(b.code, 'sr-RS'),
+            },
+            {
+              title: t('warehouse.name'),
+              dataIndex: 'name',
+              width: 240,
+              fixed: 'left',
+              sorter: (a, b) => a.name.localeCompare(b.name, 'sr-RS'),
+            },
+            {
+              title: t('materials.status'),
+              dataIndex: 'status',
+              width: 140,
+              align: 'center' as const,
+              render: statusTag,
+              sorter: (a, b) => a.status.localeCompare(b.status),
+            },
             { title: t('warehouse.unit'), dataIndex: 'unit', width: 70, align: 'center' as const },
-            { title: t('warehouse.category'), dataIndex: 'category', width: 160 },
+            {
+              title: t('warehouse.category'),
+              dataIndex: 'category',
+              width: 160,
+              sorter: (a, b) => (a.category ?? '').localeCompare(b.category ?? '', 'sr-RS'),
+            },
             {
               title: t('warehouse.quantity'),
               dataIndex: 'quantity',
               width: 110,
               align: 'right' as const,
+              sorter: (a, b) => a.quantity - b.quantity,
               render: (v: number) => v.toLocaleString('sr-RS'),
             },
-            { title: t('warehouse.min'), dataIndex: 'minQuantity', width: 80, align: 'right' as const },
-            { title: t('warehouse.max'), dataIndex: 'maxQuantity', width: 80, align: 'right' as const },
+            {
+              title: t('warehouse.min'),
+              dataIndex: 'minQuantity',
+              width: 80,
+              align: 'right' as const,
+              sorter: (a, b) => a.minQuantity - b.minQuantity,
+            },
+            {
+              title: t('warehouse.max'),
+              dataIndex: 'maxQuantity',
+              width: 80,
+              align: 'right' as const,
+              sorter: (a, b) => a.maxQuantity - b.maxQuantity,
+            },
             {
               title: t('warehouse.unitPrice'),
               dataIndex: 'latestUnitPrice',
               width: 120,
               align: 'right' as const,
+              sorter: (a, b) => a.latestUnitPrice - b.latestUnitPrice,
               render: (v: number) => v.toLocaleString('sr-RS', { minimumFractionDigits: 2 }),
             },
             {
@@ -160,9 +198,16 @@ export function StockPage() {
               dataIndex: 'totalValue',
               width: 130,
               align: 'right' as const,
+              sorter: (a, b) => a.totalValue - b.totalValue,
               render: (v: number) => v.toLocaleString('sr-RS', { minimumFractionDigits: 2 }),
             },
-            { title: t('warehouse.location'), dataIndex: 'location', width: 120, render: (v: string | null) => v || '—' },
+            {
+              title: t('warehouse.location'),
+              dataIndex: 'location',
+              width: 120,
+              sorter: (a, b) => (a.location ?? '').localeCompare(b.location ?? '', 'sr-RS'),
+              render: (v: string | null) => v || '—',
+            },
           ]}
         />
       </div>
