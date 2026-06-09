@@ -807,6 +807,8 @@ export interface StockMovementDto {
   documentReference: string;
   notes: string | null;
   createdAt: string;
+  processId: string | null;
+  processName: string | null;
 }
 
 export interface StockBalanceRowDto {

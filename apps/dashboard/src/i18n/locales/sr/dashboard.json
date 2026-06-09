@@ -687,6 +687,8 @@
     "documentReferenceOutflowPlaceholder": "ORD-2026-006",
     "documentReferenceSearch": "Broj prijemnice / narudžbenice",
     "documentReferenceRequired": "Broj prijemnice/narudžbenice je obavezan.",
+    "process": "Proces",
+    "selectProcessOptional": "Izaberi proces (opciono)",
     "lines": "Stavke materijala",
     "addLine": "Dodaj stavku",
     "removeLine": "Ukloni stavku?",

@@ -1,7 +1,7 @@
 import { Typography, Form, Input, InputNumber, DatePicker, Button, Table, Select, Space, App, Popconfirm } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { warehouseApi, materialsApi } from '@alblue/api-client';
+import { warehouseApi, materialsApi, processesApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
 import { useTranslation } from '@alblue/i18n';
 import { StockMovementType } from '@alblue/shared-types';
@@ -27,6 +27,7 @@ interface EntryFormShape {
   movementDate: dayjs.Dayjs;
   notes?: string;
   lines: LineFormShape[];
+  processId?: string;
 }
 
 export function StockEntryPage({ type }: { type: StockMovementType }) {
@@ -48,6 +49,17 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
     enabled: !!tenantId,
   });
 
+  const { data: processes } = useQuery({
+    queryKey: ['processes-for-outflow', tenantId],
+    queryFn: () => processesApi.getAll({ isActive: true, pageSize: 100 }).then((r) => r.data.items),
+    enabled: !!tenantId && !isInflow,
+  });
+
+  const processOptions = (processes ?? []).map((p) => ({
+    label: `${p.code} — ${p.name}`,
+    value: p.id,
+  }));
+
   const materialOptions = (materials ?? []).map((m) => ({
     label: `${m.code} — ${m.name}`,
     value: m.id,
@@ -60,6 +72,7 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
         documentReference: values.documentReference!.trim(),
         movementDate: values.movementDate.toISOString(),
         notes: values.notes ?? null,
+        processId: !isInflow ? (values.processId ?? null) : null,
         lines: (values.lines ?? []).map((l) => ({
           materialId: l.materialId!,
           quantity: l.quantity!,
@@ -94,6 +107,18 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
           <Form.Item label={t('warehouse.date')} name="movementDate" required>
             <DatePicker format="DD.MM.YYYY" style={{ width: 160 }} />
           </Form.Item>
+          {!isInflow && (
+            <Form.Item label={t('warehouse.process')} name="processId">
+              <Select
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                placeholder={t('warehouse.selectProcessOptional')}
+                style={{ width: 260 }}
+                options={processOptions}
+              />
+            </Form.Item>
+          )}
           <Form.Item label={t('warehouse.headerNotes')} name="notes">
             <Input style={{ width: 320 }} />
           </Form.Item>

@@ -15,6 +15,7 @@ export interface CreateStockEntryRequest {
   movementDate: string; // ISO
   notes: string | null;
   lines: StockEntryLineRequest[];
+  processId?: string | null;
 }
 
 export interface GetStockHistoryParams {

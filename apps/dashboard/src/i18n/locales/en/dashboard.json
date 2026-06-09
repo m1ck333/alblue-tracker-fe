@@ -685,6 +685,8 @@
     "documentReferenceOutflowPlaceholder": "ORD-2026-006",
     "documentReferenceSearch": "Receipt / Order number",
     "documentReferenceRequired": "Receipt/Order number is required.",
+    "process": "Process",
+    "selectProcessOptional": "Select process (optional)",
     "lines": "Material lines",
     "addLine": "Add line",
     "removeLine": "Remove line?",

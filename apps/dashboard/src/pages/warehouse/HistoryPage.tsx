@@ -68,6 +68,7 @@ export function HistoryPage() {
     { header: t('warehouse.quantity'), value: (r) => (r.type === 'Outflow' ? -r.quantity : r.quantity), width: 12 },
     { header: t('warehouse.category'), value: (r) => r.category, width: 18 },
     { header: t('warehouse.documentReference'), value: (r) => r.documentReference, width: 24 },
+    { header: t('warehouse.process'), value: (r) => r.processName ?? '', width: 20 },
     { header: t('warehouse.unitPrice'), value: (r) => r.unitPrice, width: 14 },
     { header: t('warehouse.total'), value: (r) => r.totalPrice, width: 14 },
     { header: t('materials.dimX'), value: (r) => r.dimensionX ?? '', width: 10 },
@@ -256,6 +257,12 @@ export function HistoryPage() {
               width: 200,
               sorter: true,
               sortOrder: sortOrder('documentReference'),
+            },
+            {
+              title: t('warehouse.process'),
+              dataIndex: 'processName',
+              width: 200,
+              render: (v: string | null) => v || '—',
             },
             {
               title: t('warehouse.unitPrice'),
