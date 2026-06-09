@@ -23,6 +23,7 @@ export function HistoryPage() {
 
   const [type, setType] = useState<StockMovementType | undefined>();
   const [materialId, setMaterialId] = useState<string | undefined>();
+  const [category, setCategory] = useState<string | undefined>();
   const [docRef, setDocRef] = useState('');
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([null, null]);
   const [page, setPage] = useState(1);
@@ -39,6 +40,7 @@ export function HistoryPage() {
   const queryParams = {
     type,
     materialId,
+    category,
     docRef: docRef || undefined,
     from: dateRange[0]?.format('YYYY-MM-DD'),
     to: dateRange[1]?.format('YYYY-MM-DD'),
@@ -71,12 +73,17 @@ export function HistoryPage() {
     { header: t('warehouse.notes'), value: (r) => r.notes ?? '', width: 28 },
   ];
 
+  const categoryOptions = Array.from(new Set((materials ?? []).map((m) => m.category).filter(Boolean)))
+    .sort((a, b) => a.localeCompare(b, 'sr-RS'))
+    .map((c) => ({ label: c, value: c }));
+
   const exportFilters: Array<{ label: string; value: string }> = [];
   if (type) exportFilters.push({ label: t('export.type'), value: type === StockMovementType.Inflow ? t('warehouse.inflowLabel') : t('warehouse.outflowLabel') });
   if (materialId) {
     const m = materials?.find((x) => x.id === materialId);
     if (m) exportFilters.push({ label: t('warehouse.name'), value: `${m.code} — ${m.name}` });
   }
+  if (category) exportFilters.push({ label: t('warehouse.category'), value: category });
   if (docRef) exportFilters.push({ label: t('warehouse.documentReference'), value: docRef });
   if (dateRange[0]) exportFilters.push({ label: t('export.dateFrom'), value: dateRange[0].format('DD.MM.YYYY.') });
   if (dateRange[1]) exportFilters.push({ label: t('export.dateTo'), value: dateRange[1].format('DD.MM.YYYY.') });
@@ -138,6 +145,16 @@ export function HistoryPage() {
           options={(materials ?? []).map((m) => ({ label: `${m.code} — ${m.name}`, value: m.id }))}
           value={materialId}
           onChange={(v) => { setMaterialId(v); setPage(1); }}
+        />
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder={t('warehouse.allCategories')}
+          style={{ width: 200 }}
+          options={categoryOptions}
+          value={category}
+          onChange={(v) => { setCategory(v); setPage(1); }}
         />
         <Input
           allowClear
