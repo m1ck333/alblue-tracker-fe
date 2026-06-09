@@ -1,7 +1,9 @@
-import { Typography, Form, Input, InputNumber, DatePicker, Button, Table, Select, Space, App, Popconfirm } from 'antd';
+import { useState } from 'react';
+import { Typography, Form, Input, InputNumber, DatePicker, Button, Table, Select, Space, App, Popconfirm, Modal } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { warehouseApi, materialsApi, processesApi } from '@alblue/api-client';
+import type { CreateMaterialRequest } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
 import { useTranslation } from '@alblue/i18n';
 import { StockMovementType } from '@alblue/shared-types';
@@ -47,6 +49,32 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
     queryKey: ['materials-for-warehouse', tenantId],
     queryFn: () => materialsApi.getAll({ isActive: true, pageSize: 500 }).then((r) => r.data.items),
     enabled: !!tenantId,
+  });
+
+  const [newMaterialOpen, setNewMaterialOpen] = useState(false);
+  const [newMaterialForm] = Form.useForm<CreateMaterialRequest>();
+  const [pendingLineForNewMaterial, setPendingLineForNewMaterial] = useState<number | null>(null);
+
+  const createMaterialMutation = useMutation({
+    mutationFn: (values: CreateMaterialRequest) => materialsApi.create(values),
+    onSuccess: (resp) => {
+      const created = resp.data;
+      message.success(t('warehouse.newMaterialCreated', { defaultValue: 'Materijal kreiran' }));
+      queryClient.invalidateQueries({ queryKey: ['materials-for-warehouse', tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      const lines = (form.getFieldValue('lines') as LineFormShape[]) ?? [];
+      if (pendingLineForNewMaterial != null && lines[pendingLineForNewMaterial]) {
+        const next = [...lines];
+        next[pendingLineForNewMaterial] = { ...next[pendingLineForNewMaterial], materialId: created.id };
+        form.setFieldsValue({ lines: next });
+      } else {
+        form.setFieldsValue({ lines: [...lines, { materialId: created.id }] });
+      }
+      setPendingLineForNewMaterial(null);
+      setNewMaterialOpen(false);
+      newMaterialForm.resetFields();
+    },
+    onError: (err) => message.error(getErrorMessage(err, t('warehouse.newMaterialFailed', { defaultValue: 'Kreiranje materijala nije uspelo' }))),
   });
 
   const { data: processes } = useQuery({
@@ -191,7 +219,20 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
                   },
                 ]}
               />
-              <Button onClick={() => add({})} icon={<PlusOutlined />}>{t('warehouse.addLine')}</Button>
+              <Space>
+                <Button onClick={() => add({})} icon={<PlusOutlined />}>{t('warehouse.addLine')}</Button>
+                <Button
+                  onClick={() => {
+                    setPendingLineForNewMaterial(null);
+                    newMaterialForm.resetFields();
+                    newMaterialForm.setFieldsValue({ minQuantity: 0, maxQuantity: 0 });
+                    setNewMaterialOpen(true);
+                  }}
+                  icon={<PlusOutlined />}
+                >
+                  {t('warehouse.newMaterial')}
+                </Button>
+              </Space>
             </>
           )}
         </Form.List>
@@ -200,6 +241,85 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
           <Button type="primary" htmlType="submit" loading={mutation.isPending}>{submitLabel}</Button>
         </div>
       </Form>
+
+      <Modal
+        title={t('warehouse.newMaterial')}
+        open={newMaterialOpen}
+        onCancel={() => { setNewMaterialOpen(false); setPendingLineForNewMaterial(null); }}
+        onOk={() => newMaterialForm.submit()}
+        confirmLoading={createMaterialMutation.isPending}
+        okText={t('common:actions.save', { defaultValue: 'Sačuvaj' })}
+        cancelText={t('common:actions.cancel', { defaultValue: 'Otkaži' })}
+        destroyOnClose
+        width={600}
+      >
+        <Form<CreateMaterialRequest>
+          form={newMaterialForm}
+          layout="vertical"
+          initialValues={{ minQuantity: 0, maxQuantity: 0 }}
+          onFinish={(values) => createMaterialMutation.mutate({
+            ...values,
+            dimensionX: values.dimensionX ?? null,
+            dimensionY: values.dimensionY ?? null,
+            dimensionZ: values.dimensionZ ?? null,
+            location: values.location ?? null,
+            notes: values.notes ?? null,
+          })}
+        >
+          <Form.Item label={t('materials.code')} name="code" rules={[{ required: true, message: t('materials.validation.codeRequired') }]}>
+            <Input maxLength={50} />
+          </Form.Item>
+          <Form.Item label={t('materials.name')} name="name" rules={[{ required: true, message: t('materials.validation.nameRequired') }]}>
+            <Input maxLength={200} />
+          </Form.Item>
+          <Form.Item label={t('materials.unit')} name="unit" rules={[{ required: true, message: t('materials.validation.unitRequired') }]}>
+            <Input maxLength={20} placeholder={t('materials.unitPlaceholder')} />
+          </Form.Item>
+          <Form.Item label={t('materials.category')} name="category" rules={[{ required: true, message: t('materials.validation.categoryRequired') }]}>
+            <Input maxLength={100} placeholder={t('materials.categoryPlaceholder')} />
+          </Form.Item>
+          <Space.Compact style={{ width: '100%' }}>
+            <Form.Item label={t('materials.min')} name="minQuantity" style={{ flex: 1 }} rules={[{ required: true }]}>
+              <InputNumber min={0} style={{ width: '100%' }} />
+            </Form.Item>
+            <Form.Item
+              label={t('materials.max')}
+              name="maxQuantity"
+              style={{ flex: 1 }}
+              dependencies={['minQuantity']}
+              rules={[
+                { required: true },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    const min = getFieldValue('minQuantity');
+                    if (value == null || min == null || value >= min) return Promise.resolve();
+                    return Promise.reject(new Error(t('materials.validation.maxLtMin')));
+                  },
+                }),
+              ]}
+            >
+              <InputNumber min={0} style={{ width: '100%' }} />
+            </Form.Item>
+          </Space.Compact>
+          <Space.Compact style={{ width: '100%' }}>
+            <Form.Item label={t('materials.dimX')} name="dimensionX" style={{ flex: 1 }}>
+              <InputNumber min={0} style={{ width: '100%' }} placeholder="mm" />
+            </Form.Item>
+            <Form.Item label={t('materials.dimY')} name="dimensionY" style={{ flex: 1 }}>
+              <InputNumber min={0} style={{ width: '100%' }} placeholder="mm" />
+            </Form.Item>
+            <Form.Item label={t('materials.dimZ')} name="dimensionZ" style={{ flex: 1 }}>
+              <InputNumber min={0} style={{ width: '100%' }} placeholder="mm" />
+            </Form.Item>
+          </Space.Compact>
+          <Form.Item label={t('materials.location')} name="location">
+            <Input maxLength={100} />
+          </Form.Item>
+          <Form.Item label={t('materials.notes')} name="notes">
+            <Input.TextArea rows={2} maxLength={1000} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }
