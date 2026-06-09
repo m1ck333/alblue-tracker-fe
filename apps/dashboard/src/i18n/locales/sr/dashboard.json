@@ -699,7 +699,6 @@
     "stockEmpty": "Nema materijala u magacinu",
     "historyEmpty": "Nema transakcija",
     "headerNotes": "Napomena (zaglavlje)",
-    "unitPriceOptional": "Cena po JM (opciono)",
     "unitPriceFallbackHint": "Preuzima poslednju",
     "statusBelowMin": "⚠ ISPOD MIN",
     "statusAboveMax": "↑ IZNAD MAX",

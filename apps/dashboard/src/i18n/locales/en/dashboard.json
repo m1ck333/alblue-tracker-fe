@@ -697,7 +697,6 @@
     "stockEmpty": "No materials in stock",
     "historyEmpty": "No transactions",
     "headerNotes": "Notes (header)",
-    "unitPriceOptional": "Unit price (optional)",
     "unitPriceFallbackHint": "Will use last entered",
     "statusBelowMin": "⚠ BELOW MIN",
     "statusAboveMax": "↑ ABOVE MAX",

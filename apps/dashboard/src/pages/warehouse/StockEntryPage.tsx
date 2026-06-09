@@ -130,7 +130,7 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
                     ),
                   },
                   {
-                    title: isInflow ? t('warehouse.unitPrice') : t('warehouse.unitPriceOptional'),
+                    title: t('warehouse.unitPrice'),
                     width: 160,
                     render: (_, field) => (
                       <Form.Item name={[field.name, 'unitPrice']} noStyle rules={isInflow ? [{ required: true }] : undefined}>
