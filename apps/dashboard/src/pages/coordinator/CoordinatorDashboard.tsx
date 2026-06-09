@@ -26,6 +26,9 @@ import {
   usePendingChangeRequests,
 } from '../../hooks/useDashboard';
 import { useTranslation, useEnumTranslation } from '@alblue/i18n';
+import { useQuery } from '@tanstack/react-query';
+import { warehouseApi } from '@alblue/api-client';
+import { useAuthStore } from '@alblue/auth';
 
 const { Title, Text } = Typography;
 
@@ -54,6 +57,14 @@ export function CoordinatorDashboard() {
   const pendingBlocks = useDashboardPendingBlocks();
   const statistics = useDashboardStatistics();
   const changeRequests = usePendingChangeRequests();
+  const tenantId = useAuthStore((s) => s.tenantId);
+  const stockBalances = useQuery({
+    queryKey: ['warehouse-stock', tenantId],
+    queryFn: () => warehouseApi.getStockBalances().then((r) => r.data),
+    enabled: !!tenantId,
+    refetchInterval: 60_000,
+  });
+  const lowStockCount = (stockBalances.data ?? []).filter((b) => b.status === 'BelowMin').length;
   const { t } = useTranslation('dashboard');
   const { tEnum } = useEnumTranslation();
 
@@ -67,7 +78,7 @@ export function CoordinatorDashboard() {
           <Card title={<><BarChartOutlined /> {t('coordinator.statistics')}</>} loading={statistics.isLoading}>
             {statistics.data ? (() => {
               const s = statistics.data as DashboardStatisticsDto;
-              const items: { title: string; value: number; suffix?: string; color?: string }[] = [
+              const items: { title: string; value: number; suffix?: string; color?: string; onClick?: () => void }[] = [
                 { title: t('coordinator.stats.ordersActive'), value: s.today?.ordersActive ?? 0 },
                 { title: t('coordinator.stats.ordersCompleted'), value: s.today?.ordersCompleted ?? 0 },
                 { title: t('coordinator.stats.processesCompleted'), value: s.today?.processesCompleted ?? 0 },
@@ -75,11 +86,27 @@ export function CoordinatorDashboard() {
                 { title: t('coordinator.stats.criticalWarnings'), value: s.warnings?.criticalCount ?? 0, color: s.warnings?.criticalCount ? token.colorError : undefined },
                 { title: t('coordinator.stats.warnings'), value: s.warnings?.warningCount ?? 0, color: s.warnings?.warningCount ? token.colorWarning : undefined },
                 { title: t('coordinator.stats.pendingBlockRequests'), value: s.pendingBlockRequests ?? 0 },
+                {
+                  title: t('coordinator.stats.lowStock'),
+                  value: lowStockCount,
+                  color: lowStockCount > 0 ? token.colorError : undefined,
+                  onClick: lowStockCount > 0 ? () => navigate('/warehouse/stock?status=BelowMin') : undefined,
+                },
               ];
               return (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px 16px' }}>
                   {items.map((item) => (
-                    <div key={item.title} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 64 }}>
+                    <div
+                      key={item.title}
+                      onClick={item.onClick}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        minHeight: 64,
+                        cursor: item.onClick ? 'pointer' : undefined,
+                      }}
+                    >
                       <div style={{ fontSize: 13, color: token.colorTextSecondary, lineHeight: 1.3, marginBottom: 4 }}>{item.title}</div>
                       <Statistic
                         value={item.value}

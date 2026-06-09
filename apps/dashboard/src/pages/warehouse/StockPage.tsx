@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Typography, Table, Tag, Space, Input, Select, Empty } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 import { warehouseApi } from '@alblue/api-client';
@@ -26,10 +27,14 @@ export function StockPage() {
   const { t } = useTranslation('dashboard');
   const { ref: tableWrapperRef, height: tableBodyHeight } = useTableHeight();
 
+  const [searchParams] = useSearchParams();
+  const initialStatus = searchParams.get('status') as StockBalanceRowDto['status'] | null;
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 400);
   const [category, setCategory] = useState<string | undefined>();
-  const [statusFilter, setStatusFilter] = useState<StockBalanceRowDto['status'] | undefined>();
+  const [statusFilter, setStatusFilter] = useState<StockBalanceRowDto['status'] | undefined>(
+    initialStatus === 'BelowMin' || initialStatus === 'AboveMax' || initialStatus === 'Ok' ? initialStatus : undefined,
+  );
 
   const { data, isLoading } = useQuery({
     queryKey: ['warehouse-stock', tenantId],

@@ -104,7 +104,8 @@
       "min": "min",
       "criticalWarnings": "Critical Warnings",
       "warnings": "Warnings",
-      "pendingBlockRequests": "Pending Blocks"
+      "pendingBlockRequests": "Pending Blocks",
+      "lowStock": "Materials below min"
     },
     "deadlineWarnings": "Deadline Warnings",
     "daysRemaining": "{{count}} days remaining",

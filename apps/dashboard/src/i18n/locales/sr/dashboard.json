@@ -104,7 +104,8 @@
       "min": "min",
       "criticalWarnings": "Kritična upozorenja",
       "warnings": "Upozorenja",
-      "pendingBlockRequests": "Zahtevi na čekanju"
+      "pendingBlockRequests": "Zahtevi na čekanju",
+      "lowStock": "Materijali ispod min"
     },
     "deadlineWarnings": "Upozorenja o rokovima",
     "daysRemaining": "{{count}} dana preostalo",
