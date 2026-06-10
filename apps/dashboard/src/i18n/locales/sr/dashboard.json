@@ -99,6 +99,7 @@
     "stats": {
       "ordersActive": "Aktivne narudžbine",
       "ordersCompleted": "Završene narudžbine",
+      "ordersCompletedToday": "Završene danas",
       "processesCompleted": "Završeni procesi",
       "avgProcessTime": "Prosečno vreme",
       "min": "min",

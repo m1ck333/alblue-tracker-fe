@@ -79,14 +79,39 @@ export function CoordinatorDashboard() {
           <Card title={<><BarChartOutlined /> {t('coordinator.statistics')}</>} loading={statistics.isLoading}>
             {statistics.data ? (() => {
               const s = statistics.data as DashboardStatisticsDto;
+              // 6 cells in 3×2 grid. Dropped "Završeni procesi (danas)" and
+              // "Prosečno vreme" — reporting-grade metrics, not action items;
+              // they live in /reports. Every remaining cell is a clickable
+              // entry-point into the page that lets the coordinator act on it.
               const items: { title: string; value: number; suffix?: string; color?: string; onClick?: () => void }[] = [
-                { title: t('coordinator.stats.ordersActive'), value: s.today?.ordersActive ?? 0 },
-                { title: t('coordinator.stats.ordersCompleted'), value: s.today?.ordersCompleted ?? 0 },
-                { title: t('coordinator.stats.processesCompleted'), value: s.today?.processesCompleted ?? 0 },
-                { title: t('coordinator.stats.avgProcessTime'), value: Math.round(s.today?.averageProcessTimeMinutes ?? 0), suffix: t('coordinator.stats.min') },
-                { title: t('coordinator.stats.criticalWarnings'), value: s.warnings?.criticalCount ?? 0, color: s.warnings?.criticalCount ? token.colorError : undefined },
-                { title: t('coordinator.stats.warnings'), value: s.warnings?.warningCount ?? 0, color: s.warnings?.warningCount ? token.colorWarning : undefined },
-                { title: t('coordinator.stats.pendingBlockRequests'), value: s.pendingBlockRequests ?? 0 },
+                {
+                  title: t('coordinator.stats.ordersActive'),
+                  value: s.today?.ordersActive ?? 0,
+                  onClick: () => navigate('/orders'),
+                },
+                {
+                  title: t('coordinator.stats.ordersCompletedToday'),
+                  value: s.today?.ordersCompleted ?? 0,
+                  onClick: () => navigate('/orders'),
+                },
+                {
+                  title: t('coordinator.stats.pendingBlockRequests'),
+                  value: s.pendingBlockRequests ?? 0,
+                  color: (s.pendingBlockRequests ?? 0) > 0 ? token.colorWarning : undefined,
+                  onClick: () => navigate('/block-requests'),
+                },
+                {
+                  title: t('coordinator.stats.criticalWarnings'),
+                  value: s.warnings?.criticalCount ?? 0,
+                  color: s.warnings?.criticalCount ? token.colorError : undefined,
+                  onClick: () => navigate('/orders'),
+                },
+                {
+                  title: t('coordinator.stats.warnings'),
+                  value: s.warnings?.warningCount ?? 0,
+                  color: s.warnings?.warningCount ? token.colorWarning : undefined,
+                  onClick: () => navigate('/orders'),
+                },
                 {
                   title: t('coordinator.stats.lowStock'),
                   value: lowStockCount,
@@ -95,7 +120,7 @@ export function CoordinatorDashboard() {
                 },
               ];
               return (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px 16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px 16px' }}>
                   {items.map((item) => (
                     <div
                       key={item.title}
