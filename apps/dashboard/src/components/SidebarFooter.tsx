@@ -106,7 +106,11 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
     queryKey: ['notifications', 'unread-count', userId],
     queryFn: () => notificationsApi.getUnreadCount(userId!).then((r) => r.data),
     enabled: !!userId,
-    refetchInterval: 120_000,
+    // Was 120s — too slow to feel like an "alarm" for the low-stock
+    // notification Saša asked for (Milos caught it during testing
+    // 10.06.2026). 20s is the cheapest near-real-time without
+    // wiring SignalR push on the BE side.
+    refetchInterval: 20_000,
   });
 
   const { data: pagedResult, isLoading } = useQuery({
