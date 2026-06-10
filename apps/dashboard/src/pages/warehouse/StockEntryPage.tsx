@@ -221,17 +221,25 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
               />
               <Space>
                 <Button onClick={() => add({})} icon={<PlusOutlined />}>{t('warehouse.addLine')}</Button>
-                <Button
-                  onClick={() => {
-                    setPendingLineForNewMaterial(null);
-                    newMaterialForm.resetFields();
-                    newMaterialForm.setFieldsValue({ minQuantity: 0, maxQuantity: 0 });
-                    setNewMaterialOpen(true);
-                  }}
-                  icon={<PlusOutlined />}
-                >
-                  {t('warehouse.newMaterial')}
-                </Button>
+                {/*
+                  "Novi materijal" only on Ulaz — Saša 09.06.2026 confirmed
+                  auto-add scoped to Ulaz form. On Izlaz, creating a fresh
+                  material would land with 0 stock and the very next save
+                  would fail STOCK_INSUFFICIENT, which is just a dead end.
+                */}
+                {isInflow && (
+                  <Button
+                    onClick={() => {
+                      setPendingLineForNewMaterial(null);
+                      newMaterialForm.resetFields();
+                      newMaterialForm.setFieldsValue({ minQuantity: 0, maxQuantity: 0 });
+                      setNewMaterialOpen(true);
+                    }}
+                    icon={<PlusOutlined />}
+                  >
+                    {t('warehouse.newMaterial')}
+                  </Button>
+                )}
               </Space>
             </>
           )}
