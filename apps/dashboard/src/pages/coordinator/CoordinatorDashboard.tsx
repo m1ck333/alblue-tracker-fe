@@ -73,10 +73,14 @@ export function CoordinatorDashboard() {
     <div>
       <Title level={4}>{t('coordinator.title')}</Title>
 
-      <Row gutter={[16, 16]}>
+      <Row gutter={[16, 16]} align="stretch">
         {/* Statistics */}
-        <Col xs={24} lg={12}>
-          <Card title={<><BarChartOutlined /> {t('coordinator.statistics')}</>} loading={statistics.isLoading}>
+        <Col xs={24} lg={12} style={{ display: 'flex' }}>
+          <Card
+            title={<><BarChartOutlined /> {t('coordinator.statistics')}</>}
+            loading={statistics.isLoading}
+            style={{ width: '100%' }}
+          >
             {statistics.data ? (() => {
               const s = statistics.data as DashboardStatisticsDto;
               type StatItem = { title: string; value: number; suffix?: string; color?: string; onClick?: () => void };
@@ -157,7 +161,7 @@ export function CoordinatorDashboard() {
                       >
                         {group.title}
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px 16px' }}>
+                      <div className="stats-grid">
                         {group.items.map((item) => (
                           <div
                             key={item.title}
@@ -210,13 +214,15 @@ export function CoordinatorDashboard() {
         </Col>
 
         {/* Deadline Warnings */}
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={12} style={{ display: 'flex' }}>
           <Card
             title={<><WarningOutlined /> {t('coordinator.deadlineWarnings')}</>}
             loading={warnings.isLoading}
+            style={{ width: '100%' }}
+            styles={{ body: { display: 'flex', flexDirection: 'column', height: 'calc(100% - 57px)' } }}
           >
             {Array.isArray(warnings.data) && warnings.data.length > 0 ? (
-              <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
               <List
                 size="small"
                 dataSource={warnings.data as DeadlineWarningDto[]}

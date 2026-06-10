@@ -32,3 +32,21 @@
 .stats-clickable-cell:hover {
   background-color: rgba(125, 125, 125, 0.08);
 }
+
+/* Coordinator dashboard → responsive stats grid. 3 columns on desktop,
+ * 2 on tablet, 1 on narrow mobile so the cells never get too cramped. */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px 16px;
+}
+@media (max-width: 540px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 360px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
