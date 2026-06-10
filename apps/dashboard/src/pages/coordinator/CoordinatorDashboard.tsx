@@ -113,10 +113,19 @@ export function CoordinatorDashboard() {
                         transition: 'background-color 0.15s ease',
                       }}
                     >
-                      <div style={{ fontSize: 13, color: token.colorTextSecondary, lineHeight: 1.3, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          color: item.onClick ? token.colorPrimary : token.colorTextSecondary,
+                          lineHeight: 1.3,
+                          marginBottom: 4,
+                        }}
+                      >
                         {item.title}
                         {item.onClick && (
-                          <ArrowRightOutlined style={{ fontSize: 11, color: token.colorPrimary }} />
+                          <ArrowRightOutlined
+                            style={{ fontSize: 10, marginLeft: 4, verticalAlign: 'middle' }}
+                          />
                         )}
                       </div>
                       <Statistic
