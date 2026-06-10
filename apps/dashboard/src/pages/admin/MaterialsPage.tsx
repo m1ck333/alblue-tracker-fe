@@ -279,6 +279,11 @@ export function MaterialsPage() {
         onClose={() => guardedCreateClose(() => { setCreateOpen(false); createForm.resetFields(); })}
         width={540}
         destroyOnClose
+        extra={
+          <Button type="primary" onClick={() => createForm.submit()} loading={createMutation.isPending}>
+            {t('common:actions.save', { defaultValue: 'Save' })}
+          </Button>
+        }
       >
         <Form<CreateMaterialRequest>
           form={createForm}
@@ -339,9 +344,6 @@ export function MaterialsPage() {
           <Form.Item label={t('materials.notes')} name="notes">
             <Input.TextArea rows={2} maxLength={1000} />
           </Form.Item>
-          <Button type="primary" htmlType="submit" loading={createMutation.isPending}>
-            {t('common:actions.save', { defaultValue: 'Save' })}
-          </Button>
         </Form>
       </Drawer>
 
@@ -353,7 +355,20 @@ export function MaterialsPage() {
         destroyOnClose
         extra={
           editing ? (
-            <Space>
+            <Button type="primary" onClick={() => editForm.submit()} loading={updateMutation.isPending}>
+              {t('common:actions.save', { defaultValue: 'Save' })}
+            </Button>
+          ) : null
+        }
+      >
+        <Form<Omit<CreateMaterialRequest, 'code'>>
+          form={editForm}
+          layout="vertical"
+          onValuesChange={onEditValuesChange}
+          onFinish={(values) => editing && updateMutation.mutate({ id: editing.id, values })}
+        >
+          {editing && (
+            <Space style={{ marginBottom: 16 }}>
               <Button
                 size="small"
                 icon={<CopyOutlined />}
@@ -385,10 +400,11 @@ export function MaterialsPage() {
                   okText={t('common:actions.confirm', { defaultValue: 'Da' })}
                   cancelText={t('common:actions.no', { defaultValue: 'Ne' })}
                 >
-                  <Button danger loading={setActiveMutation.isPending}>{t('materials.deactivate')}</Button>
+                  <Button size="small" danger loading={setActiveMutation.isPending}>{t('materials.deactivate')}</Button>
                 </Popconfirm>
               ) : (
                 <Button
+                  size="small"
                   type="primary"
                   ghost
                   loading={setActiveMutation.isPending}
@@ -398,15 +414,7 @@ export function MaterialsPage() {
                 </Button>
               )}
             </Space>
-          ) : null
-        }
-      >
-        <Form<Omit<CreateMaterialRequest, 'code'>>
-          form={editForm}
-          layout="vertical"
-          onValuesChange={onEditValuesChange}
-          onFinish={(values) => editing && updateMutation.mutate({ id: editing.id, values })}
-        >
+          )}
           <Form.Item label={t('materials.name')} name="name" rules={[{ required: true }]}>
             <Input maxLength={200} />
           </Form.Item>
@@ -456,9 +464,6 @@ export function MaterialsPage() {
           <Form.Item label={t('materials.notes')} name="notes">
             <Input.TextArea rows={2} maxLength={1000} />
           </Form.Item>
-          <Button type="primary" htmlType="submit" loading={updateMutation.isPending}>
-            {t('common:actions.save', { defaultValue: 'Save' })}
-          </Button>
         </Form>
       </Drawer>
 
