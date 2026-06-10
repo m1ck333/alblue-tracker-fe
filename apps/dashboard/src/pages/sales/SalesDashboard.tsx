@@ -202,7 +202,9 @@ export function SalesDashboard() {
 
   return (
     <div>
-      <Title level={4}>{t('sales.title')}</Title>
+      <div style={{ marginBottom: 16 }}>
+        <Title level={4}>{t('sales.title')}</Title>
+      </div>
 
       <Row gutter={[16, 16]}>
         <Col span={24}>

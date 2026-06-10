@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Badge, Button, Popover, List, Menu, Typography, Space, Empty, Tooltip, Divider, Segmented, theme } from 'antd';
+import { Badge, Button, Popover, List, Menu, Typography, Space, Empty, Tooltip, Divider, Segmented, theme, Grid, Drawer } from 'antd';
 import {
   BellOutlined,
   UserOutlined,
@@ -83,6 +83,8 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [notifOpen, setNotifOpen] = useState(false);
+  const screens = Grid.useBreakpoint();
+  const isMobile = screens.lg === false;
   const [profileOpen, setProfileOpen] = useState(false);
   const [page, setPage] = useState(1);
 
@@ -151,7 +153,7 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
   });
 
   const notificationsContent = (
-    <div style={{ width: 360 }}>
+    <div style={{ width: isMobile ? '100%' : 360 }}>
       <div style={{ marginBottom: 8 }}>
         <Text strong style={{ fontSize: 15 }}>{t('notifications.title')}</Text>
         <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
@@ -330,27 +332,59 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
         }}
         style={{ border: 'none', background: 'transparent' }}
       />
-      <Popover
-        content={notificationsContent}
-        trigger="click"
-        open={notifOpen}
-        onOpenChange={(v) => { setNotifOpen(v); if (v) setPage(1); }}
-        placement="rightBottom"
-        arrow={false}
-      >
-        <Tooltip title={collapsed ? t('nav.notifications', { defaultValue: 'Notifications' }) : ''} placement="right">
-          <div
-            style={rowStyle}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+      {(() => {
+        const bellRow = (
+          <Tooltip title={collapsed ? t('nav.notifications', { defaultValue: 'Notifications' }) : ''} placement="right">
+            <div
+              style={rowStyle}
+              onClick={isMobile ? () => { setNotifOpen(true); setPage(1); } : undefined}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              <Badge count={count ?? 0} size="small" offset={[2, -2]}>
+                <BellOutlined style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)' }} />
+              </Badge>
+              {!collapsed && <span>{t('nav.notifications', { defaultValue: 'Notifications' })}</span>}
+            </div>
+          </Tooltip>
+        );
+
+        // Mobile: the sidebar lives inside a Drawer already, so a
+        // right-placed Popover anchored to the bell would land off-screen
+        // (the bell is at ~x=200px and the popover would extend further
+        // right). Use a dedicated right-side Drawer for notifications
+        // instead; it stacks above the menu Drawer cleanly.
+        if (isMobile) {
+          return (
+            <>
+              {bellRow}
+              <Drawer
+                title={t('notifications.title')}
+                placement="right"
+                open={notifOpen}
+                onClose={() => setNotifOpen(false)}
+                width={Math.min(360, window.innerWidth - 16)}
+                styles={{ body: { padding: 16 } }}
+              >
+                {notificationsContent}
+              </Drawer>
+            </>
+          );
+        }
+
+        return (
+          <Popover
+            content={notificationsContent}
+            trigger="click"
+            open={notifOpen}
+            onOpenChange={(v) => { setNotifOpen(v); if (v) setPage(1); }}
+            placement="rightBottom"
+            arrow={false}
           >
-            <Badge count={count ?? 0} size="small" offset={[2, -2]}>
-              <BellOutlined style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)' }} />
-            </Badge>
-            {!collapsed && <span>{t('nav.notifications', { defaultValue: 'Notifications' })}</span>}
-          </div>
-        </Tooltip>
-      </Popover>
+            {bellRow}
+          </Popover>
+        );
+      })()}
       <Popover
         content={profileContent}
         trigger="click"

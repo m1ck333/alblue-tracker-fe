@@ -50,3 +50,33 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Page-level Titles (level 3 and 4). Content's padding-top supplies
+ * the gap above; the page is expected to wrap the title row in a div
+ * with marginBottom: 16 to supply the gap below. Killing the intrinsic
+ * antd Title margin (top: 1.2em + bottom: 0.5em, and any inline
+ * `style={{ marginBottom: 4 }}` etc.) lets the page wrapper own the
+ * spacing rule so it lines up identically across the app. */
+.ant-typography h3,
+.ant-typography h4,
+h3.ant-typography,
+h4.ant-typography {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Mobile page titles: antd Title level=4 is 20px which is fine on desktop
+ * but feels chunky next to the hamburger on a 360px screen. Drop to
+ * 16px and let it wrap. */
+@media (max-width: 540px) {
+  .ant-typography h4,
+  h4.ant-typography {
+    font-size: 16px !important;
+    line-height: 1.3 !important;
+  }
+  .ant-typography h3,
+  h3.ant-typography {
+    font-size: 18px !important;
+    line-height: 1.3 !important;
+  }
+}

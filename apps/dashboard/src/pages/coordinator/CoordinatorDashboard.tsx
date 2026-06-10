@@ -71,7 +71,9 @@ export function CoordinatorDashboard() {
 
   return (
     <div>
-      <Title level={4}>{t('coordinator.title')}</Title>
+      <div style={{ marginBottom: 16 }}>
+        <Title level={4}>{t('coordinator.title')}</Title>
+      </div>
 
       <Row gutter={[16, 16]} align="stretch">
         {/* Statistics */}
@@ -219,10 +221,9 @@ export function CoordinatorDashboard() {
             title={<><WarningOutlined /> {t('coordinator.deadlineWarnings')}</>}
             loading={warnings.isLoading}
             style={{ width: '100%' }}
-            styles={{ body: { display: 'flex', flexDirection: 'column', height: 'calc(100% - 57px)' } }}
           >
             {Array.isArray(warnings.data) && warnings.data.length > 0 ? (
-              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+              <div style={{ maxHeight: 360, overflowY: 'auto' }}>
               <List
                 size="small"
                 dataSource={warnings.data as DeadlineWarningDto[]}

@@ -122,7 +122,9 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
 
   return (
     <div style={{ padding: 0, maxWidth: 1200 }}>
-      <Title level={4}>{title}</Title>
+      <div style={{ marginBottom: 16 }}>
+        <Title level={4}>{title}</Title>
+      </div>
 
       <Form<EntryFormShape>
         form={form}
@@ -257,7 +259,7 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
         confirmLoading={createMaterialMutation.isPending}
         okText={t('common:actions.save', { defaultValue: 'Sačuvaj' })}
         cancelText={t('common:actions.cancel', { defaultValue: 'Otkaži' })}
-        destroyOnClose
+        destroyOnHidden
         width={600}
       >
         <Form<CreateMaterialRequest>

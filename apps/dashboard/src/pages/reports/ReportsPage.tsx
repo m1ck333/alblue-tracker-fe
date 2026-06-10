@@ -2731,9 +2731,9 @@ export function ReportsPage() {
 
   return (
     <div>
-      <Title level={4} style={{ marginBottom: 16 }}>
-        {t('reports.title')}
-      </Title>
+      <div style={{ marginBottom: 16 }}>
+        <Title level={4}>{t('reports.title')}</Title>
+      </div>
       <Tabs
         defaultActiveKey="averages"
         destroyOnHidden

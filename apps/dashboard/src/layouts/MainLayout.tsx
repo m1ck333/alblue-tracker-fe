@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Layout, theme, Grid, Button, Drawer } from 'antd';
-import { MenuOutlined } from '@ant-design/icons';
+import { MenuOutlined, CloseOutlined } from '@ant-design/icons';
 import { useAuthStore } from '@alblue/auth';
 import {
   createConnection,
@@ -58,7 +58,9 @@ export function MainLayout() {
   }, [tenantId]);
 
   // Sidebar inner content (logo + menu + footer). Re-used both as the
-  // Sider's children on desktop and as the Drawer's body on mobile.
+  // Sider's children on desktop and as the Drawer's body on mobile. On
+  // mobile the logo row also carries an inline X to close the drawer, so
+  // we don't burn a whole second row on a header title.
   const sidebarBody = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div
@@ -67,9 +69,10 @@ export function MainLayout() {
           margin: 16,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: isMobile ? 'space-between' : 'center',
           overflow: 'hidden',
           flexShrink: 0,
+          gap: 8,
         }}
       >
         <img
@@ -77,6 +80,15 @@ export function MainLayout() {
           alt="Alblue"
           style={{ height: isMobile || !collapsed ? 28 : 32, objectFit: 'contain' }}
         />
+        {isMobile && (
+          <Button
+            type="text"
+            size="small"
+            icon={<CloseOutlined style={{ color: '#fff', fontSize: 16 }} />}
+            onClick={() => setMobileDrawerOpen(false)}
+            aria-label="Zatvori meni"
+          />
+        )}
       </div>
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         <SidebarMenu collapsed={isMobile ? false : collapsed} />
@@ -104,13 +116,12 @@ export function MainLayout() {
           <Button
             type="primary"
             shape="circle"
-            size="large"
             icon={<MenuOutlined />}
             onClick={() => setMobileDrawerOpen(true)}
             style={{
               position: 'fixed',
-              top: 12,
-              left: 12,
+              top: 10,
+              left: 10,
               zIndex: 999,
               boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
             }}
@@ -136,7 +147,12 @@ export function MainLayout() {
           style={{
             margin: fullscreen ? 0 : (isMobile ? 12 : 24),
             padding: fullscreen ? 12 : (isMobile ? 12 : 24),
-            paddingTop: !fullscreen && isMobile ? 60 : undefined,
+            // Slightly more breathing room above the page Title on desktop
+            // — many pages override `Title style={{ margin: 0 }}` which made
+            // them feel cramped vs. dashboard (which keeps antd defaults).
+            // On mobile we leave room for the floating hamburger button
+            // (≈ 32 + 10 = 42, plus a small buffer).
+            paddingTop: fullscreen ? 12 : (isMobile ? 48 : 32),
             background: themeToken.colorBgContainer,
             borderRadius: fullscreen ? 0 : themeToken.borderRadius,
             display: 'flex',

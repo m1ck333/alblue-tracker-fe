@@ -213,7 +213,7 @@ export function MaterialsImportModal({ open, onClose }: Props) {
         )
       }
       width={900}
-      destroyOnClose
+      destroyOnHidden
     >
       {!file && (
         <Dragger

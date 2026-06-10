@@ -280,7 +280,7 @@ export function MaterialsPage() {
         open={createOpen}
         onClose={() => guardedCreateClose(() => { setCreateOpen(false); createForm.resetFields(); })}
         width={540}
-        destroyOnClose
+        destroyOnHidden
         extra={
           <Button type="primary" onClick={() => createForm.submit()} loading={createMutation.isPending}>
             {t('common:actions.save', { defaultValue: 'Save' })}
@@ -354,7 +354,7 @@ export function MaterialsPage() {
         open={!!editing}
         onClose={() => guardedEditClose(() => setEditing(null))}
         width={540}
-        destroyOnClose
+        destroyOnHidden
         extra={
           editing ? (
             <Button type="primary" onClick={() => editForm.submit()} loading={updateMutation.isPending}>

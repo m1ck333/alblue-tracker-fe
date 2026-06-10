@@ -20,18 +20,18 @@ export function WhatsNewPage() {
   const lastUpdated = changelog.length > 0 ? changelog[0].date : null;
 
   return (
-    <div style={{ maxWidth: 880, margin: '0 auto', padding: '24px 16px' }}>
-      <Title level={3} style={{ marginBottom: 4 }}>
-        {t('whatsNew.title')}
-      </Title>
-      <Text type="secondary">{t('whatsNew.subtitle')}</Text>
-      {lastUpdated && (
-        <div style={{ marginTop: 4 }}>
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            {t('whatsNew.lastUpdated', { date: dayjs(lastUpdated).format('DD.MM.YYYY') })}
-          </Text>
-        </div>
-      )}
+    <div style={{ maxWidth: 880, margin: '0 auto', width: '100%' }}>
+      <div style={{ marginBottom: 16 }}>
+        <Title level={3}>{t('whatsNew.title')}</Title>
+        <Text type="secondary">{t('whatsNew.subtitle')}</Text>
+        {lastUpdated && (
+          <div style={{ marginTop: 4 }}>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {t('whatsNew.lastUpdated', { date: dayjs(lastUpdated).format('DD.MM.YYYY') })}
+            </Text>
+          </div>
+        )}
+      </div>
       <Divider />
 
       <Space direction="vertical" size={16} style={{ width: '100%' }}>
