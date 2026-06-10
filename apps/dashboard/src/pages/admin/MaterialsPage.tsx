@@ -12,7 +12,7 @@ import { useTableHeight } from '../../hooks/useTableHeight';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
 import { TableExportButton } from '../../components/TableExportButton';
 import { MaterialsImportModal } from './MaterialsImportModal';
-import { ImportOutlined, PlusOutlined } from '@ant-design/icons';
+import { ImportOutlined, PlusOutlined, CopyOutlined } from '@ant-design/icons';
 import type { ExportColumn } from '../../utils/exportTable';
 import dayjs from 'dayjs';
 
@@ -355,6 +355,8 @@ export function MaterialsPage() {
           editing ? (
             <Space>
               <Button
+                size="small"
+                icon={<CopyOutlined />}
                 onClick={() => {
                   const src = editing;
                   setEditing(null);
