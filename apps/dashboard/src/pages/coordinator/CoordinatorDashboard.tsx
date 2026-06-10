@@ -79,11 +79,13 @@ export function CoordinatorDashboard() {
           <Card title={<><BarChartOutlined /> {t('coordinator.statistics')}</>} loading={statistics.isLoading}>
             {statistics.data ? (() => {
               const s = statistics.data as DashboardStatisticsDto;
-              // 8 cells in a 3-column grid (3+3+2). Action-required items
-              // come first and navigate to the page that lets the coordinator
-              // act on them; daily output info ("Završeni procesi", "Prosečno
-              // vreme") closes the card as plain info.
-              const items: { title: string; value: number; suffix?: string; color?: string; onClick?: () => void }[] = [
+              type StatItem = { title: string; value: number; suffix?: string; color?: string; onClick?: () => void };
+              // Three semantic groups, each rendered in its own 3-column row
+              // with a small muted header above. Groups: Narudžbine (order
+              // overview + pending block requests), Upozorenja (alarm cells
+              // — deadline + low-stock), Aktivnost danas (today-only
+              // output info, no navigation).
+              const orderGroup: StatItem[] = [
                 {
                   title: t('coordinator.stats.ordersActive'),
                   value: s.today?.ordersActive ?? 0,
@@ -100,6 +102,8 @@ export function CoordinatorDashboard() {
                   color: (s.pendingBlockRequests ?? 0) > 0 ? token.colorWarning : undefined,
                   onClick: () => navigate('/block-requests'),
                 },
+              ];
+              const alarmGroup: StatItem[] = [
                 {
                   title: t('coordinator.stats.criticalWarnings'),
                   value: s.warnings?.criticalCount ?? 0,
@@ -118,6 +122,8 @@ export function CoordinatorDashboard() {
                   color: lowStockCount > 0 ? token.colorError : undefined,
                   onClick: lowStockCount > 0 ? () => navigate('/warehouse/stock?status=BelowMin') : undefined,
                 },
+              ];
+              const activityGroup: StatItem[] = [
                 {
                   title: t('coordinator.stats.processesCompletedToday'),
                   value: s.today?.processesCompleted ?? 0,
@@ -128,45 +134,71 @@ export function CoordinatorDashboard() {
                   suffix: t('coordinator.stats.min'),
                 },
               ];
+              const groups: { title: string; items: StatItem[] }[] = [
+                { title: t('coordinator.stats.groupOrders'), items: orderGroup },
+                { title: t('coordinator.stats.groupAlarms'), items: alarmGroup },
+                { title: t('coordinator.stats.groupActivityToday'), items: activityGroup },
+              ];
               return (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px 16px' }}>
-                  {items.map((item) => (
-                    <div
-                      key={item.title}
-                      onClick={item.onClick}
-                      className={item.onClick ? 'stats-clickable-cell' : undefined}
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        minHeight: 64,
-                        cursor: item.onClick ? 'pointer' : undefined,
-                        padding: item.onClick ? '4px 8px' : undefined,
-                        margin: item.onClick ? '-4px -8px' : undefined,
-                        borderRadius: 6,
-                        transition: 'background-color 0.15s ease',
-                      }}
-                    >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {groups.map((group, gi) => (
+                    <div key={group.title}>
                       <div
                         style={{
-                          fontSize: 13,
-                          color: item.onClick ? token.colorPrimary : token.colorTextSecondary,
-                          lineHeight: 1.3,
-                          marginBottom: 4,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          letterSpacing: 0.6,
+                          textTransform: 'uppercase',
+                          color: token.colorTextSecondary,
+                          marginBottom: 10,
+                          paddingBottom: 6,
+                          borderBottom: `1px solid ${token.colorBorderSecondary}`,
                         }}
                       >
-                        {item.title}
-                        {item.onClick && (
-                          <ArrowRightOutlined
-                            style={{ fontSize: 10, marginLeft: 4, verticalAlign: 'middle' }}
-                          />
-                        )}
+                        {group.title}
                       </div>
-                      <Statistic
-                        value={item.value}
-                        suffix={item.suffix}
-                        valueStyle={{ fontSize: 24, ...(item.color ? { color: item.color } : {}) }}
-                      />
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px 16px' }}>
+                        {group.items.map((item) => (
+                          <div
+                            key={item.title}
+                            onClick={item.onClick}
+                            className={item.onClick ? 'stats-clickable-cell' : undefined}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'space-between',
+                              minHeight: 64,
+                              cursor: item.onClick ? 'pointer' : undefined,
+                              padding: item.onClick ? '4px 8px' : undefined,
+                              margin: item.onClick ? '-4px -8px' : undefined,
+                              borderRadius: 6,
+                              transition: 'background-color 0.15s ease',
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: 13,
+                                color: item.onClick ? token.colorPrimary : token.colorTextSecondary,
+                                lineHeight: 1.3,
+                                marginBottom: 4,
+                              }}
+                            >
+                              {item.title}
+                              {item.onClick && (
+                                <ArrowRightOutlined
+                                  style={{ fontSize: 10, marginLeft: 4, verticalAlign: 'middle' }}
+                                />
+                              )}
+                            </div>
+                            <Statistic
+                              value={item.value}
+                              suffix={item.suffix}
+                              valueStyle={{ fontSize: 24, ...(item.color ? { color: item.color } : {}) }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      {gi < groups.length - 1 && null}
                     </div>
                   ))}
                 </div>

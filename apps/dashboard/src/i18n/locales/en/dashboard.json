@@ -98,6 +98,9 @@
     "noStatistics": "No statistics available",
     "stats": {
       "ordersActive": "Active Orders",
+      "groupOrders": "Orders",
+      "groupAlarms": "Warnings and alarms",
+      "groupActivityToday": "Today's activity",
       "ordersCompleted": "Completed Orders",
       "ordersCompletedToday": "Completed Today",
       "processesCompletedToday": "Processes Completed Today",

@@ -98,6 +98,9 @@
     "noStatistics": "Nema dostupne statistike",
     "stats": {
       "ordersActive": "Aktivne narudžbine",
+      "groupOrders": "Narudžbine",
+      "groupAlarms": "Upozorenja i alarmi",
+      "groupActivityToday": "Aktivnost danas",
       "ordersCompleted": "Završene narudžbine",
       "ordersCompletedToday": "Završene danas",
       "processesCompleted": "Završeni procesi",
