@@ -100,6 +100,8 @@
       "ordersActive": "Active Orders",
       "ordersCompleted": "Completed Orders",
       "ordersCompletedToday": "Completed Today",
+      "processesCompletedToday": "Processes Completed Today",
+      "avgProcessTimeToday": "Avg Process Time Today",
       "processesCompleted": "Completed Processes",
       "avgProcessTime": "Avg Process Time",
       "min": "min",

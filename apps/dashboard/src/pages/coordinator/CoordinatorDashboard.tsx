@@ -79,10 +79,10 @@ export function CoordinatorDashboard() {
           <Card title={<><BarChartOutlined /> {t('coordinator.statistics')}</>} loading={statistics.isLoading}>
             {statistics.data ? (() => {
               const s = statistics.data as DashboardStatisticsDto;
-              // 6 cells in 3×2 grid. Dropped "Završeni procesi (danas)" and
-              // "Prosečno vreme" — reporting-grade metrics, not action items;
-              // they live in /reports. Every remaining cell is a clickable
-              // entry-point into the page that lets the coordinator act on it.
+              // 8 cells in a 3-column grid (3+3+2). Action-required items
+              // come first and navigate to the page that lets the coordinator
+              // act on them; daily output info ("Završeni procesi", "Prosečno
+              // vreme") closes the card as plain info.
               const items: { title: string; value: number; suffix?: string; color?: string; onClick?: () => void }[] = [
                 {
                   title: t('coordinator.stats.ordersActive'),
@@ -117,6 +117,15 @@ export function CoordinatorDashboard() {
                   value: lowStockCount,
                   color: lowStockCount > 0 ? token.colorError : undefined,
                   onClick: lowStockCount > 0 ? () => navigate('/warehouse/stock?status=BelowMin') : undefined,
+                },
+                {
+                  title: t('coordinator.stats.processesCompletedToday'),
+                  value: s.today?.processesCompleted ?? 0,
+                },
+                {
+                  title: t('coordinator.stats.avgProcessTimeToday'),
+                  value: Math.round(s.today?.averageProcessTimeMinutes ?? 0),
+                  suffix: t('coordinator.stats.min'),
                 },
               ];
               return (
