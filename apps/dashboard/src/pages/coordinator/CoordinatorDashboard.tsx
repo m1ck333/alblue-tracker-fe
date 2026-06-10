@@ -7,6 +7,7 @@ import {
   StopOutlined,
   BarChartOutlined,
   SwapOutlined,
+  ArrowRightOutlined,
 } from '@ant-design/icons';
 import type {
   DashboardStatisticsDto,
@@ -99,15 +100,25 @@ export function CoordinatorDashboard() {
                     <div
                       key={item.title}
                       onClick={item.onClick}
+                      className={item.onClick ? 'stats-clickable-cell' : undefined}
                       style={{
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
                         minHeight: 64,
                         cursor: item.onClick ? 'pointer' : undefined,
+                        padding: item.onClick ? '4px 8px' : undefined,
+                        margin: item.onClick ? '-4px -8px' : undefined,
+                        borderRadius: 6,
+                        transition: 'background-color 0.15s ease',
                       }}
                     >
-                      <div style={{ fontSize: 13, color: token.colorTextSecondary, lineHeight: 1.3, marginBottom: 4 }}>{item.title}</div>
+                      <div style={{ fontSize: 13, color: token.colorTextSecondary, lineHeight: 1.3, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {item.title}
+                        {item.onClick && (
+                          <ArrowRightOutlined style={{ fontSize: 11, color: token.colorPrimary }} />
+                        )}
+                      </div>
                       <Statistic
                         value={item.value}
                         suffix={item.suffix}

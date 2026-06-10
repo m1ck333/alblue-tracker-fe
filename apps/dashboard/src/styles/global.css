@@ -25,3 +25,10 @@
   opacity: 0.4;
   font-style: italic;
 }
+
+/* Coordinator dashboard → clickable Statistic cells (e.g. "Materijali ispod
+ * min" → /warehouse/stock filtered). Hover background hints that the cell
+ * navigates, complementing the arrow icon next to the title. */
+.stats-clickable-cell:hover {
+  background-color: rgba(125, 125, 125, 0.08);
+}
