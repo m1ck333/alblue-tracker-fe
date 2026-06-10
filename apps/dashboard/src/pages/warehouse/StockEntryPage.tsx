@@ -27,7 +27,6 @@ interface LineFormShape {
 interface EntryFormShape {
   documentReference?: string;
   movementDate: dayjs.Dayjs;
-  notes?: string;
   lines: LineFormShape[];
   processId?: string;
 }
@@ -99,7 +98,10 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
         type,
         documentReference: values.documentReference!.trim(),
         movementDate: values.movementDate.toISOString(),
-        notes: values.notes ?? null,
+        // No document-level notes — Saša's Excel spec only has Napomena
+        // as a per-stavka column. BE handler still accepts the field for
+        // backwards compat but we don't send it from the form anymore.
+        notes: null,
         processId: !isInflow ? (values.processId ?? null) : null,
         lines: (values.lines ?? []).map((l) => ({
           materialId: l.materialId!,
@@ -147,9 +149,6 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
               />
             </Form.Item>
           )}
-          <Form.Item label={t('warehouse.headerNotes')} name="notes">
-            <Input style={{ width: 320 }} />
-          </Form.Item>
         </Space>
 
         <div style={{ marginTop: 8 }}>

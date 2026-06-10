@@ -728,7 +728,6 @@
     "saveError": "Greška pri snimanju.",
     "stockEmpty": "Nema materijala u magacinu",
     "historyEmpty": "Nema transakcija",
-    "headerNotes": "Napomena (zaglavlje)",
     "unitPriceFallbackHint": "Preuzima poslednju",
     "statusBelowMin": "⚠ ISPOD MIN",
     "statusAboveMax": "↑ IZNAD MAX",
