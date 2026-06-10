@@ -46,6 +46,56 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    id: '2026-06-10-magacin-finishing-touches',
+    date: '2026-06-10',
+    title: {
+      sr: 'Magacin — dorade i alarmi (po potvrdama)',
+      en: 'Warehouse — finishing touches and alarms (per confirmations)',
+    },
+    bullets: [
+      {
+        sr: 'Stanje i Istorija sada prikazuju dimenzije materijala (Dim X, Dim Y, Dim Z) i Napomenu kao zasebne kolone — vidljive su sve karakteristike stavke iz Liste materijala bez otvaranja detalja.',
+        en: 'Stock and History now expose Dim X, Dim Y, Dim Z, and Notes as standalone columns — every attribute from the Materials list is visible without opening details.',
+      },
+      {
+        sr: 'Materijali (Administracija → Materijali): novo dugme „Dupliraj" u panelu materijala — otvara Novi materijal sa kopiranim podacima i praznim poljem Kod, što ubrzava unos serije sličnih artikala (npr. različite varijante istog profila).',
+        en: 'Materials (Administration → Materials): a new "Duplicate" button in the material panel — opens New material with the data pre-filled and an empty Code, which speeds up entering series of near-identical items (e.g. variants of the same profile).',
+      },
+      {
+        sr: 'Materijali (Administracija → Materijali): novo dugme „Uvoz iz Excela" — Excel sa zaglavljima Kod, Naziv, Jedinica mere, Kategorija, Min, Max, Dimenzija X/Y/Z, Pozicija, Napomena se može uvesti masovno. Pregled pre uvoza pokazuje koji su redovi validni, a koji imaju greške (prazan Kod, već postoji, duplikat u istom fajlu, Max ispod Min) — uvozi se samo ono što je ispravno, a rezime navodi koji su redovi propali sa razlogom.',
+        en: 'Materials (Administration → Materials): a new "Import from Excel" button — bulk-import an .xlsx file with headers Code, Name, Unit, Category, Min, Max, Dim X/Y/Z, Location, Notes. The preview before import shows which rows are valid and which have errors (empty Code, already exists, duplicate in the same file, Max below Min) — only the valid ones get created, and the summary lists the failing rows with reasons.',
+      },
+      {
+        sr: 'Ulaz materijala: u formi sada postoji dugme „Novi materijal" pored „Dodaj stavku" — ako materijal sa traženim kodom još ne postoji u sistemu, može se kreirati u toku unosa prijemnice. Sačuvani materijal se automatski dodaje kao izabrana stavka, pa korisnik samo unese količinu i cenu.',
+        en: 'Receipt form: a "New material" button now sits next to "Add line" — if the code being entered doesn\'t exist in the system yet, the material can be created right inside the receipt. Once saved it becomes a pre-selected line, so the operator only fills in the quantity and price.',
+      },
+      {
+        sr: 'Izlaz materijala: novo opciono polje „Proces" u zaglavlju — bira se sa liste procesa i pojavljuje se u Istoriji u koloni Proces za sve stavke tog izlaza. Korisno kada se materijal izdaje na konkretan proces (predkrojenje, plastifikacija itd.).',
+        en: 'Issue form: a new optional "Process" field in the header — pick from the active process list, and it surfaces in History under the Process column for every line of the issue. Handy when material is being released to a specific production process (pre-cut, powder coating, etc.).',
+      },
+      {
+        sr: 'Izlaz materijala: ako se traži veća količina nego što je na stanju, sistem odbija unos sa porukom „Nedovoljno na stanju za KOD — NAZIV: trenutno X JM, traženo Y JM" — stanje se ne može spustiti ispod nule.',
+        en: 'Issue form: if the requested quantity exceeds the on-hand amount, the system rejects the entry with "Insufficient stock for CODE — NAME: currently X UoM, requested Y UoM" — stock cannot go below zero.',
+      },
+      {
+        sr: 'Alarm za minimum zaliha (po potvrdi Saše): kada Izlaz prevede materijal iz stanja iznad minimuma u stanje ispod minimuma, na kontrolnoj tabli koordinatora pojavi se brojač „Materijali ispod min" (crveni broj klikom vodi na Stanje sa filterom „Ispod min"), a u zvoncetu se kreira obaveštenje „Materijal ispod minimuma: KOD — NAZIV" za sve menadžment uloge (SuperAdmin, Admin, Menadžer, Koordinator). Ako je materijal već bio ispod min, dodatni Izlazi ne stvaraju nove notifikacije — tek kad se vrati iznad min i ponovo padne ispod.',
+        en: 'Low-stock alarm (per Saša\'s confirmation): when an Issue brings a material from at-or-above min down to below min, the coordinator dashboard shows a "Materials below min" counter (the red number is clickable and navigates to Stock filtered to "Below min"), and a "Material below minimum: CODE — NAME" notification is created in the bell for every management user (SuperAdmin, Admin, Manager, Coordinator). If the material was already below min, follow-up Issues don\'t create extra notifications — a new one fires only after the stock is restored above min and crosses back below.',
+      },
+      {
+        sr: 'Obaveštenja prate jezik aplikacije: tekst „Materijal ispod minimuma…" se odmah prepravlja kada se jezik promeni u profilu, bez osvežavanja stranice.',
+        en: 'Notifications follow the app language: the "Material below minimum…" text updates immediately when the language is switched in the profile, with no page reload.',
+      },
+      {
+        sr: 'Uloga „Magacioner" se može kombinovati sa drugim ulogama (npr. korisnik može biti i Koordinator i Magacioner) — sve uloge se računaju zajedno kod provere prava pristupa.',
+        en: 'The Warehouse worker role can be combined with other roles (e.g. a user can be both Coordinator and Warehouse worker) — all assigned roles are considered together for access checks.',
+      },
+      {
+        sr: 'Detaljno: pogledati ažuriranu sekciju 3.11 Magacin u Uputstvu.',
+        en: 'Full walkthrough: see the updated section 3.11 Warehouse in the Tutorial.',
+      },
+    ],
+  },
+  {
     id: '2026-06-09-magacin',
     date: '2026-06-09',
     title: {

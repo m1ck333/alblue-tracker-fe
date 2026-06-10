@@ -536,15 +536,27 @@ The catalog of every material tracked. Each material has:
 - **Notes** — free text.
 
 Actions:
-- **New material** (top right) opens the side panel for entry.
-- **Click a row** opens the side panel pre-filled for edit. The
-  top-right of the panel hosts **Deactivate** / **Activate** — a
-  deactivated material disappears from Stock and can't be selected on
-  receipt / issue forms, but existing history stays visible.
+- **New material** (top right) opens the side panel for entry. The
+  Save button sits in the panel header so it stays visible even when
+  scrolling through the fields.
+- **Click a row** opens the side panel pre-filled for edit. The top
+  of the panel body hosts **Duplicate** (opens New material with the
+  current row's data pre-filled — only Code stays blank, useful for
+  authoring families of near-identical materials) and **Deactivate**
+  / **Activate** — a deactivated material disappears from Stock and
+  can't be selected on receipt / issue forms, but existing history
+  stays visible.
 - **Search** by code or name, filter by category and status (active /
   inactive), filter by created date.
 - **Export** (top right) — downloads an Excel of the current filtered
   view.
+- **Import from Excel** — an .xlsx file with headers _Code, Name,
+  Unit, Category, Min, Max, Dim X/Y/Z, Location, Notes_ can be
+  bulk-imported. A preview opens with valid rows highlighted and any
+  problematic ones flagged in red (empty Code, code already exists,
+  duplicate within the file, Max below Min). Clicking **Import (N)**
+  creates only the valid rows; the summary shows how many were
+  created and which rows failed with reasons.
 
 #### Warehouse stock (Warehouse → Stock)
 
@@ -560,6 +572,8 @@ scroll.
 | Min / Max | From the Materials list. |
 | Unit price | The unit price from the most recent receipt. |
 | Total value | Quantity × Unit price. |
+| Dim X / Y / Z | From the Materials list (millimeters). |
+| Notes | From the Materials list. |
 | Location | From the Materials list. |
 
 Filters above the table: search by code/name, category, stock status.
@@ -573,9 +587,9 @@ contain multiple different materials.
 Header fields:
 - **Receipt number** — free text (e.g. `2026/043`).
 - **Date** — defaults to today.
-- **Header notes** — free text for the whole receipt.
 
-Material lines (the table below, **Add line** for a new row):
+Material lines (the table below, **Add line** for a new row,
+**New material** for inline creation):
 - **Name** — selected from the Materials list. Typing filters by code
   or name.
 - **Quantity** — required, positive number.
@@ -584,6 +598,12 @@ Material lines (the table below, **Add line** for a new row):
 - **Notes** — optional, per line.
 - The red **trash** button removes a line (disabled when only one row
   remains — at least one line is required).
+
+**New material** sits next to **Add line** and opens a modal with the
+full material form. When a code arrives that doesn't exist yet in the
+system, the operator can create the material mid-receipt — once
+saved, it slots into the lines table as a selected row and the
+operator only fills in quantity and price.
 
 **Save receipt** stores all lines at once. After save:
 - Stock increases by the entered quantities.
@@ -595,9 +615,16 @@ Material lines (the table below, **Add line** for a new row):
 Same as Receipt, with differences:
 - **Order number** instead of Receipt number — free text reference to
   an MES order (e.g. `ORD-2026-006`).
+- **Process** — optional header field, picks from the active process
+  list. When set, it appears in the History "Process" column for
+  every line of this issue. Useful when material is being issued to
+  a specific production process (e.g. pre-cut, powder coating).
 - **Unit price** is **optional**. If left empty, the system uses the
   last-known unit price for that material from prior receipts. If the
   material has never been received, the unit price is required.
+- There's no **New material** button — Issue assumes the material
+  already exists with stock on hand; new materials are introduced
+  through a Receipt.
 - The system checks on-hand quantity. If the requested amount exceeds
   what's available, it returns an error "Insufficient stock for 'CODE
   — NAME': currently X UoM, requested Y UoM." and nothing is saved.
@@ -607,6 +634,10 @@ After save:
 - Status updates accordingly.
 - The history page shows one **Outflow** row per line, with a negative
   quantity (e.g. -4 pcs).
+- If this Issue crossed the material from at-or-above min down to
+  below min, a **Material below minimum** notification is created for
+  every management user in the tenant (see 3.10 Notifications and
+  the "Low-stock alarm" subsection below).
 
 #### Transaction history (Warehouse → History)
 
@@ -619,8 +650,34 @@ Filters above the table:
 - **Receipt / Order number** — search by document.
 - **Date range**.
 
+In addition to the basics, the table also exposes the **Process** column
+(populated from Issues), and **Dim X / Y / Z** + **Notes**.
+
 **Export** downloads every row matching the filter (up to 10,000), with
 a header that lists the active filters.
+
+#### Low-stock alarm
+
+When an Issue brings a material from at-or-above its minimum down to
+below the minimum, the system automatically notifies management:
+
+- **Coordinator dashboard counter** — the Statistics card has a
+  **Materials below min** cell showing how many materials are
+  currently below their minimum. The red number is clickable and
+  navigates to Warehouse stock with the "Below min" filter applied.
+- **Notification bell** — every user with role SuperAdmin, Admin,
+  Manager, or Coordinator (and combinations including the Warehouse
+  worker role) receives a "**Material below minimum: CODE — NAME**"
+  notification with the current on-hand quantity, the minimum, and
+  the unit of measure. The text follows the active app language and
+  refreshes immediately when the language is switched, with no page
+  reload.
+- **No repeats** — if a material is already below min, additional
+  Issues do not create more notifications. A new one is fired only
+  after the stock is restored above min (via an Inflow) and then
+  crosses below again.
+- **Warehouse worker (Magacioner)**, **Sales Manager**, **Department**,
+  and other non-management roles do not receive these notifications.
 
 ---
 

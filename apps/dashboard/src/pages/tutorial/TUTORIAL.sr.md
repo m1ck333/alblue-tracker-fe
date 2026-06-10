@@ -541,14 +541,26 @@ Lista svih materijala koji se vode u magacinu. Svaki materijal ima:
 - **Napomena** — slobodan tekst.
 
 Akcije:
-- **Novi materijal** (gore desno) otvara desni panel za unos.
+- **Novi materijal** (gore desno) otvara desni panel za unos. Dugme
+  Sačuvaj je u zaglavlju panela, tako da je uvek vidljivo bez
+  skrolovanja kroz polja.
 - **Klik na red** otvara desni panel za izmenu, sa popunjenim poljima.
-  U gornjem desnom uglu panela su **Deaktiviraj** / **Aktiviraj** —
-  deaktiviran materijal nestaje sa Stanja i ne može da se izabere u
-  Ulaz/Izlaz formama, ali postojeća istorija ostaje vidljiva.
+  U gornjem delu tela panela su **Dupliraj** (otvara Novi materijal
+  sa kopiranim podacima, samo Kod ostaje prazan — korisno za seriju
+  sličnih artikala) i **Deaktiviraj** / **Aktiviraj** — deaktiviran
+  materijal nestaje sa Stanja i ne može da se izabere u Ulaz/Izlaz
+  formama, ali postojeća istorija ostaje vidljiva.
 - **Pretraga** po kodu ili nazivu, filter po kategoriji i statusu
   (aktivan / neaktivan), filter po datumu kreiranja.
 - **Izvezi** (gore desno) — preuzima Excel sa trenutnim filterima.
+- **Uvoz iz Excela** — Excel fajl sa zaglavljima _Kod, Naziv,
+  Jedinica mere, Kategorija, Min, Max, Dimenzija X/Y/Z, Pozicija,
+  Napomena_ se može uvesti masovno. Otvara se pregled gde su validni
+  redovi obeleženi i prikazani sa svim poljima, a problematični
+  (prazan Kod, već postoji kod, duplikat u istom fajlu, Max < Min)
+  obojeni crvenim. Klik na **Uvezi (N)** kreira samo validne, a u
+  rezimeu se vidi koliko je uvezeno i koji redovi nisu prošli sa
+  razlogom.
 
 #### Stanje magacina (Magacin → Stanje)
 
@@ -565,9 +577,12 @@ levo pri horizontalnom skrolovanju.
 | Cena po JM | Cena iz poslednje Ulazne prijemnice. |
 | Ukupna cena | Količina × Cena po JM. |
 | Pozicija | Iz Liste materijala. |
+| Dim X / Y / Z | Iz Liste materijala (u milimetrima). |
+| Napomena | Iz Liste materijala. |
 
-Filteri iznad tabele: pretraga po kodu/nazivu, kategorija, status
-zaliha. **Izvezi** preuzima Excel sa trenutnim prikazom.
+Sve kolone su sortabilne. Filteri iznad tabele: pretraga po
+kodu/nazivu, kategorija, status zaliha. **Izvezi** preuzima Excel sa
+trenutnim prikazom.
 
 #### Ulaz materijala — prijemnica (Magacin → Ulaz)
 
@@ -577,9 +592,9 @@ sadrži više različitih materijala.
 Polja u zaglavlju:
 - **Broj prijemnice** — slobodan tekst (npr. `2026/043`).
 - **Datum** — podrazumevano danas.
-- **Napomena (zaglavlje)** — slobodan tekst za celu prijemnicu.
 
-Stavke materijala (tabela ispod, **Dodaj stavku** za novi red):
+Stavke materijala (tabela ispod, **Dodaj stavku** za novi red,
+**Novi materijal** za inline kreiranje):
 - **Naziv** — bira se iz Liste materijala. Kucanje filtrira po kodu ili
   nazivu.
 - **Količina** — obavezna, pozitivan broj.
@@ -588,6 +603,12 @@ Stavke materijala (tabela ispod, **Dodaj stavku** za novi red):
 - **Napomena** — opciona, po stavci.
 - Crveno dugme **kanta** uklanja stavku (disabled kad ima samo jedan
   red — mora postojati bar jedna stavka).
+
+**Novi materijal** dugme pored **Dodaj stavku** otvara prozor sa svim
+poljima materijala. Ako kod ne postoji u sistemu, može se kreirati
+odmah u toku unosa prijemnice — sačuvani materijal se automatski
+postavlja kao izabrana stavka u tabeli, pa korisnik samo unese
+količinu i cenu.
 
 **Sačuvaj prijemnicu** snima sve stavke odjednom. Nakon snimanja:
 - Stanje se uvećava za unete količine.
@@ -599,9 +620,15 @@ Stavke materijala (tabela ispod, **Dodaj stavku** za novi red):
 Isto kao Ulaz, ali sa razlikama:
 - **Broj narudžbenice** umesto Broja prijemnice — slobodan tekst
   referenca na MES narudžbinu (npr. `ORD-2026-006`).
+- **Proces** — opciono polje u zaglavlju, bira se sa liste procesa.
+  Ako je izabran, prikazuje se u Istoriji u koloni „Proces" za
+  svaku stavku tog izlaza. Korisno kada se materijal izdaje na
+  konkretan proces (npr. predkrojenje, plastifikacija).
 - **Cena po JM** je **opciona**. Ako se ne unese, sistem automatski
   preuzima poslednju unesenu cenu za taj materijal sa prethodnih
   Ulaza. Ako materijal nikada nije imao Ulaz, traži cenu obavezno.
+- Nema **Novi materijal** dugmeta — Izlaz pretpostavlja da materijal
+  već postoji sa stanjem; novi materijali se uvode kroz Ulaz.
 - Sistem proverava da li ima dovoljno na stanju. Ako se traži
   količina veća od trenutne, javlja grešku „Nedovoljno na stanju za
   'KOD — NAZIV': trenutno X JM, traženo Y JM." i ništa se ne snima.
@@ -611,6 +638,10 @@ Nakon snimanja:
 - Status se ažurira.
 - U Istoriji se pojavi po jedan red **Izlaz** za svaku stavku, sa
   negativnom količinom (npr. -4 kom).
+- Ako je ovaj Izlaz prešao iz stanja iznad minimuma u stanje ispod
+  minimuma, automatski se kreira obaveštenje **Materijal ispod
+  minimuma** za sve menadžment uloge u firmi (vidi 3.10
+  Obaveštenja i niže odeljak „Alarm za minimum zaliha").
 
 #### Istorija transakcija (Magacin → Istorija)
 
@@ -623,9 +654,35 @@ Filteri iznad tabele:
 - **Broj prijemnice/narudžbenice** — pretraga po dokumentu.
 - **Datumski opseg**.
 
+Pored osnovnih, prikazane su i kolone **Proces** (iz Izlaza),
+**Dim X / Y / Z** i **Napomena**.
+
 **Izvezi** preuzima Excel sa svim redovima koji odgovaraju filteru
 (do 10.000 redova), sa zaglavljem koje navodi koji su filteri bili
 primenjeni.
+
+#### Alarm za minimum zaliha
+
+Kada se Izlazom materijal prevede iz stanja iznad minimuma u stanje
+ispod minimuma, sistem automatski obaveštava menadžment:
+
+- **Brojač na kontrolnoj tabli koordinatora** — kartica „Statistika"
+  ima ćeliju **Materijali ispod min** koja pokazuje broj svih
+  materijala koji su trenutno ispod svog minimuma. Crveni broj
+  klikom vodi na Stanje magacina sa već primenjenim filterom „Ispod
+  min".
+- **Obaveštenje u zvoncetu** — svaki korisnik sa ulogom SuperAdmin,
+  Admin, Manager ili Koordinator (uključujući kombinacije sa
+  Magacioner ulogom) dobija obaveštenje „**Materijal ispod
+  minimuma: KOD — NAZIV**" sa detaljima trenutnog stanja, minimuma
+  i jedinice mere. Tekst obaveštenja prati izabrani jezik aplikacije
+  i ažurira se odmah kada se promeni jezik bez osvežavanja.
+- **Bez ponavljanja** — ako se materijal već nalazi ispod minimuma,
+  dodatni Izlazi neće generisati nova obaveštenja. Tek kada se
+  stanje vrati iznad minimuma (Ulazom) pa ponovo padne ispod, šalje
+  se sledeće.
+- **Magacioner**, **Menadžer prodaje**, **Odeljenje** i ostale uloge
+  van menadžment grupe ne primaju ova obaveštenja.
 
 ---
 
