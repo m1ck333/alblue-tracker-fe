@@ -131,6 +131,7 @@ export function MaterialsPage() {
     { header: t('materials.min'), value: (m) => m.minQuantity, align: 'right', width: 8 },
     { header: t('materials.max'), value: (m) => m.maxQuantity, align: 'right', width: 8 },
     { header: t('materials.location'), value: (m) => m.location ?? '', width: 14 },
+    { header: t('materials.notes'), value: (m) => m.notes ?? '', width: 30 },
     { header: t('materials.status'), value: (m) => m.isActive ? t('materials.statusActive') : t('materials.statusInactive'), width: 12 },
   ];
 
@@ -244,6 +245,7 @@ export function MaterialsPage() {
             { title: t('materials.min'), dataIndex: 'minQuantity', width: 80, align: 'right' as const },
             { title: t('materials.max'), dataIndex: 'maxQuantity', width: 80, align: 'right' as const },
             { title: t('materials.location'), dataIndex: 'location', width: 130, render: (v: string | null) => v || '—' },
+            { title: t('materials.notes'), dataIndex: 'notes', width: 200, ellipsis: true, render: (v: string | null) => v || '—' },
             {
               title: t('materials.status'),
               dataIndex: 'isActive',
