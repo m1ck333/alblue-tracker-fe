@@ -50,7 +50,14 @@ export function MainLayout() {
       .then(() => {
         if (!cancelled) return joinTenantGroup();
       })
-      .catch(console.error);
+      .catch(() => {
+        // SignalR connection failures are handled by the SignalR client's
+        // own auto-retry + by ConnectionAlert (red banner when the API is
+        // unreachable). Swallowing here keeps the console clean during
+        // routine reconnect churn (e.g. dev server restarts, brief network
+        // hiccups). Production telemetry happens via the SignalR client's
+        // own logger, not this catch.
+      });
 
     return () => {
       cancelled = true;

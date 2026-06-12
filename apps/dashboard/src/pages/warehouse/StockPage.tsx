@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Typography, Table, Tag, Space, Input, Select, Empty } from 'antd';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Typography, Table, Tag, Space, Input, Select } from 'antd';
+import { EmptyState } from '../../components/EmptyState';
 import { useQuery } from '@tanstack/react-query';
 import { warehouseApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
@@ -18,6 +19,7 @@ const { Title } = Typography;
 export function StockPage() {
   const tenantId = useAuthStore((s) => s.tenantId);
   const { t } = useTranslation('dashboard');
+  const navigate = useNavigate();
   const { ref: tableWrapperRef, height: tableBodyHeight } = useTableHeight();
 
   const [searchParams] = useSearchParams();
@@ -132,7 +134,24 @@ export function StockPage() {
           size="middle"
           scroll={{ x: 'max-content', y: tableBodyHeight }}
           pagination={{ pageSize: 50, showSizeChanger: true }}
-          locale={{ emptyText: <Empty description={t('warehouse.stockEmpty')} image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
+          locale={{
+            emptyText: (
+              <EmptyState
+                description={t('warehouse.stockEmpty')}
+                action={
+                  // Only suggest the materials shortcut when no filters are
+                  // applied — otherwise the empty state is "your filter
+                  // matched nothing", not "you have no materials".
+                  !debouncedSearch && !category && !statusFilter
+                    ? {
+                        label: t('warehouse.stockEmptyAction', { defaultValue: 'Otvori Materijale' }),
+                        onClick: () => navigate('/admin/materials'),
+                      }
+                    : undefined
+                }
+              />
+            ),
+          }}
           columns={[
             {
               title: t('warehouse.code'),

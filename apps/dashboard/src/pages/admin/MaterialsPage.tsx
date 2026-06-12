@@ -13,6 +13,7 @@ import { useTableHeight } from '../../hooks/useTableHeight';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
 import { TableExportButton } from '../../components/TableExportButton';
 import { MaterialsImportModal } from './MaterialsImportModal';
+import { EmptyState } from '../../components/EmptyState';
 import { ImportOutlined, PlusOutlined, CopyOutlined } from '@ant-design/icons';
 import type { ExportColumn } from '../../utils/exportTable';
 import dayjs from 'dayjs';
@@ -197,7 +198,22 @@ export function MaterialsPage() {
             total: pagedResult?.totalCount,
             showSizeChanger: true,
           }}
-          locale={{ emptyText: <Empty description={t('materials.empty')} image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
+          locale={{
+            emptyText: (
+              <EmptyState
+                description={t('materials.empty')}
+                action={
+                  !debouncedSearch && !categoryFilter && isActiveFilter !== false
+                    ? {
+                        label: t('materials.newMaterial'),
+                        icon: <PlusOutlined />,
+                        onClick: () => { createForm.resetFields(); setCreateOpen(true); },
+                      }
+                    : undefined
+                }
+              />
+            ),
+          }}
           onChange={(pagination, _filters, sorter) => {
             if (pagination.pageSize !== pageSize) {
               setPageSize(pagination.pageSize ?? 20);

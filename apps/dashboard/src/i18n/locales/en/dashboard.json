@@ -728,6 +728,7 @@
     "saveOutflow": "Save outflow",
     "saveError": "Failed to save.",
     "stockEmpty": "No materials in stock",
+    "stockEmptyAction": "Open Materials",
     "historyEmpty": "No transactions",
     "unitPriceFallbackHint": "Will use last entered",
     "statusBelowMin": "⚠ BELOW MIN",

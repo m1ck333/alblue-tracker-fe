@@ -14,6 +14,13 @@ import {
   InfoCircleOutlined,
   BookOutlined,
   HistoryOutlined,
+  ClockCircleOutlined,
+  AlertOutlined,
+  StopOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  PlayCircleOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -36,6 +43,26 @@ const PAGE_SIZE = 15;
 const NOTIFICATION_TEMPLATE_KEY: Partial<Record<NotificationType, string>> = {
   [NotificationType.MaterialLowStock]: 'notifications.templates.materialLowStock',
 };
+
+/**
+ * Visual signal per notification type — a small leading icon in the bell
+ * list so the user can scan by category without reading every title.
+ * The colour is the antd token (resolved at render time via theme.useToken).
+ */
+type NotificationIconSpec = { icon: typeof BellOutlined; colorToken: 'colorError' | 'colorWarning' | 'colorPrimary' | 'colorSuccess' | 'colorTextSecondary' };
+const NOTIFICATION_ICON: Partial<Record<NotificationType, NotificationIconSpec>> = {
+  [NotificationType.MaterialLowStock]: { icon: AlertOutlined, colorToken: 'colorError' },
+  [NotificationType.DeadlineCritical]: { icon: ClockCircleOutlined, colorToken: 'colorError' },
+  [NotificationType.DeadlineWarning]: { icon: ClockCircleOutlined, colorToken: 'colorWarning' },
+  [NotificationType.BlockRequest]: { icon: StopOutlined, colorToken: 'colorWarning' },
+  [NotificationType.BlockRequestApproved]: { icon: CheckCircleOutlined, colorToken: 'colorSuccess' },
+  [NotificationType.BlockRequestRejected]: { icon: CloseCircleOutlined, colorToken: 'colorError' },
+  [NotificationType.ProcessCompleted]: { icon: CheckCircleOutlined, colorToken: 'colorSuccess' },
+  [NotificationType.ProcessBlocked]: { icon: WarningOutlined, colorToken: 'colorWarning' },
+  [NotificationType.OrderActivated]: { icon: PlayCircleOutlined, colorToken: 'colorPrimary' },
+  [NotificationType.WorkerAutoLoggedOut]: { icon: LogoutOutlined, colorToken: 'colorWarning' },
+};
+
 
 function renderNotificationText(
   n: NotificationDto,
@@ -197,6 +224,9 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
         ) : null}
         renderItem={(item: NotificationDto) => {
           const { title, message } = renderNotificationText(item, t);
+          const iconSpec = NOTIFICATION_ICON[item.type];
+          const IconComp = iconSpec?.icon ?? BellOutlined;
+          const iconColor = iconSpec ? token[iconSpec.colorToken] : token.colorTextSecondary;
           return (
           <List.Item
             style={{
@@ -235,6 +265,17 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
             ]}
           >
             <List.Item.Meta
+              avatar={
+                <div
+                  style={{
+                    width: 28, height: 28, borderRadius: 14,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: iconColor + '22', color: iconColor, fontSize: 14,
+                  }}
+                >
+                  <IconComp />
+                </div>
+              }
               title={<Text strong={!item.isRead} style={{ fontSize: 13 }}>{title}</Text>}
               description={
                 <Space direction="vertical" size={0}>

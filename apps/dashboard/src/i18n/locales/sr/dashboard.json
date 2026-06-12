@@ -730,6 +730,7 @@
     "saveOutflow": "Sačuvaj izlaz",
     "saveError": "Greška pri snimanju.",
     "stockEmpty": "Nema materijala u magacinu",
+    "stockEmptyAction": "Otvori Materijale",
     "historyEmpty": "Nema transakcija",
     "unitPriceFallbackHint": "Preuzima poslednju",
     "statusBelowMin": "⚠ ISPOD MIN",
