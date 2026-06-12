@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Typography, Row, Col, Card, Table, Tag, Button, Drawer, Form, Input, Select,
   DatePicker, InputNumber, App, Modal,
@@ -8,6 +8,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi, changeRequestsApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
+import { useSignalREvent, SignalREvents } from '@alblue/signalr-client';
 import {
   OrderStatus, OrderType, RequestStatus, ChangeRequestType,
 } from '@alblue/shared-types';
@@ -56,6 +57,23 @@ export function SalesDashboard() {
     queryFn: () => changeRequestsApi.getMy({ userId: userId! }).then((r) => r.data.items),
     enabled: !!tenantId && !!userId,
   });
+
+  // SignalR push: orders + their own change requests update within ~1s of
+  // any state change instead of staying stale until manual refresh. The
+  // sales dashboard has no polling, so this is the only thing keeping the
+  // tables live.
+  const invalidateSalesLists = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
+    queryClient.invalidateQueries({ queryKey: ['change-requests'] });
+  }, [queryClient]);
+  useSignalREvent(SignalREvents.OrderActivated, invalidateSalesLists);
+  useSignalREvent(SignalREvents.OrderUpdated, invalidateSalesLists);
+  // ChangeRequest Approved/Rejected both write a notification to the
+  // requestor (this sales manager), so NotificationCreated covers the
+  // change-request side. Created has its own SignalR event for the
+  // coordinator-side; harmless if this dashboard also reacts to it.
+  useSignalREvent(SignalREvents.NotificationCreated, invalidateSalesLists);
+  useSignalREvent(SignalREvents.ChangeRequestCreated, invalidateSalesLists);
 
   const createOrderMutation = useMutation({
     mutationFn: (values: Record<string, unknown>) =>
