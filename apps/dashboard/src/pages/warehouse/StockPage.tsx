@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Table, Tag, Input, Select } from 'antd';
 import { EmptyState } from '../../components/EmptyState';
@@ -20,7 +20,7 @@ export function StockPage() {
   const navigate = useNavigate();
   const { ref: tableWrapperRef, height: tableBodyHeight } = useTableHeight();
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const initialStatus = searchParams.get('status') as StockBalanceRowDto['status'] | null;
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 400);
@@ -28,6 +28,18 @@ export function StockPage() {
   const [statusFilter, setStatusFilter] = useState<StockBalanceRowDto['status'] | undefined>(
     initialStatus === 'BelowMin' || initialStatus === 'AboveMax' || initialStatus === 'Ok' ? initialStatus : undefined,
   );
+
+  // Re-apply ?status= when the URL changes — so navigating in from a
+  // low-stock notification while already on this page actually shifts the
+  // filter (the useState initializer above only runs once).
+  useEffect(() => {
+    const fromUrl = searchParams.get('status');
+    if (fromUrl === 'BelowMin' || fromUrl === 'AboveMax' || fromUrl === 'Ok') {
+      setStatusFilter(fromUrl);
+      searchParams.delete('status');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['warehouse-stock', tenantId],

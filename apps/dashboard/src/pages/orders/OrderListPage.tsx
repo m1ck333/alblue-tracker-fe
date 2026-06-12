@@ -538,13 +538,18 @@ export function OrderListPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [detailOrderId, setDetailOrderId] = useState<string | null>(() => searchParams.get('detail'));
 
-  // Clear detail param from URL after reading it
+  // Open the drawer whenever ?detail=<id> appears in the URL, then strip the
+  // param so the URL stays clean. Runs on mount AND on every later URL change,
+  // so clicking a notification while already on /orders also works (the
+  // useState initializer above only fires once).
   useEffect(() => {
-    if (searchParams.has('detail')) {
+    const detail = searchParams.get('detail');
+    if (detail) {
+      setDetailOrderId(detail);
       searchParams.delete('detail');
       setSearchParams(searchParams, { replace: true });
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [searchParams, setSearchParams]);
   const [addingItem, setAddingItem] = useState(false);
   const [createPendingItems, setCreatePendingItems] = useState<AddOrderItemRequest[]>([]);
   const [pendingFiles, setPendingFiles] = useState<Map<number, File[]>>(new Map()); // key: item index, -1 for order-level
