@@ -21,6 +21,7 @@ import {
   CloseCircleOutlined,
   PlayCircleOutlined,
   WarningOutlined,
+  EditOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -62,6 +63,9 @@ const NOTIFICATION_ICON: Partial<Record<NotificationType, NotificationIconSpec>>
   [NotificationType.ProcessBlocked]: { icon: WarningOutlined, colorToken: 'colorWarning' },
   [NotificationType.OrderActivated]: { icon: PlayCircleOutlined, colorToken: 'colorPrimary' },
   [NotificationType.WorkerAutoLoggedOut]: { icon: LogoutOutlined, colorToken: 'colorWarning' },
+  [NotificationType.ChangeRequest]: { icon: EditOutlined, colorToken: 'colorWarning' },
+  [NotificationType.ChangeRequestApproved]: { icon: CheckCircleOutlined, colorToken: 'colorSuccess' },
+  [NotificationType.ChangeRequestRejected]: { icon: CloseCircleOutlined, colorToken: 'colorError' },
 };
 
 

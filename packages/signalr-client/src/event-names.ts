@@ -13,6 +13,9 @@ export const SignalREvents = {
   ProcessReadyForQueue: 'ProcessReadyForQueue',
   ProcessDefinitionUpdated: 'ProcessDefinitionUpdated',
   OrderUpdated: 'OrderUpdated',
+  ChangeRequestCreated: 'ChangeRequestCreated',
+  ChangeRequestApproved: 'ChangeRequestApproved',
+  ChangeRequestRejected: 'ChangeRequestRejected',
   /**
    * Generic "a new in-app notification was just persisted for someone in this
    * tenant" event. Broadcast by the BE after any NotificationCreator write or

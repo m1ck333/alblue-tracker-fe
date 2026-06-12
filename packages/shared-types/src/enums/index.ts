@@ -57,6 +57,9 @@ export enum NotificationType {
   OrderActivated = 'OrderActivated',
   WorkerAutoLoggedOut = 'WorkerAutoLoggedOut',
   MaterialLowStock = 'MaterialLowStock',
+  ChangeRequest = 'ChangeRequest',
+  ChangeRequestApproved = 'ChangeRequestApproved',
+  ChangeRequestRejected = 'ChangeRequestRejected',
 }
 
 export enum HistoryAction {
