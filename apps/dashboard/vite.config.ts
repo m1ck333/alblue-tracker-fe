@@ -7,26 +7,13 @@ export default defineConfig({
     port: 5941,
   },
   build: {
-    chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        // Split big third-party libraries into their own chunks so the
-        // app code chunks stay small AND vendor caches don't bust whenever
-        // app code changes. Order matters — more specific tests first.
-        manualChunks(id) {
-          if (!id.includes('node_modules')) return undefined;
-          if (id.includes('antd') || id.includes('@ant-design/icons') || id.includes('rc-')) return 'vendor-antd';
-          if (id.includes('react-router')) return 'vendor-router';
-          if (id.includes('@tanstack/react-query')) return 'vendor-react-query';
-          if (id.includes('exceljs')) return 'vendor-exceljs';
-          if (id.includes('react-markdown') || id.includes('remark-') || id.includes('rehype-')) return 'vendor-markdown';
-          if (id.includes('dayjs')) return 'vendor-dayjs';
-          if (id.includes('@microsoft/signalr')) return 'vendor-signalr';
-          if (id.includes('react-dom')) return 'vendor-react';
-          if (id.includes('react/')) return 'vendor-react';
-          return undefined;
-        },
-      },
-    },
+    chunkSizeWarningLimit: 1500,
+    // manualChunks was emitting separate vendor-react / vendor-antd / etc.
+    // chunks. antd reads React.version on module load; when antd lives in
+    // a different chunk and the chunks load out of order, antd crashes
+    // with "Cannot read properties of undefined (reading 'version')" in
+    // production (caught 12.06.2026 post-deploy). Reverted to the default
+    // Rollup chunking — one bigger bundle, but stable. Re-attempt later
+    // with a more surgical split if cache reuse becomes a measured pain.
   },
 });
