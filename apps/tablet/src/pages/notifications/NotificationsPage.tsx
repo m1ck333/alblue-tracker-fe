@@ -48,15 +48,17 @@ function renderTabletNotificationText(
   return { title: n.title, message: n.message };
 }
 
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return 'sada';
-  if (mins < 60) return `pre ${mins} min`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `pre ${hours}h`;
-  const days = Math.floor(hours / 24);
-  return `pre ${days}d`;
+function buildTimeAgo(t: (key: string, opts?: Record<string, unknown>) => string) {
+  return (dateStr: string): string => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60_000);
+    if (mins < 1) return t('notificationsPage.timeAgo.now');
+    if (mins < 60) return t('notificationsPage.timeAgo.min', { count: mins });
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return t('notificationsPage.timeAgo.hour', { count: hours });
+    const days = Math.floor(hours / 24);
+    return t('notificationsPage.timeAgo.day', { count: days });
+  };
 }
 
 function notificationIcon(type: string): string {
@@ -84,6 +86,7 @@ function notificationIcon(type: string): string {
 export function NotificationsPage() {
   const userId = useAuthStore((s) => s.user?.id) ?? '';
   const { t } = useTranslation('tablet');
+  const timeAgo = buildTimeAgo(t);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [tab, setTab] = useState<'all' | 'unread'>('all');
@@ -230,6 +233,7 @@ export function NotificationsPage() {
                 notification={n}
                 displayTitle={title}
                 displayMessage={message}
+                displayTime={timeAgo(n.createdAt)}
                 onTap={handleTap}
                 onDelete={(id) => deleteMutation.mutate(id)}
               />
@@ -253,12 +257,14 @@ function SwipeableNotification({
   notification: n,
   displayTitle,
   displayMessage,
+  displayTime,
   onTap,
   onDelete,
 }: {
   notification: NotificationDto;
   displayTitle: string;
   displayMessage: string;
+  displayTime: string;
   onTap: (n: NotificationDto) => void;
   onDelete: (id: string) => void;
 }) {
@@ -338,7 +344,7 @@ function SwipeableNotification({
                 {displayTitle}
               </span>
               <span className="text-tablet-xs text-gray-400 flex-shrink-0">
-                {timeAgo(n.createdAt)}
+                {displayTime}
               </span>
             </div>
             <p className="text-tablet-sm text-gray-500 mt-1 line-clamp-2">

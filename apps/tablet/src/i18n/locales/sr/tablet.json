@@ -106,6 +106,12 @@
     "markAllRead": "Označi sve kao pročitano",
     "tabAll": "Sve",
     "tabUnread": "Nepročitano",
+    "timeAgo": {
+      "now": "sada",
+      "min": "pre {{count}} min",
+      "hour": "pre {{count}}h",
+      "day": "pre {{count}}d"
+    },
     "templates": {
       "materialLowStock": {
         "title": "Materijal ispod minimuma: {{code}} — {{name}}",

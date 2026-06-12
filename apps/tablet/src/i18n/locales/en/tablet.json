@@ -106,6 +106,12 @@
     "markAllRead": "Mark all read",
     "tabAll": "All",
     "tabUnread": "Unread",
+    "timeAgo": {
+      "now": "now",
+      "min": "{{count}}m ago",
+      "hour": "{{count}}h ago",
+      "day": "{{count}}d ago"
+    },
     "templates": {
       "materialLowStock": {
         "title": "Material below minimum: {{code}} — {{name}}",

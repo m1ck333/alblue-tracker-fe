@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useTableHeight } from '../../hooks/useTableHeight';
+import { useSignalREvent, SignalREvents } from '@alblue/signalr-client';
 import { Typography, Table, Space, Button, App, Popconfirm, Tag, Input, Select, DatePicker } from 'antd';
 import { useNavigate } from 'react-router-dom';
 
@@ -38,6 +39,16 @@ export function ChangeRequestsPage() {
   const { ref: tableWrapperRef, height: tableBodyHeight } = useTableHeight();
 
   useEffect(() => { setPage(1); }, [debouncedSearch, statusFilter, dateFrom, dateTo]);
+
+  // SignalR push: refresh the list within ~1s of any change-request event.
+  // Approve/Reject from another tab + new submissions from sales managers
+  // are caught via NotificationCreated (every change-request flow writes
+  // a notification), Created has its own type-specific event too.
+  const invalidateChangeRequests = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['change-requests'] });
+  }, [queryClient]);
+  useSignalREvent(SignalREvents.ChangeRequestCreated, invalidateChangeRequests);
+  useSignalREvent(SignalREvents.NotificationCreated, invalidateChangeRequests);
 
   const { data: pagedResult, isLoading } = useQuery({
     queryKey: ['change-requests', tenantId, statusFilter, debouncedSearch, dateFrom?.format('YYYY-MM-DD'), dateTo?.format('YYYY-MM-DD'), page, pageSize, sortBy, sortDirection],
