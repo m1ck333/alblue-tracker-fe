@@ -290,9 +290,12 @@ function ProcessAveragesTab() {
       .map((p) => ({
         process: p.processCode,
         name: p.processName,
-        Teško: Number((p.stats[ComplexityType.T]?.trimmedMeanMinutes ?? 0).toFixed(2)),
-        Srednje: Number((p.stats[ComplexityType.S]?.trimmedMeanMinutes ?? 0).toFixed(2)),
-        Lako: Number((p.stats[ComplexityType.L]?.trimmedMeanMinutes ?? 0).toFixed(2)),
+        // Stable data keys (T/S/L). The legend uses Bar `name` prop with the
+        // localized label so switching dashboard locale also flips the
+        // chart legend without rebuilding this data array.
+        T: Number((p.stats[ComplexityType.T]?.trimmedMeanMinutes ?? 0).toFixed(2)),
+        S: Number((p.stats[ComplexityType.S]?.trimmedMeanMinutes ?? 0).toFixed(2)),
+        L: Number((p.stats[ComplexityType.L]?.trimmedMeanMinutes ?? 0).toFixed(2)),
       }));
   }, [data]);
 
@@ -455,15 +458,15 @@ function ProcessAveragesTab() {
                 itemStyle={{ color: token.colorText }}
                 cursor={{ fill: token.colorFillTertiary }}
               />
-              {/* Bars are declared heaviest-first (Teško → Srednje → Lako),
-                  so the legend already reads in that order. Plain <Legend/>
-                  keeps the standard icon-then-text layout used by every other
+              {/* Bars are declared heaviest-first (T → S → L), so the
+                  legend already reads in that order. Plain <Legend/> keeps
+                  the standard icon-then-text layout used by every other
                   chart (the old rtl hack reversed it and dropped the gap). */}
               <Legend />
               {/* Colors match Sale/Bojan's Excel cover page chart. */}
-              <Bar dataKey="Teško" fill="#1890ff" maxBarSize={40} />
-              <Bar dataKey="Srednje" fill="#52c41a" maxBarSize={40} />
-              <Bar dataKey="Lako" fill="#fa8c16" maxBarSize={40} />
+              <Bar dataKey="T" name={complexityLabels.T} fill="#1890ff" maxBarSize={40} />
+              <Bar dataKey="S" name={complexityLabels.S} fill="#52c41a" maxBarSize={40} />
+              <Bar dataKey="L" name={complexityLabels.L} fill="#fa8c16" maxBarSize={40} />
             </BarChart>
           </ResponsiveContainer>
         )}

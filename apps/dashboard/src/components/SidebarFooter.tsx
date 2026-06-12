@@ -305,10 +305,12 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
           const isClickable = !!item.referenceType;
           return (
           <List.Item
+            className={isClickable ? 'notification-item-clickable' : undefined}
             style={{
               background: item.isRead ? undefined : token.colorPrimaryBg,
-              padding: '8px 12px',
+              padding: '10px 12px',
               cursor: isClickable ? 'pointer' : 'default',
+              alignItems: 'flex-start',
             }}
             onClick={isClickable ? () => handleNotificationClick(item) : undefined}
             actions={[
@@ -346,22 +348,25 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
               avatar={
                 <div
                   style={{
-                    width: 28, height: 28, borderRadius: 14,
+                    width: 32, height: 32, borderRadius: 16,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: iconColor + '22', color: iconColor, fontSize: 14,
+                    background: iconColor + '22', color: iconColor, fontSize: 15,
+                    flexShrink: 0,
                   }}
                 >
                   <IconComp />
                 </div>
               }
-              title={<Text strong={!item.isRead} style={{ fontSize: 13 }}>{title}</Text>}
-              description={
-                <Space direction="vertical" size={0}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>{message}</Text>
-                  <Text type="secondary" style={{ fontSize: 11 }}>
-                    {t('notifications.timeAgo', { time: formatTimeAgo(item.createdAt) })}
+              title={
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                  <Text strong={!item.isRead} style={{ fontSize: 13, lineHeight: 1.3 }}>{title}</Text>
+                  <Text type="secondary" style={{ fontSize: 11, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                    {formatTimeAgo(item.createdAt)}
                   </Text>
-                </Space>
+                </div>
+              }
+              description={
+                <Text type="secondary" style={{ fontSize: 12, lineHeight: 1.4 }}>{message}</Text>
               }
             />
           </List.Item>

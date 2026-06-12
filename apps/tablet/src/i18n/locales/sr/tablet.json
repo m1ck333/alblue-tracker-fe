@@ -2,6 +2,13 @@
   "errorBoundary": {
     "bootFallback": "Došlo je do greške. Pokušajte ponovo."
   },
+  "attachments": {
+    "loading": "Učitavanje...",
+    "close": "Zatvori",
+    "loadingPdf": "Učitavanje PDF-a...",
+    "pdfPageAlt": "Strana {{n}}",
+    "pdfLoadError": "Greška pri učitavanju PDF-a"
+  },
   "nav": {
     "queue": "Red",
     "incoming": "Dolazne",

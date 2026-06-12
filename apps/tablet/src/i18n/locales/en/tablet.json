@@ -2,6 +2,13 @@
   "errorBoundary": {
     "bootFallback": "An error occurred. Please try again."
   },
+  "attachments": {
+    "loading": "Loading...",
+    "close": "Close",
+    "loadingPdf": "Loading PDF...",
+    "pdfPageAlt": "Page {{n}}",
+    "pdfLoadError": "Failed to load PDF"
+  },
   "nav": {
     "queue": "Queue",
     "incoming": "Incoming",
