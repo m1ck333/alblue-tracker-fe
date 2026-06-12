@@ -156,7 +156,7 @@ export function MaterialsPage() {
           </Button></>}
       />
 
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16 , flexWrap: 'wrap' }}>
         <Input.Search
           placeholder={t('materials.searchPlaceholder')}
           allowClear
