@@ -47,7 +47,7 @@ function LoginHistorySection({ userId }: { userId: string }) {
         </Typography.Text>
       )}
       {!isLoading && data && data.length > 0 && (
-        <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
+        <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, maxHeight: 180, overflowY: 'auto' }}>
           {data.map((entry) => (
             <li key={entry.id} style={{ marginBottom: 6 }}>
               <div>
@@ -99,7 +99,7 @@ function RoleHistorySection({ userId }: { userId: string }) {
         </Typography.Text>
       )}
       {!isLoading && data && data.length > 0 && (
-        <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
+        <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, maxHeight: 180, overflowY: 'auto' }}>
           {data.map((entry) => (
             <li key={entry.id} style={{ marginBottom: 6 }}>
               <div>
