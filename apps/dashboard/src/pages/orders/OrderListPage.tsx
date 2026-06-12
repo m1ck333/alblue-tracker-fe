@@ -28,6 +28,7 @@ import { TableExportButton } from '../../components/TableExportButton';
 import type { ExportColumn } from '../../utils/exportTable';
 import { PageHeader } from '../../components/PageHeader';
 import { getTranslatedError } from '../../utils/errors';
+import { useSignalREvent, SignalREvents } from '@alblue/signalr-client';
 
 const { Title, Text } = Typography;
 
@@ -528,8 +529,11 @@ export function OrderListPage() {
       sortDirection,
     }).then((r) => r.data),
     enabled: !!tenantId,
-    refetchInterval: 30_000,
+    // SignalR push handles most order-state changes within ~1s. Polling is
+    // the safety net for missed events (hub reconnect, etc.).
+    refetchInterval: 120_000,
   });
+
   const [searchParams, setSearchParams] = useSearchParams();
   const [isCreating, setIsCreating] = useState(false);
   const [detailOrderId, setDetailOrderId] = useState<string | null>(() => searchParams.get('detail'));
@@ -608,7 +612,9 @@ export function OrderListPage() {
       }),
     enabled: !!tenantId && !!detailOrderId && !!detailOrder,
     staleTime: 5_000,
-    refetchInterval: 15_000, // keep ready/paused state fresh as work progresses
+    // SignalR push (above) refreshes this within ~1s of any process state
+    // change. Polling stays as a safety net.
+    refetchInterval: 60_000,
   });
 
 
@@ -810,6 +816,21 @@ export function OrderListPage() {
   };
 
   const queryClient = useQueryClient();
+
+  // SignalR push: refresh the order list + open-detail row whenever an event
+  // changes order/process state somewhere in the system. Each handler is a
+  // single cache invalidation — the underlying queries refetch with the
+  // user's current filters/sort/page.
+  const invalidateOrderViews = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['orders-master-view'] });
+    queryClient.invalidateQueries({ queryKey: ['order-detail-master-row'] });
+  }, [queryClient]);
+  useSignalREvent(SignalREvents.OrderActivated, invalidateOrderViews);
+  useSignalREvent(SignalREvents.OrderUpdated, invalidateOrderViews);
+  useSignalREvent(SignalREvents.ProcessStarted, invalidateOrderViews);
+  useSignalREvent(SignalREvents.ProcessCompleted, invalidateOrderViews);
+  useSignalREvent(SignalREvents.ProcessBlocked, invalidateOrderViews);
+  useSignalREvent(SignalREvents.ProcessUnblocked, invalidateOrderViews);
 
   // ─── Pending state for unified form ──────────────────────
   const [pendingItems, setPendingItems] = useState<AddOrderItemRequest[]>([]);

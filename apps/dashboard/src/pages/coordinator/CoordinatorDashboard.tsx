@@ -25,6 +25,7 @@ import {
   useDashboardPendingBlocks,
   useDashboardStatistics,
   usePendingChangeRequests,
+  useDashboardSignalRSync,
 } from '../../hooks/useDashboard';
 import { useTranslation, useEnumTranslation } from '@alblue/i18n';
 import { useQuery } from '@tanstack/react-query';
@@ -53,6 +54,7 @@ export function CoordinatorDashboard() {
   const navigate = useNavigate();
   const { token } = theme.useToken();
   const [activeOrdersProcess, setActiveOrdersProcess] = useState<LiveViewProcessDto | null>(null);
+  useDashboardSignalRSync();
   const warnings = useDashboardWarnings();
   const liveView = useDashboardLiveView();
   const workers = useDashboardWorkersStatus();

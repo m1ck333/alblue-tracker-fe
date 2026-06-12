@@ -56,10 +56,18 @@ export function OrderQueuePage() {
     refetchInterval: 60_000,
   });
 
-  useSignalREvent(SignalREvents.ProcessUnblocked, () => {
+  // Any event that can shift work into/out of this worker's queue invalidates
+  // both lists. ProcessReadyForQueue covers new arrivals; the started/completed/
+  // blocked/unblocked events cover state changes on existing items.
+  const invalidateTabletViews = () => {
     queryClient.invalidateQueries({ queryKey: ['tablet-queue'] });
     queryClient.invalidateQueries({ queryKey: ['tablet-active'] });
-  });
+  };
+  useSignalREvent(SignalREvents.ProcessReadyForQueue, invalidateTabletViews);
+  useSignalREvent(SignalREvents.ProcessStarted, invalidateTabletViews);
+  useSignalREvent(SignalREvents.ProcessCompleted, invalidateTabletViews);
+  useSignalREvent(SignalREvents.ProcessBlocked, invalidateTabletViews);
+  useSignalREvent(SignalREvents.ProcessUnblocked, invalidateTabletViews);
 
   const { data: activeGroups } = useQuery({
     queryKey: ['tablet-active', userId, tenantId],
