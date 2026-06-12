@@ -80,6 +80,23 @@ export interface LoginResponseDto {
   user: UserDto;
 }
 
+/**
+ * One row of role-change history rendered in the user-detail drawer.
+ * Returned newest-first by GET /api/users/{id}/role-history.
+ * `changedByUserName` is the actor's full name resolved server-side; it can
+ * be null if the actor's user row was hard-deleted (rare — soft-delete is
+ * the norm).
+ */
+export interface UserRoleChangeEntryDto {
+  id: string;
+  oldRole: UserRole;
+  newRole: UserRole;
+  changedByUserId: string;
+  changedByUserName: string | null;
+  changedAt: string;
+  reason: string | null;
+}
+
 // ─── Orders ──────────────────────────────────────────────
 
 export interface OrderDto {

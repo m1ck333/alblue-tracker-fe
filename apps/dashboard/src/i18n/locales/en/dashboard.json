@@ -329,7 +329,11 @@
       "newPasswordPlaceholder": "Leave empty to keep current password",
       "deleted": "User deleted",
       "deleteFailed": "Failed to delete user",
-      "deleteConfirm": "Are you sure you want to delete this user?"
+      "deleteConfirm": "Are you sure you want to delete this user?",
+      "roleHistory": "Role change history",
+      "roleHistoryEmpty": "No role changes recorded.",
+      "roleHistoryEntry": "{{oldRole}} → {{newRole}}",
+      "roleHistoryBy": "by {{actor}}"
     },
     "processes": {
       "title": "Processes",

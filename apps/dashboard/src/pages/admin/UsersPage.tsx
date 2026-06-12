@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useTableHeight } from '../../hooks/useTableHeight';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
-import { Typography, Table, Button, Drawer, Form, Input, Select, Tag, App, Switch, DatePicker, Popconfirm } from 'antd';
+import { Typography, Table, Button, Drawer, Form, Input, Select, Tag, App, Switch, DatePicker, Popconfirm, Divider } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -18,6 +18,55 @@ import { PageHeader } from '../../components/PageHeader';
 import { getTranslatedError } from '../../utils/errors';
 import { passwordRules } from '../../utils/password';
 
+
+/**
+ * Compact list of role changes for the currently-open user. Lives at the
+ * bottom of the edit drawer — collapses to "no changes recorded" for
+ * users who never had their role mutated. Loads lazily when the drawer
+ * opens (the query is keyed on userId; React Query caches per user).
+ */
+function RoleHistorySection({ userId }: { userId: string }) {
+  const { t } = useTranslation('dashboard');
+  const { tEnum } = useEnumTranslation();
+  const { data, isLoading } = useQuery({
+    queryKey: ['user-role-history', userId],
+    queryFn: () => usersApi.getRoleHistory(userId).then((r) => r.data),
+    enabled: !!userId,
+    staleTime: 30_000,
+  });
+
+  return (
+    <div>
+      <Typography.Text strong style={{ fontSize: 13, display: 'block', marginBottom: 6 }}>
+        {t('admin.users.roleHistory')}
+      </Typography.Text>
+      {isLoading && <Typography.Text type="secondary" style={{ fontSize: 12 }}>…</Typography.Text>}
+      {!isLoading && (!data || data.length === 0) && (
+        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+          {t('admin.users.roleHistoryEmpty')}
+        </Typography.Text>
+      )}
+      {!isLoading && data && data.length > 0 && (
+        <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
+          {data.map((entry) => (
+            <li key={entry.id} style={{ marginBottom: 6 }}>
+              <div>
+                {t('admin.users.roleHistoryEntry', {
+                  oldRole: tEnum('UserRole', entry.oldRole),
+                  newRole: tEnum('UserRole', entry.newRole),
+                })}
+              </div>
+              <Typography.Text type="secondary" style={{ fontSize: 11 }}>
+                {dayjs(entry.changedAt).format('DD.MM.YYYY. HH:mm')} ·{' '}
+                {t('admin.users.roleHistoryBy', { actor: entry.changedByUserName ?? '—' })}
+              </Typography.Text>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export function UsersPage() {
   const tenantId = useAuthStore((s) => s.tenantId);
@@ -510,6 +559,12 @@ export function UsersPage() {
             <Switch />
           </Form.Item>
         </Form>
+        {editUser && (
+          <>
+            <Divider style={{ margin: '16px 0 8px' }} />
+            <RoleHistorySection userId={editUser.id} />
+          </>
+        )}
         {editUser?.updatedAt && (
           <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
             {t('common:labels.updated')}: {dayjs(editUser.updatedAt).format('DD.MM.YYYY.')}

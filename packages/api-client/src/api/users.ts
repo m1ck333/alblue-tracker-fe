@@ -1,4 +1,4 @@
-import type { UserDto, PagedResult } from '@alblue/shared-types';
+import type { UserDto, PagedResult, UserRoleChangeEntryDto } from '@alblue/shared-types';
 import type { CreateUserRequest, UpdateUserRequest, ChangePasswordRequest } from '@alblue/shared-types';
 import { apiClient } from '../axios-instance';
 
@@ -29,5 +29,9 @@ export const usersApi = {
 
   delete(id: string) {
     return apiClient.delete(`/users/${id}`);
+  },
+
+  getRoleHistory(id: string) {
+    return apiClient.get<UserRoleChangeEntryDto[]>(`/users/${id}/role-history`);
   },
 };
