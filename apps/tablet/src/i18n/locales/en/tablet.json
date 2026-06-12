@@ -1,4 +1,7 @@
 {
+  "errorBoundary": {
+    "bootFallback": "An error occurred. Please try again."
+  },
   "nav": {
     "queue": "Queue",
     "incoming": "Incoming",

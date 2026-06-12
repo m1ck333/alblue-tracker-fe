@@ -1,4 +1,7 @@
 {
+  "errorBoundary": {
+    "bootFallback": "Došlo je do greške. Pokušajte ponovo."
+  },
   "nav": {
     "queue": "Red",
     "incoming": "Dolazne",

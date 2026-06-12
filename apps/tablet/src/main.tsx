@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import * as Sentry from '@sentry/react';
+import { useTranslation } from '@alblue/i18n';
 import { setOnForceLogout } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
 import './i18n';
@@ -22,10 +23,15 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   });
 }
 
+function BootErrorFallback() {
+  const { t } = useTranslation('tablet');
+  return <div style={{ padding: 24 }}>{t('errorBoundary.bootFallback')}</div>;
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Sentry.ErrorBoundary
-      fallback={<div style={{ padding: 24 }}>Došlo je do greške. Pokušajte ponovo.</div>}
+      fallback={<BootErrorFallback />}
       showDialog={false}
     >
       <App />

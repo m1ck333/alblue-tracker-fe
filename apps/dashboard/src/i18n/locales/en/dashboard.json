@@ -1,4 +1,19 @@
 {
+  "errorBoundary": {
+    "title": "An error occurred",
+    "subtitle": "Something went wrong. Please try again or return to the home page.",
+    "reload": "Reload",
+    "home": "Home",
+    "bootFallback": "An error occurred. Please try again."
+  },
+  "errors": {
+    "forbiddenRoleChange": "Only a SuperAdmin can change user roles.",
+    "lastAdminRemoval": "Cannot remove the last active Admin from the system.",
+    "selfDeleteForbidden": "You cannot delete your own account.",
+    "superAdminDeleteForbidden": "Only a SuperAdmin can delete a SuperAdmin account.",
+    "changePasswordNotSelf": "You can only change your own password.",
+    "forbiddenGeneric": "Your role does not have permission for this action."
+  },
   "nav": {
     "dashboard": "Dashboard",
     "orders": "Orders",

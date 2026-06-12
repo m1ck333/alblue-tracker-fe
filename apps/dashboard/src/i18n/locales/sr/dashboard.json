@@ -1,4 +1,19 @@
 {
+  "errorBoundary": {
+    "title": "Došlo je do greške",
+    "subtitle": "Nešto je pošlo po zlu. Pokušajte ponovo ili se vratite na početnu stranicu.",
+    "reload": "Ponovo učitaj",
+    "home": "Početna",
+    "bootFallback": "Došlo je do greške. Pokušajte ponovo."
+  },
+  "errors": {
+    "forbiddenRoleChange": "Samo SuperAdmin može da menja ulogu korisnika.",
+    "lastAdminRemoval": "Nije moguće ukloniti poslednjeg aktivnog Admina u sistemu.",
+    "selfDeleteForbidden": "Ne možete obrisati sopstveni nalog.",
+    "superAdminDeleteForbidden": "Samo SuperAdmin može da obriše SuperAdmin nalog.",
+    "changePasswordNotSelf": "Možete menjati samo sopstvenu lozinku.",
+    "forbiddenGeneric": "Vaša uloga nema dozvolu za ovu akciju."
+  },
   "nav": {
     "dashboard": "Kontrolna tabla",
     "orders": "Narudžbine",
