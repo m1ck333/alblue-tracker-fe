@@ -573,8 +573,11 @@ export function UsersPage() {
             <Form.Item noStyle shouldUpdate={(prev, cur) => prev.role !== cur.role}>
               {({ getFieldValue }) => {
                 const primary = getFieldValue('role') as UserRole | undefined;
+                // SuperAdmin is already excluded from assignableRoles
+                // upstream — just drop the primary role here so it can't
+                // also be picked as an additional one.
                 const options = assignableRoles
-                  .filter((r) => r !== UserRole.SuperAdmin && r !== primary)
+                  .filter((r) => r !== primary)
                   .map((r) => ({ label: tEnum('UserRole', r), value: r }));
                 return (
                   <Select
