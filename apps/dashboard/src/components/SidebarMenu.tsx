@@ -70,9 +70,11 @@ export function SidebarMenu({ collapsed: _collapsed }: SidebarMenuProps) {
   const invalidatePendingBlockCount = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['block-requests-pending-count'] });
   }, [queryClient]);
-  useSignalREvent(SignalREvents.BlockRequestCreated, invalidatePendingBlockCount);
-  useSignalREvent(SignalREvents.BlockRequestApproved, invalidatePendingBlockCount);
-  useSignalREvent(SignalREvents.ProcessUnblocked, invalidatePendingBlockCount);
+  // NotificationCreated covers Block Created/Approved/Rejected — including
+  // Rejected which never had its own SignalR event. Other notification types
+  // (low-stock, deadline, ...) also trigger an invalidate; harmless, the
+  // refetch is a 1-row count query.
+  useSignalREvent(SignalREvents.NotificationCreated, invalidatePendingBlockCount);
 
   const items = [
     isCoordOrAbove && {

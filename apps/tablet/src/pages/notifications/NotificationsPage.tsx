@@ -51,7 +51,9 @@ export function NotificationsPage() {
     queryKey: ['notifications', userId],
     queryFn: () => notificationsApi.getAll({ userId, pageSize: 50 }).then((r) => r.data),
     enabled: !!userId,
-    refetchInterval: 30_000,
+    // SignalR NotificationCreated subscription in BottomNav already invalidates
+    // ['notifications'] within ~1s. This polling stays as a 60s safety net.
+    refetchInterval: 60_000,
   });
 
   const markReadMutation = useMutation({
