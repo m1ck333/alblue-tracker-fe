@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useDebounce } from '../../hooks/useDebounce';
 import { useTableHeight } from '../../hooks/useTableHeight';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
 import {
@@ -13,30 +14,10 @@ import { useTranslation } from '@alblue/i18n';
 import dayjs from 'dayjs';
 import { TableExportButton } from '../../components/TableExportButton';
 import type { ExportColumn } from '../../utils/exportTable';
+import { PageHeader } from '../../components/PageHeader';
+import { getTranslatedError } from '../../utils/errors';
 
 const { Title } = Typography;
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-  return debounced;
-}
-
-function getApiErrorCode(error: unknown): string | undefined {
-  return (error as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
-}
-
-function getTranslatedError(error: unknown, t: (key: string, opts?: Record<string, string>) => string, fallback: string): string {
-  const resp = (error as { response?: { data?: { error?: { code?: string; message?: string } } } })?.response?.data?.error;
-  if (resp?.code) {
-    const translated = t(`common:errors.${resp.code}`, { defaultValue: '' });
-    if (translated) return translated;
-  }
-  return resp?.message || fallback;
-}
 
 function resolveColor(value: unknown, fallback: string): string {
   if (typeof value === 'string') return value;
@@ -254,9 +235,9 @@ export function TenantsPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>{t('admin.tenants.title')}</Title>
-        <div style={{ display: 'flex', gap: 8 }}>
+      <PageHeader
+        title={t('admin.tenants.title')}
+        actions={<><div style={{ display: 'flex', gap: 8 }}>
           <TableExportButton
             onFetchAll={fetchAllTenants}
             columns={exportColumns}
@@ -270,8 +251,8 @@ export function TenantsPage() {
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             {t('admin.tenants.addTenant')}
           </Button>
-        </div>
-      </div>
+        </div></>}
+      />
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
         <Input.Search

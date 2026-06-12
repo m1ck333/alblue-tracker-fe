@@ -1,5 +1,6 @@
+import { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Layout, theme } from 'antd';
+import { Layout, Spin, theme } from 'antd';
 import { PublicLanguageSwitcher } from '../components/PublicLanguageSwitcher';
 
 export function AuthLayout() {
@@ -16,7 +17,15 @@ export function AuthLayout() {
       }}
     >
       <PublicLanguageSwitcher />
-      <Outlet />
+      <Suspense
+        fallback={
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+            <Spin size="large" />
+          </div>
+        }
+      >
+        <Outlet />
+      </Suspense>
     </Layout>
   );
 }

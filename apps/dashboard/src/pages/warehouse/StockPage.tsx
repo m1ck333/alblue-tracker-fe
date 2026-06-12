@@ -6,21 +6,14 @@ import { warehouseApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
 import { useTranslation } from '@alblue/i18n';
 import type { StockBalanceRowDto } from '@alblue/shared-types';
+import { useDebounce } from '../../hooks/useDebounce';
 import { useTableHeight } from '../../hooks/useTableHeight';
 import { TableExportButton } from '../../components/TableExportButton';
 import type { ExportColumn } from '../../utils/exportTable';
 import dayjs from 'dayjs';
+import { PageHeader } from '../../components/PageHeader';
 
 const { Title } = Typography;
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(t);
-  }, [value, delay]);
-  return debounced;
-}
 
 export function StockPage() {
   const tenantId = useAuthStore((s) => s.tenantId);
@@ -88,10 +81,9 @@ export function StockPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>{t('warehouse.stockTitle')}</Title>
-        <Space>
-          <TableExportButton
+      <PageHeader
+        title={t('warehouse.stockTitle')}
+        actions={<><TableExportButton
             onFetchAll={async () => filtered}
             columns={exportColumns}
             options={{
@@ -99,9 +91,8 @@ export function StockPage() {
               title: t('warehouse.stockTitle'),
               sheetName: t('warehouse.stockTitle'),
             }}
-          />
-        </Space>
-      </div>
+          /></>}
+      />
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
         <Input.Search

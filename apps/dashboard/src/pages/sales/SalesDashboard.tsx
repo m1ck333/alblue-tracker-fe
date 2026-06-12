@@ -15,21 +15,10 @@ import type { OrderDto, ChangeRequestDto } from '@alblue/shared-types';
 import { StatusBadge } from '../../components/StatusBadge';
 import { useTranslation, useEnumTranslation } from '@alblue/i18n';
 import dayjs from 'dayjs';
+import { PageHeader } from '../../components/PageHeader';
+import { getTranslatedError } from '../../utils/errors';
 
 const { Title, Text } = Typography;
-
-function getApiErrorCode(error: unknown): string | undefined {
-  return (error as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
-}
-
-function getTranslatedError(error: unknown, t: (key: string, opts?: Record<string, string>) => string, fallback: string): string {
-  const resp = (error as { response?: { data?: { error?: { code?: string; message?: string } } } })?.response?.data?.error;
-  if (resp?.code) {
-    const translated = t(`common:errors.${resp.code}`, { defaultValue: '' });
-    if (translated) return translated;
-  }
-  return resp?.message || fallback;
-}
 
 const orderTypeColors: Record<OrderType, string> = {
   [OrderType.Standard]: 'blue',
@@ -202,9 +191,7 @@ export function SalesDashboard() {
 
   return (
     <div>
-      <div style={{ marginBottom: 16 }}>
-        <Title level={4}>{t('sales.title')}</Title>
-      </div>
+      <PageHeader title={t('sales.title')} />
 
       <Row gutter={[16, 16]}>
         <Col span={24}>

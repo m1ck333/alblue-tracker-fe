@@ -8,14 +8,10 @@ import { useAuthStore } from '@alblue/auth';
 import { useTranslation } from '@alblue/i18n';
 import { StockMovementType } from '@alblue/shared-types';
 import dayjs from 'dayjs';
+import { PageHeader } from '../../components/PageHeader';
+import { getErrorMessage } from '../../utils/errors';
 
 const { Title, Text } = Typography;
-
-function getErrorMessage(err: unknown, fallback: string): string {
-  const resp = (err as { response?: { data?: { error?: { code?: string; message?: string } } } })
-    ?.response?.data?.error;
-  return resp?.message || fallback;
-}
 
 interface LineFormShape {
   materialId?: string;
@@ -122,9 +118,7 @@ export function StockEntryPage({ type }: { type: StockMovementType }) {
 
   return (
     <div style={{ padding: 0, maxWidth: 1200 }}>
-      <div style={{ marginBottom: 16 }}>
-        <Title level={4}>{title}</Title>
-      </div>
+      <PageHeader title={title} />
 
       <Form<EntryFormShape>
         form={form}

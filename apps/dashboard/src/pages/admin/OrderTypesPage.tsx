@@ -1,17 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useDebounce } from '../../hooks/useDebounce';
 import { useTableHeight } from '../../hooks/useTableHeight';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
 import { Typography, Table, Button, Drawer, Form, Input, Select, Tag, Switch, App, Popconfirm, DatePicker } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-  return debounced;
-}
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { orderTypesApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
@@ -20,17 +13,10 @@ import { useTranslation } from '@alblue/i18n';
 import dayjs from 'dayjs';
 import { TableExportButton } from '../../components/TableExportButton';
 import type { ExportColumn } from '../../utils/exportTable';
+import { PageHeader } from '../../components/PageHeader';
+import { getTranslatedError } from '../../utils/errors';
 
 const { Title, Text } = Typography;
-
-function getTranslatedError(error: unknown, t: (key: string, opts?: Record<string, string>) => string, fallback: string): string {
-  const resp = (error as { response?: { data?: { error?: { code?: string; message?: string } } } })?.response?.data?.error;
-  if (resp?.code) {
-    const translated = t(`common:errors.${resp.code}`, { defaultValue: '' });
-    if (translated) return translated;
-  }
-  return resp?.message || fallback;
-}
 
 export function OrderTypesPage() {
   const tenantId = useAuthStore((s) => s.tenantId);
@@ -204,9 +190,9 @@ export function OrderTypesPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>{t('admin.orderTypes.title')}</Title>
-        <div style={{ display: 'flex', gap: 8 }}>
+      <PageHeader
+        title={t('admin.orderTypes.title')}
+        actions={<><div style={{ display: 'flex', gap: 8 }}>
           <TableExportButton
             onFetchAll={fetchAll}
             columns={exportColumns}
@@ -220,8 +206,8 @@ export function OrderTypesPage() {
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
             {t('admin.orderTypes.addType')}
           </Button>
-        </div>
-      </div>
+        </div></>}
+      />
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
         <Input.Search

@@ -8,6 +8,7 @@ import type { CreateMaterialRequest } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
 import { useTranslation } from '@alblue/i18n';
 import type { MaterialDto } from '@alblue/shared-types';
+import { useDebounce } from '../../hooks/useDebounce';
 import { useTableHeight } from '../../hooks/useTableHeight';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
 import { TableExportButton } from '../../components/TableExportButton';
@@ -15,23 +16,10 @@ import { MaterialsImportModal } from './MaterialsImportModal';
 import { ImportOutlined, PlusOutlined, CopyOutlined } from '@ant-design/icons';
 import type { ExportColumn } from '../../utils/exportTable';
 import dayjs from 'dayjs';
+import { PageHeader } from '../../components/PageHeader';
+import { getErrorMessage } from '../../utils/errors';
 
 const { Title } = Typography;
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(t);
-  }, [value, delay]);
-  return debounced;
-}
-
-function getErrorMessage(err: unknown, fallback: string): string {
-  const resp = (err as { response?: { data?: { error?: { code?: string; message?: string } } } })
-    ?.response?.data?.error;
-  return resp?.message || fallback;
-}
 
 export function MaterialsPage() {
   const tenantId = useAuthStore((s) => s.tenantId);
@@ -148,10 +136,9 @@ export function MaterialsPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>{t('materials.title')}</Title>
-        <Space>
-          <TableExportButton
+      <PageHeader
+        title={t('materials.title')}
+        actions={<><TableExportButton
             onFetchAll={fetchAllForExport}
             columns={exportColumns}
             options={{
@@ -165,9 +152,8 @@ export function MaterialsPage() {
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => { createForm.resetFields(); setCreateOpen(true); }}>
             {t('materials.newMaterial')}
-          </Button>
-        </Space>
-      </div>
+          </Button></>}
+      />
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
         <Input.Search

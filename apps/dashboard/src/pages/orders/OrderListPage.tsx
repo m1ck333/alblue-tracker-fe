@@ -26,6 +26,8 @@ import { useLayoutStore } from '../../stores/layout-store';
 import dayjs from 'dayjs';
 import { TableExportButton } from '../../components/TableExportButton';
 import type { ExportColumn } from '../../utils/exportTable';
+import { PageHeader } from '../../components/PageHeader';
+import { getTranslatedError } from '../../utils/errors';
 
 const { Title, Text } = Typography;
 
@@ -69,19 +71,6 @@ const orderStatusTextColors: Record<OrderStatus, string> = {
 };
 
 // ─── Helpers ─────────────────────────────────────────────
-
-function getApiErrorCode(error: unknown): string | undefined {
-  return (error as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
-}
-
-function getTranslatedError(error: unknown, t: (key: string, opts?: Record<string, string>) => string, fallback: string): string {
-  const resp = (error as { response?: { data?: { error?: { code?: string; message?: string } } } })?.response?.data?.error;
-  if (resp?.code) {
-    const translated = t(`common:errors.${resp.code}`, { defaultValue: '' });
-    if (translated) return translated;
-  }
-  return resp?.message || fallback;
-}
 
 /** Aggregate process status across all items in an order for a given processId (used in detail drawer) */
 type AggregateState = {
@@ -1213,12 +1202,9 @@ export function OrderListPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>
-          {t('orders.title')}
-        </Title>
-        <Space>
-          <Popover
+      <PageHeader
+        title={t('orders.title')}
+        actions={<><Popover
             trigger="click"
             placement="bottomRight"
             title={t('orders.legend.title')}
@@ -1285,9 +1271,8 @@ export function OrderListPage() {
             >
               {t('orders.createOrder')}
             </Button>
-          )}
-        </Space>
-      </div>
+          )}</>}
+      />
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         <Input.Search

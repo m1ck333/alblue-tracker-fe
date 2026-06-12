@@ -30,6 +30,7 @@ import { useTranslation, useEnumTranslation } from '@alblue/i18n';
 import { useQuery } from '@tanstack/react-query';
 import { warehouseApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
+import { PageHeader } from '../../components/PageHeader';
 
 const { Title, Text } = Typography;
 
@@ -71,9 +72,7 @@ export function CoordinatorDashboard() {
 
   return (
     <div>
-      <div style={{ marginBottom: 16 }}>
-        <Title level={4}>{t('coordinator.title')}</Title>
-      </div>
+      <PageHeader title={t('coordinator.title')} />
 
       <Row gutter={[16, 16]} align="stretch">
         {/* Statistics */}

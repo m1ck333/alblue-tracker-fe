@@ -1,32 +1,45 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Spin } from 'antd';
 import { RequireAuth, RequireRole } from '@alblue/auth';
-import { UserRole } from '@alblue/shared-types';
+import { UserRole, StockMovementType } from '@alblue/shared-types';
 import { AuthLayout } from './layouts/AuthLayout';
 import { MainLayout } from './layouts/MainLayout';
 import { LoginPage } from './pages/login/LoginPage';
-import { AboutPage } from './pages/about/AboutPage';
-import { TutorialPage } from './pages/tutorial/TutorialPage';
-import { WhatsNewPage } from './pages/whats-new/WhatsNewPage';
-import { CoordinatorDashboard } from './pages/coordinator/CoordinatorDashboard';
-import { OrderListPage } from './pages/orders/OrderListPage';
-import { SalesDashboard } from './pages/sales/SalesDashboard';
-import { BlockRequestsPage } from './pages/block-requests/BlockRequestsPage';
-import { ChangeRequestsPage } from './pages/change-requests/ChangeRequestsPage';
-import { UsersPage } from './pages/admin/UsersPage';
-import { ProcessesPage } from './pages/admin/ProcessesPage';
-import { ProductCategoriesPage } from './pages/admin/ProductCategoriesPage';
-import { SpecialRequestTypesPage } from './pages/admin/SpecialRequestTypesPage';
-import { OrderTypesPage } from './pages/admin/OrderTypesPage';
-import { TenantsPage } from './pages/admin/TenantsPage';
-import { ShiftsPage } from './pages/admin/ShiftsPage';
-import { MaterialsPage } from './pages/admin/MaterialsPage';
-import { ReportsPage } from './pages/reports/ReportsPage';
-import { StockPage } from './pages/warehouse/StockPage';
-import { StockEntryPage } from './pages/warehouse/StockEntryPage';
-import { HistoryPage } from './pages/warehouse/HistoryPage';
-import { StockMovementType } from '@alblue/shared-types';
-import { NotFoundPage } from './pages/not-found/NotFoundPage';
 import { RoleRedirect } from './components/RoleRedirect';
+import { NotFoundPage } from './pages/not-found/NotFoundPage';
+
+// Every page beyond the login flow is lazy-loaded so the initial JS chunk
+// only carries the auth shell + the RoleRedirect target. Each chunk is
+// fetched on demand and cached by the browser for subsequent visits.
+const AboutPage = lazy(() => import('./pages/about/AboutPage').then((m) => ({ default: m.AboutPage })));
+const TutorialPage = lazy(() => import('./pages/tutorial/TutorialPage').then((m) => ({ default: m.TutorialPage })));
+const WhatsNewPage = lazy(() => import('./pages/whats-new/WhatsNewPage').then((m) => ({ default: m.WhatsNewPage })));
+const CoordinatorDashboard = lazy(() => import('./pages/coordinator/CoordinatorDashboard').then((m) => ({ default: m.CoordinatorDashboard })));
+const OrderListPage = lazy(() => import('./pages/orders/OrderListPage').then((m) => ({ default: m.OrderListPage })));
+const SalesDashboard = lazy(() => import('./pages/sales/SalesDashboard').then((m) => ({ default: m.SalesDashboard })));
+const BlockRequestsPage = lazy(() => import('./pages/block-requests/BlockRequestsPage').then((m) => ({ default: m.BlockRequestsPage })));
+const ChangeRequestsPage = lazy(() => import('./pages/change-requests/ChangeRequestsPage').then((m) => ({ default: m.ChangeRequestsPage })));
+const UsersPage = lazy(() => import('./pages/admin/UsersPage').then((m) => ({ default: m.UsersPage })));
+const ProcessesPage = lazy(() => import('./pages/admin/ProcessesPage').then((m) => ({ default: m.ProcessesPage })));
+const ProductCategoriesPage = lazy(() => import('./pages/admin/ProductCategoriesPage').then((m) => ({ default: m.ProductCategoriesPage })));
+const SpecialRequestTypesPage = lazy(() => import('./pages/admin/SpecialRequestTypesPage').then((m) => ({ default: m.SpecialRequestTypesPage })));
+const OrderTypesPage = lazy(() => import('./pages/admin/OrderTypesPage').then((m) => ({ default: m.OrderTypesPage })));
+const TenantsPage = lazy(() => import('./pages/admin/TenantsPage').then((m) => ({ default: m.TenantsPage })));
+const ShiftsPage = lazy(() => import('./pages/admin/ShiftsPage').then((m) => ({ default: m.ShiftsPage })));
+const MaterialsPage = lazy(() => import('./pages/admin/MaterialsPage').then((m) => ({ default: m.MaterialsPage })));
+const ReportsPage = lazy(() => import('./pages/reports/ReportsPage').then((m) => ({ default: m.ReportsPage })));
+const StockPage = lazy(() => import('./pages/warehouse/StockPage').then((m) => ({ default: m.StockPage })));
+const StockEntryPage = lazy(() => import('./pages/warehouse/StockEntryPage').then((m) => ({ default: m.StockEntryPage })));
+const HistoryPage = lazy(() => import('./pages/warehouse/HistoryPage').then((m) => ({ default: m.HistoryPage })));
+
+function RouteFallback() {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+      <Spin size="large" />
+    </div>
+  );
+}
 
 export function AppRoutes() {
   return (

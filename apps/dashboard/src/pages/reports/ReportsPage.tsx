@@ -44,6 +44,7 @@ import type {
 import { UserRole, ComplexityType } from '@alblue/shared-types';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
+import { PageHeader } from '../../components/PageHeader';
 import {
   BarChart,
   Bar,
@@ -2731,9 +2732,7 @@ export function ReportsPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 16 }}>
-        <Title level={4}>{t('reports.title')}</Title>
-      </div>
+      <PageHeader title={t('reports.title')} />
       <Tabs
         defaultActiveKey="averages"
         destroyOnHidden

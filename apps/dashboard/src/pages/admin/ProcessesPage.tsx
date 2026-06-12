@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useDebounce } from '../../hooks/useDebounce';
 import { useTableHeight } from '../../hooks/useTableHeight';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
 import {
@@ -24,26 +25,10 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import React from 'react';
+import { PageHeader } from '../../components/PageHeader';
+import { getTranslatedError } from '../../utils/errors';
 
 const { Title, Text } = Typography;
-
-function getTranslatedError(error: unknown, t: (key: string, opts?: Record<string, string>) => string, fallback: string): string {
-  const resp = (error as { response?: { data?: { error?: { code?: string; message?: string } } } })?.response?.data?.error;
-  if (resp?.code) {
-    const translated = t(`common:errors.${resp.code}`, { defaultValue: '' });
-    if (translated) return translated;
-  }
-  return resp?.message || fallback;
-}
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-  return debounced;
-}
 
 // ─── Sortable table row ──────────────────────────────────────
 
@@ -429,9 +414,9 @@ export function ProcessesPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>{t('admin.processes.title')}</Title>
-        <div style={{ display: 'flex', gap: 8 }}>
+      <PageHeader
+        title={t('admin.processes.title')}
+        actions={<><div style={{ display: 'flex', gap: 8 }}>
           <TableExportButton
             onFetchAll={fetchAllProcesses}
             columns={exportColumns}
@@ -445,8 +430,8 @@ export function ProcessesPage() {
           <Button type="primary" icon={<PlusOutlined />} onClick={() => { createForm.resetFields(); createForm.setFieldValue('sequenceOrder', nextSequenceOrder); setPendingSubProcesses([]); setAddSubName(''); setAddSubOrder(1); setCreateOpen(true); }}>
             {t('admin.processes.addProcess')}
           </Button>
-        </div>
-      </div>
+        </div></>}
+      />
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
         <Input.Search

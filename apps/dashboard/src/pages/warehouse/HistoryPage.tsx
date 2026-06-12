@@ -12,6 +12,7 @@ import { useTableHeight } from '../../hooks/useTableHeight';
 import { TableExportButton } from '../../components/TableExportButton';
 import type { ExportColumn } from '../../utils/exportTable';
 import dayjs from 'dayjs';
+import { PageHeader } from '../../components/PageHeader';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
@@ -114,9 +115,9 @@ export function HistoryPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>{t('warehouse.historyTitle')}</Title>
-        <TableExportButton
+      <PageHeader
+        title={t('warehouse.historyTitle')}
+        actions={<><TableExportButton
           onFetchAll={fetchAll}
           columns={exportColumns}
           options={{
@@ -125,8 +126,8 @@ export function HistoryPage() {
             filters: exportFilters,
             sheetName: t('warehouse.historyTitle'),
           }}
-        />
-      </div>
+        /></>}
+      />
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         <Select

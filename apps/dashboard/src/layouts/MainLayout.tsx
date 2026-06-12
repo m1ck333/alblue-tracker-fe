@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Layout, theme, Grid, Button, Drawer } from 'antd';
+import { Layout, theme, Grid, Button, Drawer, Spin } from 'antd';
 import { MenuOutlined, CloseOutlined } from '@ant-design/icons';
 import { useAuthStore } from '@alblue/auth';
 import {
@@ -161,7 +161,15 @@ export function MainLayout() {
           }}
         >
           {!fullscreen && <ConnectionAlert />}
-          <Outlet />
+          <Suspense
+            fallback={
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, minHeight: 200 }}>
+                <Spin size="large" />
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
         </Content>
       </Layout>
     </Layout>
