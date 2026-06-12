@@ -333,7 +333,11 @@
       "roleHistory": "Istorija promene uloge",
       "roleHistoryEmpty": "Nema zabeleženih promena uloge.",
       "roleHistoryEntry": "{{oldRole}} → {{newRole}}",
-      "roleHistoryBy": "promenio: {{actor}}"
+      "roleHistoryBy": "promenio: {{actor}}",
+      "loginHistory": "Istorija prijava",
+      "loginHistoryEmpty": "Nema zabeleženih pokušaja prijave.",
+      "loginSucceeded": "Uspešna prijava",
+      "loginFailed": "Neuspešan pokušaj"
     },
     "processes": {
       "title": "Procesi",

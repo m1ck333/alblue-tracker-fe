@@ -20,6 +20,58 @@ import { passwordRules } from '../../utils/password';
 
 
 /**
+ * Compact list of recent login attempts (success + failure) for the
+ * currently-open user. Same lazy-load pattern as the role-history
+ * section. Failure reasons render as small red tags; successes as
+ * green. IP + user-agent shown beneath the title to help an admin
+ * spot weird origins.
+ */
+function LoginHistorySection({ userId }: { userId: string }) {
+  const { t } = useTranslation('dashboard');
+  const { data, isLoading } = useQuery({
+    queryKey: ['user-login-history', userId],
+    queryFn: () => usersApi.getLoginHistory(userId, 20).then((r) => r.data),
+    enabled: !!userId,
+    staleTime: 30_000,
+  });
+
+  return (
+    <div>
+      <Typography.Text strong style={{ fontSize: 13, display: 'block', marginBottom: 6 }}>
+        {t('admin.users.loginHistory')}
+      </Typography.Text>
+      {isLoading && <Typography.Text type="secondary" style={{ fontSize: 12 }}>…</Typography.Text>}
+      {!isLoading && (!data || data.length === 0) && (
+        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+          {t('admin.users.loginHistoryEmpty')}
+        </Typography.Text>
+      )}
+      {!isLoading && data && data.length > 0 && (
+        <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
+          {data.map((entry) => (
+            <li key={entry.id} style={{ marginBottom: 6 }}>
+              <div>
+                {entry.succeeded ? (
+                  <Tag color="green" style={{ fontSize: 11 }}>{t('admin.users.loginSucceeded')}</Tag>
+                ) : (
+                  <Tag color="red" style={{ fontSize: 11 }}>
+                    {entry.failureReason ?? t('admin.users.loginFailed')}
+                  </Tag>
+                )}
+              </div>
+              <Typography.Text type="secondary" style={{ fontSize: 11 }}>
+                {dayjs(entry.attemptedAt).format('DD.MM.YYYY. HH:mm')}
+                {entry.ipAddress ? ` · ${entry.ipAddress}` : ''}
+              </Typography.Text>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/**
  * Compact list of role changes for the currently-open user. Lives at the
  * bottom of the edit drawer — collapses to "no changes recorded" for
  * users who never had their role mutated. Loads lazily when the drawer
@@ -563,6 +615,8 @@ export function UsersPage() {
           <>
             <Divider style={{ margin: '16px 0 8px' }} />
             <RoleHistorySection userId={editUser.id} />
+            <Divider style={{ margin: '16px 0 8px' }} />
+            <LoginHistorySection userId={editUser.id} />
           </>
         )}
         {editUser?.updatedAt && (

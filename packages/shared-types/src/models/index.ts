@@ -97,6 +97,22 @@ export interface UserRoleChangeEntryDto {
   reason: string | null;
 }
 
+/**
+ * One row of the login-attempt audit log. Returned newest-first by
+ * GET /api/users/{id}/login-history. `failureReason` is null when
+ * `succeeded` is true; otherwise it's the BE error code
+ * (INVALID_CREDENTIALS, USER_INACTIVE, ACCOUNT_LOCKED, ...).
+ */
+export interface LoginAttemptDto {
+  id: string;
+  email: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  succeeded: boolean;
+  failureReason: string | null;
+  attemptedAt: string;
+}
+
 // ─── Orders ──────────────────────────────────────────────
 
 export interface OrderDto {

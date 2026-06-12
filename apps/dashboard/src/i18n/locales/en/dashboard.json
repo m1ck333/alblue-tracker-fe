@@ -333,7 +333,11 @@
       "roleHistory": "Role change history",
       "roleHistoryEmpty": "No role changes recorded.",
       "roleHistoryEntry": "{{oldRole}} → {{newRole}}",
-      "roleHistoryBy": "by {{actor}}"
+      "roleHistoryBy": "by {{actor}}",
+      "loginHistory": "Login history",
+      "loginHistoryEmpty": "No login attempts recorded.",
+      "loginSucceeded": "Successful login",
+      "loginFailed": "Failed attempt"
     },
     "processes": {
       "title": "Processes",

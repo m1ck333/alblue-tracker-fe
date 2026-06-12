@@ -1,4 +1,4 @@
-import type { UserDto, PagedResult, UserRoleChangeEntryDto } from '@alblue/shared-types';
+import type { UserDto, PagedResult, UserRoleChangeEntryDto, LoginAttemptDto } from '@alblue/shared-types';
 import type { CreateUserRequest, UpdateUserRequest, ChangePasswordRequest } from '@alblue/shared-types';
 import { apiClient } from '../axios-instance';
 
@@ -33,5 +33,9 @@ export const usersApi = {
 
   getRoleHistory(id: string) {
     return apiClient.get<UserRoleChangeEntryDto[]>(`/users/${id}/role-history`);
+  },
+
+  getLoginHistory(id: string, limit = 20) {
+    return apiClient.get<LoginAttemptDto[]>(`/users/${id}/login-history`, { params: { limit } });
   },
 };
