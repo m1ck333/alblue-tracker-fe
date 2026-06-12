@@ -125,9 +125,10 @@ export function UsersPage() {
   const currentUserId = useAuthStore((s) => s.user?.id);
   const currentUserRole = useAuthStore((s) => s.user?.role);
   const isSuperAdmin = currentUserRole === UserRole.SuperAdmin;
-  const assignableRoles = Object.values(UserRole).filter(
-    (r) => isSuperAdmin || r !== UserRole.SuperAdmin,
-  );
+  // SuperAdmin is intentionally NOT in the dropdown for anyone — that role
+  // is platform-level and only granted directly via DB (Milos 12.06.2026).
+  // BE rejects the role with FORBIDDEN_ROLE_ASSIGNMENT as defense-in-depth.
+  const assignableRoles = Object.values(UserRole).filter((r) => r !== UserRole.SuperAdmin);
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
   const [editUser, setEditUser] = useState<UserDto | null>(null);
