@@ -45,9 +45,15 @@ export const useAuthStore = create<AuthState>()(
             Sentry.setTag('tenant_id', resolvedTenantId);
           }
         } catch (err: unknown) {
-          const code =
-            (err as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
-          set({ isLoading: false, error: code || 'LOGIN_FAILED' });
+          // BE returns a coded error in the standard envelope. The rate
+          // limiter is the one path that comes back as a plain 429 without
+          // the envelope — surface it as RATE_LIMITED so the FE can show
+          // a meaningful "too many attempts" message.
+          const errLike = err as { response?: { status?: number; data?: { error?: { code?: string } } } };
+          const status = errLike?.response?.status;
+          const code = errLike?.response?.data?.error?.code;
+          const resolved = status === 429 ? 'RATE_LIMITED' : (code || 'LOGIN_FAILED');
+          set({ isLoading: false, error: resolved });
           throw err;
         }
       },
