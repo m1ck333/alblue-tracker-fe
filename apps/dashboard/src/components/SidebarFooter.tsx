@@ -143,20 +143,14 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
     refetchInterval: 60_000,
   });
 
-  // SignalR push: when the BE broadcasts any event that implies a
-  // notification was just created for management users, invalidate the
-  // notifications queries so the bell badge updates within ~1s instead
-  // of waiting for the polling tick.
+  // SignalR push: NotificationCreated fires every time the BE persists a new
+  // in-app notification for anyone in this tenant (block request, low-stock
+  // alarm, deadline warning, auto-logout, ...). One subscription covers every
+  // notification type — no per-type wiring on the FE.
   const invalidateNotificationsLists = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['notifications'] });
   }, [queryClient]);
-  useSignalREvent(SignalREvents.BlockRequestCreated, invalidateNotificationsLists);
-  useSignalREvent(SignalREvents.BlockRequestApproved, invalidateNotificationsLists);
-  useSignalREvent(SignalREvents.ProcessBlocked, invalidateNotificationsLists);
-  useSignalREvent(SignalREvents.ProcessCompleted, invalidateNotificationsLists);
-  useSignalREvent(SignalREvents.OrderActivated, invalidateNotificationsLists);
-  useSignalREvent(SignalREvents.DeadlineWarning, invalidateNotificationsLists);
-  useSignalREvent(SignalREvents.WorkerAutoLoggedOut, invalidateNotificationsLists);
+  useSignalREvent(SignalREvents.NotificationCreated, invalidateNotificationsLists);
 
   const { data: pagedResult, isLoading } = useQuery({
     queryKey: ['notifications', 'list', userId, page],
