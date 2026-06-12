@@ -152,6 +152,45 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
   }, [queryClient]);
   useSignalREvent(SignalREvents.NotificationCreated, invalidateNotificationsLists);
 
+  /**
+   * Click navigation for a notification. Each notification carries a
+   * referenceType + referenceId that maps to the page where the user can
+   * act on the underlying record. If the type maps cleanly, we mark as
+   * read and navigate; otherwise we just mark as read (no navigation).
+   * Drops the bell popover/drawer on the way out.
+   */
+  function handleNotificationClick(item: NotificationDto) {
+    if (!item.isRead) markAsRead.mutate(item.id);
+    setNotifOpen(false);
+
+    const refType = item.referenceType;
+    const refId = item.referenceId;
+    if (!refType) return;
+
+    switch (refType) {
+      case 'Order':
+        if (refId) navigate(`/orders?detail=${refId}`);
+        else navigate('/orders');
+        break;
+      case 'BlockRequest':
+        navigate('/block-requests');
+        break;
+      case 'ChangeRequest':
+        navigate('/change-requests');
+        break;
+      case 'Material':
+        // The low-stock notification lands the user on the Stock page
+        // filtered to materials currently below min — the actionable view.
+        navigate('/warehouse/stock?status=BelowMin');
+        break;
+      case 'WorkSession':
+        navigate('/dashboard');
+        break;
+      default:
+        break;
+    }
+  }
+
   const { data: pagedResult, isLoading } = useQuery({
     queryKey: ['notifications', 'list', userId, page],
     queryFn: () => notificationsApi.getAll({ userId: userId!, page, pageSize: PAGE_SIZE }).then((r) => r.data),
@@ -237,12 +276,19 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
           const iconSpec = NOTIFICATION_ICON[item.type];
           const IconComp = iconSpec?.icon ?? BellOutlined;
           const iconColor = iconSpec ? token[iconSpec.colorToken] : token.colorTextSecondary;
+          // Notifications with a referenceType are clickable — clicking
+          // marks-as-read and jumps to the relevant page. Notifications
+          // without a referenceType only show the cursor on hover for the
+          // action buttons.
+          const isClickable = !!item.referenceType;
           return (
           <List.Item
             style={{
               background: item.isRead ? undefined : token.colorPrimaryBg,
               padding: '8px 12px',
+              cursor: isClickable ? 'pointer' : 'default',
             }}
+            onClick={isClickable ? () => handleNotificationClick(item) : undefined}
             actions={[
               item.isRead ? (
                 <Tooltip key="unread" title={t('notifications.markUnread')}>
@@ -250,7 +296,7 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
                     type="text"
                     size="small"
                     icon={<EyeInvisibleOutlined />}
-                    onClick={() => markAsUnread.mutate(item.id)}
+                    onClick={(e) => { e.stopPropagation(); markAsUnread.mutate(item.id); }}
                   />
                 </Tooltip>
               ) : (
@@ -259,7 +305,7 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
                     type="text"
                     size="small"
                     icon={<CheckOutlined />}
-                    onClick={() => markAsRead.mutate(item.id)}
+                    onClick={(e) => { e.stopPropagation(); markAsRead.mutate(item.id); }}
                   />
                 </Tooltip>
               ),
@@ -269,7 +315,7 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
                   size="small"
                   danger
                   icon={<DeleteOutlined />}
-                  onClick={() => deleteOne.mutate(item.id)}
+                  onClick={(e) => { e.stopPropagation(); deleteOne.mutate(item.id); }}
                 />
               </Tooltip>,
             ]}

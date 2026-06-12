@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useTableHeight } from '../../hooks/useTableHeight';
+import { useSignalREvent, SignalREvents } from '@alblue/signalr-client';
 import { Typography, Table, Space, Button, App, Popconfirm, Modal, Input, Select, DatePicker, Dropdown, theme } from 'antd';
 import { useNavigate } from 'react-router-dom';
 
@@ -42,6 +43,20 @@ export function BlockRequestsPage() {
   const { ref: tableWrapperRef, height: tableBodyHeight } = useTableHeight();
 
   useEffect(() => { setPage(1); }, [debouncedSearch, statusFilter, dateFrom, dateTo]);
+
+  // SignalR push: a new block request arrives, or an existing one is
+  // approved/rejected → the open list view refreshes within ~1s so the
+  // coordinator doesn't have to refresh manually.
+  const invalidateBlockList = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['block-requests'] });
+    queryClient.invalidateQueries({ queryKey: ['block-requests-pending-count'] });
+  }, [queryClient]);
+  useSignalREvent(SignalREvents.BlockRequestCreated, invalidateBlockList);
+  useSignalREvent(SignalREvents.BlockRequestApproved, invalidateBlockList);
+  // BlockRequestRejected doesn't have its own SignalR event, but the BE
+  // emits NotificationCreated after persisting the worker notification, and
+  // that's enough to trigger a list refresh.
+  useSignalREvent(SignalREvents.NotificationCreated, invalidateBlockList);
 
   const { data: pagedResult, isLoading } = useQuery({
     queryKey: ['block-requests', tenantId, statusFilter, debouncedSearch, dateFrom?.format('YYYY-MM-DD'), dateTo?.format('YYYY-MM-DD'), page, pageSize, sortBy, sortDirection],
