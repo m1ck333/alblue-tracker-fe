@@ -5,6 +5,48 @@ import { useAuthStore } from '@alblue/auth';
 import { notificationsApi } from '@alblue/api-client';
 import { useTranslation } from '@alblue/i18n';
 import type { NotificationDto } from '@alblue/shared-types';
+import { NotificationType } from '@alblue/shared-types';
+
+/**
+ * Map BE notification type → i18n template path. Mirrors the dashboard's
+ * SidebarFooter map so the bell list reads in whichever language the tablet
+ * is set to. The renderer falls back to the BE-provided Title/Message if a
+ * template is missing or paramsJson can't be parsed.
+ */
+const TABLET_NOTIFICATION_TEMPLATE: Partial<Record<NotificationType, string>> = {
+  [NotificationType.MaterialLowStock]: 'notificationsPage.templates.materialLowStock',
+  [NotificationType.OrderActivated]: 'notificationsPage.templates.orderActivated',
+  [NotificationType.ProcessCompleted]: 'notificationsPage.templates.processCompleted',
+  [NotificationType.ProcessBlocked]: 'notificationsPage.templates.processBlocked',
+  [NotificationType.BlockRequest]: 'notificationsPage.templates.blockRequest',
+  [NotificationType.BlockRequestApproved]: 'notificationsPage.templates.blockRequestApproved',
+  [NotificationType.BlockRequestRejected]: 'notificationsPage.templates.blockRequestRejected',
+  [NotificationType.WorkerAutoLoggedOut]: 'notificationsPage.templates.workerAutoLoggedOut',
+  [NotificationType.DeadlineWarning]: 'notificationsPage.templates.deadlineWarning',
+  [NotificationType.DeadlineCritical]: 'notificationsPage.templates.deadlineCritical',
+  [NotificationType.ChangeRequest]: 'notificationsPage.templates.changeRequest',
+  [NotificationType.ChangeRequestApproved]: 'notificationsPage.templates.changeRequestApproved',
+  [NotificationType.ChangeRequestRejected]: 'notificationsPage.templates.changeRequestRejected',
+};
+
+function renderTabletNotificationText(
+  n: NotificationDto,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): { title: string; message: string } {
+  const tplPath = TABLET_NOTIFICATION_TEMPLATE[n.type];
+  if (tplPath && n.paramsJson) {
+    try {
+      const params = JSON.parse(n.paramsJson) as Record<string, unknown>;
+      return {
+        title: t(`${tplPath}.title`, params),
+        message: t(`${tplPath}.message`, params),
+      };
+    } catch {
+      // Fall through to BE strings.
+    }
+  }
+  return { title: n.title, message: n.message };
+}
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -180,14 +222,19 @@ export function NotificationsPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.slice(0, visibleCount).map((n) => (
-            <SwipeableNotification
-              key={n.id}
-              notification={n}
-              onTap={handleTap}
-              onDelete={(id) => deleteMutation.mutate(id)}
-            />
-          ))}
+          {filtered.slice(0, visibleCount).map((n) => {
+            const { title, message } = renderTabletNotificationText(n, t);
+            return (
+              <SwipeableNotification
+                key={n.id}
+                notification={n}
+                displayTitle={title}
+                displayMessage={message}
+                onTap={handleTap}
+                onDelete={(id) => deleteMutation.mutate(id)}
+              />
+            );
+          })}
           {filtered.length > visibleCount && (
             <button
               onClick={() => setVisibleCount((c) => c + 15)}
@@ -204,10 +251,14 @@ export function NotificationsPage() {
 
 function SwipeableNotification({
   notification: n,
+  displayTitle,
+  displayMessage,
   onTap,
   onDelete,
 }: {
   notification: NotificationDto;
+  displayTitle: string;
+  displayMessage: string;
   onTap: (n: NotificationDto) => void;
   onDelete: (id: string) => void;
 }) {
@@ -284,14 +335,14 @@ function SwipeableNotification({
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
               <span className={`text-tablet-base truncate ${n.isRead ? 'text-gray-700' : 'text-gray-900 font-semibold'}`}>
-                {n.title}
+                {displayTitle}
               </span>
               <span className="text-tablet-xs text-gray-400 flex-shrink-0">
                 {timeAgo(n.createdAt)}
               </span>
             </div>
             <p className="text-tablet-sm text-gray-500 mt-1 line-clamp-2">
-              {n.message}
+              {displayMessage}
             </p>
           </div>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 text-gray-300 ml-1">

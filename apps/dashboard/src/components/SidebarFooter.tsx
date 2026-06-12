@@ -41,9 +41,27 @@ const PAGE_SIZE = 15;
  * template AND the notification carries structured params, render via i18n
  * (so it follows the active locale). Otherwise we fall back to the
  * BE-provided title/message (legacy / unmapped types).
+ *
+ * Some templates use i18next's `context` mechanism to switch sub-variants
+ * (e.g. blockRequestRejected.message vs .message_withNote, or
+ * orderActivated.title vs .title_readyForQueue). The BE sets a `context`
+ * field inside paramsJson; i18next picks it up automatically from the
+ * params object passed to `t()`.
  */
 const NOTIFICATION_TEMPLATE_KEY: Partial<Record<NotificationType, string>> = {
   [NotificationType.MaterialLowStock]: 'notifications.templates.materialLowStock',
+  [NotificationType.OrderActivated]: 'notifications.templates.orderActivated',
+  [NotificationType.ProcessCompleted]: 'notifications.templates.processCompleted',
+  [NotificationType.ProcessBlocked]: 'notifications.templates.processBlocked',
+  [NotificationType.BlockRequest]: 'notifications.templates.blockRequest',
+  [NotificationType.BlockRequestApproved]: 'notifications.templates.blockRequestApproved',
+  [NotificationType.BlockRequestRejected]: 'notifications.templates.blockRequestRejected',
+  [NotificationType.WorkerAutoLoggedOut]: 'notifications.templates.workerAutoLoggedOut',
+  [NotificationType.DeadlineWarning]: 'notifications.templates.deadlineWarning',
+  [NotificationType.DeadlineCritical]: 'notifications.templates.deadlineCritical',
+  [NotificationType.ChangeRequest]: 'notifications.templates.changeRequest',
+  [NotificationType.ChangeRequestApproved]: 'notifications.templates.changeRequestApproved',
+  [NotificationType.ChangeRequestRejected]: 'notifications.templates.changeRequestRejected',
 };
 
 /**
