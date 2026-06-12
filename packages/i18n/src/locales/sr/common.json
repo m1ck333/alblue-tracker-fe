@@ -65,7 +65,12 @@
     "enterTenantCode": "Unesite kod firme",
     "enterEmail": "Unesite email",
     "enterPassword": "Unesite lozinku",
-    "enterValidEmail": "Unesite ispravnu email adresu"
+    "enterValidEmail": "Unesite ispravnu email adresu",
+    "passwordRequired": "Lozinka je obavezna",
+    "passwordTooShort": "Lozinka mora imati najmanje 8 karaktera",
+    "passwordTooLong": "Lozinka može imati najviše 100 karaktera",
+    "passwordNeedsLetter": "Lozinka mora sadržati bar jedno slovo",
+    "passwordNeedsDigit": "Lozinka mora sadržati bar jednu cifru"
   },
   "messages": {
     "noDataAvailable": "Nema dostupnih podataka",

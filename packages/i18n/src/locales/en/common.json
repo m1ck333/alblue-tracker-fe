@@ -65,7 +65,12 @@
     "enterTenantCode": "Please enter tenant code",
     "enterEmail": "Please enter your email",
     "enterPassword": "Please enter your password",
-    "enterValidEmail": "Please enter a valid email"
+    "enterValidEmail": "Please enter a valid email",
+    "passwordRequired": "Password is required",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "passwordTooLong": "Password must be at most 100 characters",
+    "passwordNeedsLetter": "Password must contain at least one letter",
+    "passwordNeedsDigit": "Password must contain at least one digit"
   },
   "messages": {
     "noDataAvailable": "No data available",

@@ -16,6 +16,7 @@ import { TableExportButton } from '../../components/TableExportButton';
 import type { ExportColumn } from '../../utils/exportTable';
 import { PageHeader } from '../../components/PageHeader';
 import { getTranslatedError } from '../../utils/errors';
+import { passwordRules } from '../../utils/password';
 
 
 export function UsersPage() {
@@ -379,7 +380,7 @@ export function UsersPage() {
           <Form.Item name="email" label={t('common:labels.email')} rules={[{ required: true, type: 'email' }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="password" label={t('common:labels.password')} rules={[{ required: true, min: 6 }]}>
+          <Form.Item name="password" label={t('common:labels.password')} rules={passwordRules(t)}>
             <Input.Password />
           </Form.Item>
           <Form.Item name="firstName" label={t('common:labels.firstName')} rules={[{ required: true }]}>
@@ -499,7 +500,7 @@ export function UsersPage() {
               ) : null
             }
           </Form.Item>
-          <Form.Item name="newPassword" label={t('admin.users.newPassword')} rules={[{ min: 6 }]}>
+          <Form.Item name="newPassword" label={t('admin.users.newPassword')} rules={passwordRules(t, { required: false })}>
             <Input.Password placeholder={t('admin.users.newPasswordPlaceholder')} />
           </Form.Item>
           <Form.Item name="isActive" label={t('common:labels.status')} valuePropName="checked">
