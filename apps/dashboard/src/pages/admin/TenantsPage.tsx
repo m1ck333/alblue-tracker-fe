@@ -3,7 +3,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { useTableHeight } from '../../hooks/useTableHeight';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
 import {
-  Typography, Table, Button, Drawer, Form, Input, InputNumber, Tag, App,
+  Table, Button, Drawer, Form, Input, InputNumber, Tag, App,
   Divider, ColorPicker, Popconfirm, Spin, Select, DatePicker,
 } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
@@ -16,8 +16,6 @@ import { TableExportButton } from '../../components/TableExportButton';
 import type { ExportColumn } from '../../utils/exportTable';
 import { PageHeader } from '../../components/PageHeader';
 import { getTranslatedError } from '../../utils/errors';
-
-const { Title } = Typography;
 
 function resolveColor(value: unknown, fallback: string): string {
   if (typeof value === 'string') return value;

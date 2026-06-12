@@ -16,7 +16,6 @@ import type { ExportColumn } from '../../utils/exportTable';
 import { PageHeader } from '../../components/PageHeader';
 import { getTranslatedError } from '../../utils/errors';
 
-const { Title } = Typography;
 
 export function ShiftsPage() {
   const tenantId = useAuthStore((s) => s.tenantId);

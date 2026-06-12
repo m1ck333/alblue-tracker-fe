@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Typography, Table, Tag, Space, Input, Select } from 'antd';
+import { Table, Tag, Input, Select } from 'antd';
 import { EmptyState } from '../../components/EmptyState';
 import { useQuery } from '@tanstack/react-query';
 import { warehouseApi } from '@alblue/api-client';
@@ -13,8 +13,6 @@ import { TableExportButton } from '../../components/TableExportButton';
 import type { ExportColumn } from '../../utils/exportTable';
 import dayjs from 'dayjs';
 import { PageHeader } from '../../components/PageHeader';
-
-const { Title } = Typography;
 
 export function StockPage() {
   const tenantId = useAuthStore((s) => s.tenantId);

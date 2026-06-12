@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { changeRequestsApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
-import { RequestStatus, ChangeRequestType } from '@alblue/shared-types';
+import { RequestStatus } from '@alblue/shared-types';
 import type { ChangeRequestDto } from '@alblue/shared-types';
 import { StatusBadge } from '../../components/StatusBadge';
 import { useTranslation, useEnumTranslation } from '@alblue/i18n';
@@ -16,8 +16,6 @@ import { TableExportButton } from '../../components/TableExportButton';
 import type { ExportColumn } from '../../utils/exportTable';
 import { PageHeader } from '../../components/PageHeader';
 import { getTranslatedError } from '../../utils/errors';
-
-const { Title } = Typography;
 
 export function ChangeRequestsPage() {
   const tenantId = useAuthStore((s) => s.tenantId);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Typography, Table, Tag, DatePicker, Select, Input, Empty } from 'antd';
+import { Table, Tag, DatePicker, Select, Input, Empty } from 'antd';
 import type { TablePaginationConfig } from 'antd';
 import type { SorterResult } from 'antd/es/table/interface';
 import { useQuery } from '@tanstack/react-query';
@@ -14,7 +14,6 @@ import type { ExportColumn } from '../../utils/exportTable';
 import dayjs from 'dayjs';
 import { PageHeader } from '../../components/PageHeader';
 
-const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
 export function HistoryPage() {

@@ -1,6 +1,5 @@
-import { lazy, Suspense } from 'react';
+import { lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Spin } from 'antd';
 import { RequireAuth, RequireRole } from '@alblue/auth';
 import { UserRole, StockMovementType } from '@alblue/shared-types';
 import { AuthLayout } from './layouts/AuthLayout';
@@ -32,14 +31,6 @@ const ReportsPage = lazy(() => import('./pages/reports/ReportsPage').then((m) =>
 const StockPage = lazy(() => import('./pages/warehouse/StockPage').then((m) => ({ default: m.StockPage })));
 const StockEntryPage = lazy(() => import('./pages/warehouse/StockEntryPage').then((m) => ({ default: m.StockEntryPage })));
 const HistoryPage = lazy(() => import('./pages/warehouse/HistoryPage').then((m) => ({ default: m.HistoryPage })));
-
-function RouteFallback() {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
-      <Spin size="large" />
-    </div>
-  );
-}
 
 export function AppRoutes() {
   return (

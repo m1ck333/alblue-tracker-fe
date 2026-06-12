@@ -18,7 +18,7 @@ import dayjs from 'dayjs';
 import { PageHeader } from '../../components/PageHeader';
 import { getTranslatedError } from '../../utils/errors';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const orderTypeColors: Record<OrderType, string> = {
   [OrderType.Standard]: 'blue',

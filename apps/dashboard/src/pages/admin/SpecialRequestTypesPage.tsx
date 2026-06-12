@@ -2,13 +2,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useTableHeight } from '../../hooks/useTableHeight';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
-import { Typography, Table, Button, Drawer, Form, Input, Select, Tag, Space, App, Popconfirm, Divider, DatePicker } from 'antd';
+import { Typography, Table, Button, Drawer, Form, Input, Select, Tag, App, Popconfirm, Divider, DatePicker } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { specialRequestTypesApi, processesApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
-import type { SpecialRequestTypeDto, ProcessDto } from '@alblue/shared-types';
+import type { SpecialRequestTypeDto } from '@alblue/shared-types';
 import { useTranslation } from '@alblue/i18n';
 import dayjs from 'dayjs';
 import { TableExportButton } from '../../components/TableExportButton';
@@ -16,7 +16,7 @@ import type { ExportColumn } from '../../utils/exportTable';
 import { PageHeader } from '../../components/PageHeader';
 import { getTranslatedError } from '../../utils/errors';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export function SpecialRequestTypesPage() {
   const tenantId = useAuthStore((s) => s.tenantId);
@@ -66,12 +66,6 @@ export function SpecialRequestTypesPage() {
     queryFn: () => processesApi.getAll({ pageSize: 100 }).then((r) => r.data.items),
     enabled: !!tenantId && (!!detailItem || createOpen),
   });
-
-  const processMap = useMemo(() => {
-    const map = new Map<string, ProcessDto>();
-    (processes ?? []).forEach((p) => map.set(p.id, p));
-    return map;
-  }, [processes]);
 
   const processOptions = (processes ?? []).map((p) => ({ label: `${p.code} — ${p.name}`, value: p.id }));
 
@@ -153,18 +147,6 @@ export function SpecialRequestTypesPage() {
       });
     }
   }, [currentDetail, editForm]);
-
-  const renderProcessTags = (ids: string[]) => {
-    if (!ids || ids.length === 0) return <Text type="secondary">—</Text>;
-    return (
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-        {ids.map((id) => {
-          const proc = processMap.get(id);
-          return <Tag key={id} color="blue">{proc ? `${proc.code} — ${proc.name}` : id.slice(0, 8)}</Tag>;
-        })}
-      </div>
-    );
-  };
 
   const columns = [
     {

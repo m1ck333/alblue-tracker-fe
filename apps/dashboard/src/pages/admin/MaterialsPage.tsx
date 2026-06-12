@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
-  Typography, Table, Button, Drawer, Form, Input, InputNumber, Select, Tag, Space, App, Popconfirm, Empty,
+  Table, Button, Drawer, Form, Input, InputNumber, Select, Tag, Space, App, Popconfirm,
 } from 'antd';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { materialsApi } from '@alblue/api-client';
@@ -19,8 +19,6 @@ import type { ExportColumn } from '../../utils/exportTable';
 import dayjs from 'dayjs';
 import { PageHeader } from '../../components/PageHeader';
 import { getErrorMessage } from '../../utils/errors';
-
-const { Title } = Typography;
 
 export function MaterialsPage() {
   const tenantId = useAuthStore((s) => s.tenantId);

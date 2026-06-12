@@ -150,7 +150,6 @@ export function AutoLogoutBanner() {
     } else if (data === null && hadSessionRef.current) {
       markAutoLoggedOut();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, isAuthenticated, autoLoggedOut]);
 
   // Full-screen blocker after auto-logout — worker must tap to re-login.

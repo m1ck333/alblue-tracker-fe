@@ -16,7 +16,7 @@ import type { ExportColumn } from '../../utils/exportTable';
 import { PageHeader } from '../../components/PageHeader';
 import { getTranslatedError } from '../../utils/errors';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export function OrderTypesPage() {
   const tenantId = useAuthStore((s) => s.tenantId);

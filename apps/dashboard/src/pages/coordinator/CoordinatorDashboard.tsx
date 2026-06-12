@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Row, Col, Card, Typography, Table, Alert, Statistic, List, Tag, Badge, Tooltip, Button, Drawer, theme } from 'antd';
+import { Row, Col, Card, Typography, Table, Alert, Statistic, List, Tag, Badge, Button, Drawer, theme } from 'antd';
 import {
   WarningOutlined,
   ClockCircleOutlined,
@@ -32,7 +32,7 @@ import { warehouseApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
 import { PageHeader } from '../../components/PageHeader';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 function formatDate(iso: string): string {
   const d = new Date(iso);

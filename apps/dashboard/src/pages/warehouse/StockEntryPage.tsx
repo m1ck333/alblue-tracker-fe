@@ -11,7 +11,7 @@ import dayjs from 'dayjs';
 import { PageHeader } from '../../components/PageHeader';
 import { getErrorMessage } from '../../utils/errors';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface LineFormShape {
   materialId?: string;

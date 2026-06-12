@@ -9,7 +9,7 @@ import { PlusOutlined, DeleteOutlined, CheckOutlined, PaperClipOutlined, UndoOut
 import type { ColumnsType } from 'antd/es/table';
 import { useAuthStore } from '@alblue/auth';
 import { OrderStatus, OrderType, ProcessStatus, ComplexityType, UserRole } from '@alblue/shared-types';
-import type { OrderMasterViewDto, OrderDetailDto, OrderItemDto, OrderItemProcessDto, OrderItemSubProcessDto, ProcessDto, ProductCategoryDto, SpecialRequestTypeDto, AddOrderItemRequest, OrderTypeDto, ManualProcessInput, ManualDependencyInput } from '@alblue/shared-types';
+import type { OrderMasterViewDto, OrderDetailDto, OrderItemDto, OrderItemSubProcessDto, ProcessDto, ProductCategoryDto, SpecialRequestTypeDto, AddOrderItemRequest, OrderTypeDto, ManualProcessInput, ManualDependencyInput } from '@alblue/shared-types';
 import {
   useCreateOrder, useOrder, useActivateOrder,
   useUpdateOrder, useCancelOrder, usePauseOrder, useResumeOrder, useReopenOrder,
@@ -836,8 +836,6 @@ export function OrderListPage() {
     setCurrentDraftItemFiles([]);
     setAddingItem(false);
   }, []);
-
-  const hasPendingChanges = pendingItems.length > 0 || pendingItemRemovals.length > 0 || pendingComplexity.size > 0 || pendingSpecialRequestAdds.length > 0 || pendingSpecialRequestRemovals.length > 0;
 
   const changePriorityMutation = useMutation({
     mutationFn: ({ id, priority }: { id: string; priority: number }) => ordersApi.changePriority(id, priority),
