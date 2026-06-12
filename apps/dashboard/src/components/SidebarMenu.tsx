@@ -22,11 +22,13 @@ import {
   HistoryOutlined,
   BlockOutlined,
 } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 import { useAuthStore } from '@alblue/auth';
 import { UserRole, RequestStatus, hasRole } from '@alblue/shared-types';
 import { blockRequestsApi } from '@alblue/api-client';
 import { useTranslation } from '@alblue/i18n';
+import { useSignalREvent, SignalREvents } from '@alblue/signalr-client';
 
 interface SidebarMenuProps {
   collapsed: boolean;
@@ -52,6 +54,7 @@ export function SidebarMenu({ collapsed: _collapsed }: SidebarMenuProps) {
   const isMagacionerOrAdmin = isAdminOrManager || hasRole(user, UserRole.Magacioner);
   const canReadMagacin = isCoordOrAbove || hasRole(user, UserRole.Magacioner);
 
+  const queryClient = useQueryClient();
   const { data: pendingBlockCount } = useQuery({
     queryKey: ['block-requests-pending-count', tenantId],
     queryFn: () =>
@@ -59,8 +62,17 @@ export function SidebarMenu({ collapsed: _collapsed }: SidebarMenuProps) {
         .getAll({ status: RequestStatus.Pending, page: 1, pageSize: 1 })
         .then((r) => r.data.totalCount),
     enabled: !!tenantId && isCoordOrAbove,
-    refetchInterval: 30_000,
+    // SignalR refreshes this within a second of the BE state changing
+    // (see below). Polling is the safety net for missed events.
+    refetchInterval: 60_000,
   });
+
+  const invalidatePendingBlockCount = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['block-requests-pending-count'] });
+  }, [queryClient]);
+  useSignalREvent(SignalREvents.BlockRequestCreated, invalidatePendingBlockCount);
+  useSignalREvent(SignalREvents.BlockRequestApproved, invalidatePendingBlockCount);
+  useSignalREvent(SignalREvents.ProcessUnblocked, invalidatePendingBlockCount);
 
   const items = [
     isCoordOrAbove && {

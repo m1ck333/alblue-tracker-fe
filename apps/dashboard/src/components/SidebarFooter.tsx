@@ -29,6 +29,7 @@ import { useAuthStore } from '@alblue/auth';
 import { useTranslation } from '@alblue/i18n';
 import type { NotificationDto } from '@alblue/shared-types';
 import { NotificationType } from '@alblue/shared-types';
+import { useSignalREvent, SignalREvents } from '@alblue/signalr-client';
 import { useThemeStore } from '../stores/theme-store';
 
 const { Text } = Typography;
@@ -135,12 +136,27 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
     queryKey: ['notifications', 'unread-count', userId],
     queryFn: () => notificationsApi.getUnreadCount(userId!).then((r) => r.data),
     enabled: !!userId,
-    // Was 120s — too slow to feel like an "alarm" for the low-stock
-    // notification Saša asked for (Milos caught it during testing
-    // 10.06.2026). 20s is the cheapest near-real-time without
-    // wiring SignalR push on the BE side.
-    refetchInterval: 20_000,
+    // Polling fallback. The SignalR subscriptions below make most updates
+    // arrive instantly, but polling still catches the types we don't have
+    // a dedicated SignalR event for (e.g. MaterialLowStock fires from a
+    // stock-entry write — no broadcast event for that yet).
+    refetchInterval: 60_000,
   });
+
+  // SignalR push: when the BE broadcasts any event that implies a
+  // notification was just created for management users, invalidate the
+  // notifications queries so the bell badge updates within ~1s instead
+  // of waiting for the polling tick.
+  const invalidateNotificationsLists = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  }, [queryClient]);
+  useSignalREvent(SignalREvents.BlockRequestCreated, invalidateNotificationsLists);
+  useSignalREvent(SignalREvents.BlockRequestApproved, invalidateNotificationsLists);
+  useSignalREvent(SignalREvents.ProcessBlocked, invalidateNotificationsLists);
+  useSignalREvent(SignalREvents.ProcessCompleted, invalidateNotificationsLists);
+  useSignalREvent(SignalREvents.OrderActivated, invalidateNotificationsLists);
+  useSignalREvent(SignalREvents.DeadlineWarning, invalidateNotificationsLists);
+  useSignalREvent(SignalREvents.WorkerAutoLoggedOut, invalidateNotificationsLists);
 
   const { data: pagedResult, isLoading } = useQuery({
     queryKey: ['notifications', 'list', userId, page],
