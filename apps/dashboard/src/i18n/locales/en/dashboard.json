@@ -1,4 +1,8 @@
 {
+  "notFound": {
+    "subtitle": "This page does not exist.",
+    "backHome": "Home"
+  },
   "errorBoundary": {
     "title": "An error occurred",
     "subtitle": "Something went wrong. Please try again or return to the home page.",

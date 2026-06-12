@@ -1,4 +1,8 @@
 {
+  "notFound": {
+    "subtitle": "Stranica ne postoji.",
+    "backHome": "Početna"
+  },
   "errorBoundary": {
     "title": "Došlo je do greške",
     "subtitle": "Nešto je pošlo po zlu. Pokušajte ponovo ili se vratite na početnu stranicu.",
