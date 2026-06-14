@@ -108,14 +108,17 @@ export function MainLayout() {
       <SidebarFooter collapsed={isMobile ? false : collapsed} />
       {/* MPMS product mark — Saša 14.06.2026 convention: at the very
           bottom of the sidebar as a "powered by" footer below the user
-          row. Hidden when the sidebar is collapsed (no horizontal room).
-          Lower opacity so it reads as a watermark, not a competing
-          element with the tenant logo at the top. */}
-      {(isMobile || !collapsed) && (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 16px', opacity: 0.65, flexShrink: 0 }}>
-          <img src="/mpms-logo-text.png" alt="MPMS" style={{ height: 36, objectFit: 'contain' }} />
-        </div>
-      )}
+          row. Collapsed mode swaps to the square asset so the brand
+          stays visible (Milos 14.06.2026 — "i dont like losing logo
+          when sidebar is collapsed"). Lower opacity so it reads as a
+          watermark, not a competing element with the tenant logo. */}
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '4px 0 6px', opacity: 0.65, flexShrink: 0 }}>
+        <img
+          src={isMobile || !collapsed ? '/mpms-logo-text.png' : '/mpms-logo.png'}
+          alt="MPMS"
+          style={{ height: isMobile || !collapsed ? 32 : 24, objectFit: 'contain' }}
+        />
+      </div>
     </div>
   );
 

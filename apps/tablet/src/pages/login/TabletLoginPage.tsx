@@ -88,16 +88,18 @@ export function TabletLoginPage() {
   const submitting = isLoading || settingUp;
 
   return (
-    // Background matches the dashboard sidebar navy so the tablet feels
-    // like the same product — Milos 14.06.2026.
-    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#001529' }}>
-      <div className="card w-full max-w-md">
-        <img
-          src="/mpms-logo-text.png"
-          alt="MPMS"
-          className="block mx-auto mb-2"
-          style={{ height: 120, objectFit: 'contain' }}
-        />
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+      <div className="card w-full max-w-md overflow-hidden p-0">
+        {/* Logo lives in its own navy band so the dark-on-dark MPMS mark
+            stays legible. Same pattern as dashboard LoginPage. */}
+        <div className="flex justify-center" style={{ background: '#001529', padding: '24px 0' }}>
+          <img
+            src="/mpms-logo-text.png"
+            alt="MPMS"
+            style={{ height: 120, objectFit: 'contain' }}
+          />
+        </div>
+        <div className="p-6">
         <p className="text-center text-gray-500 mb-8 text-tablet-sm">
           {t('login.subtitle')}
         </p>
@@ -156,6 +158,7 @@ export function TabletLoginPage() {
             {submitting ? t('login.signingIn') : t('login.signIn')}
           </button>
         </form>
+        </div>
       </div>
     </div>
   );

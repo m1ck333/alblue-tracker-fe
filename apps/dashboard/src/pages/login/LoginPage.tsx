@@ -27,18 +27,26 @@ export function LoginPage() {
   };
 
   return (
-    // Background matches the sidebar navy so the login screen reads as
-    // "same product" rather than a separate site — Milos 14.06.2026.
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#001529' }}>
-    <Card style={{ width: 400, boxShadow: token.boxShadow }}>
-      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <Card
+      style={{ width: 400, boxShadow: token.boxShadow, overflow: 'hidden' }}
+      styles={{ body: { padding: 0 } }}
+    >
+      {/* Logo lives in its own navy band INSIDE the card so the
+          dark-on-dark MPMS mark stays legible without paint the whole
+          page navy — Milos 14.06.2026 ("only bg change is in card in
+          row where is logo, in order to better see this light logo"). */}
+      <div style={{ background: '#001529', textAlign: 'center', padding: '24px 0' }}>
         <img
           src="/mpms-logo-text.png"
           alt="MPMS"
-          style={{ height: 96, objectFit: 'contain', marginBottom: 8 }}
+          style={{ height: 96, objectFit: 'contain' }}
         />
-        <Typography.Text type="secondary" style={{ display: 'block' }}>{t('login.subtitle')}</Typography.Text>
       </div>
+      <div style={{ padding: 24 }}>
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <Typography.Text type="secondary">{t('login.subtitle')}</Typography.Text>
+        </div>
 
       {error && (
         <Alert message={t(`common:errors.${error === 'NOT_FOUND' ? 'INVALID_CREDENTIALS' : error}`, { defaultValue: '' }) || t('login.failed')} type="error" showIcon style={{ marginBottom: 16 }} />
@@ -79,6 +87,7 @@ export function LoginPage() {
         <Link to="/about">
           <InfoCircleOutlined /> {t('about.learnMore')}
         </Link>
+      </div>
       </div>
     </Card>
     </div>
