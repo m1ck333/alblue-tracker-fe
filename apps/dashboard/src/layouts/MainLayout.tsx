@@ -1,7 +1,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Layout, theme, Grid, Button, Drawer, Spin } from 'antd';
-import { MenuOutlined, CloseOutlined } from '@ant-design/icons';
+import { MenuOutlined, CloseOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { useAuthStore } from '@alblue/auth';
 import {
   createConnection,
@@ -106,19 +106,42 @@ export function MainLayout() {
         <SidebarMenu collapsed={isMobile ? false : collapsed} />
       </div>
       <SidebarFooter collapsed={isMobile ? false : collapsed} />
-      {/* MPMS product mark — Saša 14.06.2026 convention: at the very
-          bottom of the sidebar as a "powered by" footer below the user
-          row. Collapsed mode swaps to the square asset so the brand
-          stays visible (Milos 14.06.2026 — "i dont like losing logo
-          when sidebar is collapsed"). Lower opacity so it reads as a
-          watermark, not a competing element with the tenant logo. */}
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '4px 0 6px', opacity: 0.65, flexShrink: 0 }}>
-        <img
-          src={isMobile || !collapsed ? '/mpms-logo-text.png' : '/mpms-logo.png'}
-          alt="MPMS"
-          style={{ height: isMobile || !collapsed ? 32 : 24, objectFit: 'contain' }}
-        />
-      </div>
+      {/* Single footer row combining the MPMS product mark + the
+          sidebar collapse toggle. antd Sider's default `trigger` is
+          disabled below (`trigger={null}`) so this is the only thing
+          at the bottom — no double footer.
+          Expanded: MPMS logo left, chevron right, one horizontal row.
+          Collapsed: MPMS square + chevron stacked vertically, both
+          centered, keeps the brand visible in icon-rail mode.
+          Mobile: only the MPMS mark (drawer has its own close button
+          in the top logo row). */}
+      {isMobile ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '6px 0 10px', opacity: 0.65, flexShrink: 0 }}>
+          <img src="/mpms-logo-text.png" alt="MPMS" style={{ height: 32, objectFit: 'contain' }} />
+        </div>
+      ) : collapsed ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 0 8px', flexShrink: 0 }}>
+          <img src="/mpms-logo.png" alt="MPMS" style={{ height: 24, objectFit: 'contain', opacity: 0.65 }} />
+          <Button
+            type="text"
+            size="small"
+            icon={<RightOutlined style={{ color: 'rgba(255,255,255,0.85)' }} />}
+            onClick={() => setCollapsed(false)}
+            aria-label="Otvori sidebar"
+          />
+        </div>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px 8px', flexShrink: 0 }}>
+          <img src="/mpms-logo-text.png" alt="MPMS" style={{ height: 28, objectFit: 'contain', opacity: 0.65 }} />
+          <Button
+            type="text"
+            size="small"
+            icon={<LeftOutlined style={{ color: 'rgba(255,255,255,0.85)' }} />}
+            onClick={() => setCollapsed(true)}
+            aria-label="Skupi sidebar"
+          />
+        </div>
+      )}
     </div>
   );
 
@@ -131,6 +154,7 @@ export function MainLayout() {
           onCollapse={setCollapsed}
           breakpoint="lg"
           theme="dark"
+          trigger={null}
           style={{ height: '100vh', position: 'sticky', top: 0, left: 0 }}
         >
           {sidebarBody}
