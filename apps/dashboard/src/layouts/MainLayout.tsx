@@ -120,8 +120,12 @@ export function MainLayout() {
           <img src="/mpms-logo-text.png" alt="MPMS" style={{ height: 32, objectFit: 'contain' }} />
         </div>
       ) : collapsed ? (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 0 8px', flexShrink: 0 }}>
-          <img src="/mpms-logo.png" alt="MPMS" style={{ height: 24, objectFit: 'contain', opacity: 0.65 }} />
+        // Collapsed rail — only the expand chevron. MPMS mark hidden:
+        // the square asset still showed up as a tiny logo above the
+        // chevron and Milos 14.06.2026 found it noisy in icon-rail
+        // mode. Top of sidebar already carries the brand when
+        // collapsed (mpms-logo.png), so we're not losing it product-wide.
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '4px 0 8px', flexShrink: 0 }}>
           <Button
             type="text"
             size="small"
