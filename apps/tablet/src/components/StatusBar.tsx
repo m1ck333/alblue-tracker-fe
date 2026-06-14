@@ -14,7 +14,7 @@ export function StatusBar() {
   return (
     <div className="bg-primary-500 text-white px-4 py-3 flex items-center justify-between">
       <div className="flex items-center gap-3 min-w-0">
-        <img src="/alblue-logo-text.png" alt="Alblue" className="h-6 object-contain flex-shrink-0" />
+        <img src="/mpms-logo-text.png" alt="MPMS" className="h-6 object-contain flex-shrink-0" />
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
         {user && (

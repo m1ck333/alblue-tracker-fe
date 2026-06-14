@@ -82,9 +82,14 @@ export function MainLayout() {
           gap: 8,
         }}
       >
+        {/* Top of sidebar — Saša 14.06.2026 convention: this slot belongs
+            to the per-tenant CLIENT logo once Tenant.LogoUrl lands. For now
+            (Phase 1 of the MPMS rebrand) we just put the MPMS mark here
+            too so the layout doesn't have an empty box. Replace src with
+            the resolved tenant logo URL when that field exists. */}
         <img
-          src={isMobile || !collapsed ? '/alblue-logo-text.png' : '/alblue-logo.png'}
-          alt="Alblue"
+          src={isMobile || !collapsed ? '/mpms-logo-text.png' : '/mpms-logo.png'}
+          alt="MPMS"
           style={{ height: isMobile || !collapsed ? 28 : 32, objectFit: 'contain' }}
         />
         {isMobile && (
@@ -100,6 +105,14 @@ export function MainLayout() {
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         <SidebarMenu collapsed={isMobile ? false : collapsed} />
       </div>
+      {/* MPMS product mark — Saša 14.06.2026 convention: sits at the
+          bottom of the sidebar above the user/notifications footer.
+          Hidden when the sidebar is collapsed (no horizontal room). */}
+      {(isMobile || !collapsed) && (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0', opacity: 0.6 }}>
+          <img src="/mpms-logo-text.png" alt="MPMS" style={{ height: 20, objectFit: 'contain' }} />
+        </div>
+      )}
       <SidebarFooter collapsed={isMobile ? false : collapsed} />
     </div>
   );
