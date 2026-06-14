@@ -72,7 +72,7 @@ export function MainLayout() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div
         style={{
-          height: 48,
+          height: 72,
           margin: 16,
           display: 'flex',
           alignItems: 'center',
@@ -90,7 +90,7 @@ export function MainLayout() {
         <img
           src={isMobile || !collapsed ? '/mpms-logo-text.png' : '/mpms-logo.png'}
           alt="MPMS"
-          style={{ height: isMobile || !collapsed ? 28 : 32, objectFit: 'contain' }}
+          style={{ height: isMobile || !collapsed ? 56 : 36, objectFit: 'contain' }}
         />
         {isMobile && (
           <Button
@@ -105,15 +105,17 @@ export function MainLayout() {
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         <SidebarMenu collapsed={isMobile ? false : collapsed} />
       </div>
-      {/* MPMS product mark — Saša 14.06.2026 convention: sits at the
-          bottom of the sidebar above the user/notifications footer.
-          Hidden when the sidebar is collapsed (no horizontal room). */}
+      <SidebarFooter collapsed={isMobile ? false : collapsed} />
+      {/* MPMS product mark — Saša 14.06.2026 convention: at the very
+          bottom of the sidebar as a "powered by" footer below the user
+          row. Hidden when the sidebar is collapsed (no horizontal room).
+          Lower opacity so it reads as a watermark, not a competing
+          element with the tenant logo at the top. */}
       {(isMobile || !collapsed) && (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0', opacity: 0.6 }}>
-          <img src="/mpms-logo-text.png" alt="MPMS" style={{ height: 20, objectFit: 'contain' }} />
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 16px', opacity: 0.65, flexShrink: 0 }}>
+          <img src="/mpms-logo-text.png" alt="MPMS" style={{ height: 36, objectFit: 'contain' }} />
         </div>
       )}
-      <SidebarFooter collapsed={isMobile ? false : collapsed} />
     </div>
   );
 
