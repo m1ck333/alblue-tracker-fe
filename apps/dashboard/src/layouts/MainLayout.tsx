@@ -131,7 +131,12 @@ export function MainLayout() {
           />
         </div>
       ) : (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px 8px', flexShrink: 0 }}>
+        // Padding-left 24 aligns the MPMS mark with the menu-item icons
+        // above (Info / Obaveštenja / Admin User); padding-right 16
+        // lines the collapse button up with the dropdown carets antd
+        // renders on expandable menu items. Reads as part of the menu,
+        // not a floating bottom row (Milos screenshot 14.06.2026).
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 16px 8px 24px', flexShrink: 0 }}>
           <img src="/mpms-logo-text.png" alt="MPMS" style={{ height: 28, objectFit: 'contain', opacity: 0.65 }} />
           <Button
             type="text"
