@@ -88,11 +88,16 @@ export function TabletLoginPage() {
   const submitting = isLoading || settingUp;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+    // Background matches the dashboard sidebar navy so the tablet feels
+    // like the same product — Milos 14.06.2026.
+    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#001529' }}>
       <div className="card w-full max-w-md">
-        <h1 className="text-tablet-2xl font-bold text-center text-primary-500 mb-2">
-          {t('common:appName')}
-        </h1>
+        <img
+          src="/mpms-logo-text.png"
+          alt="MPMS"
+          className="block mx-auto mb-2"
+          style={{ height: 120, objectFit: 'contain' }}
+        />
         <p className="text-center text-gray-500 mb-8 text-tablet-sm">
           {t('login.subtitle')}
         </p>

@@ -4,8 +4,6 @@ import { UserOutlined, LockOutlined, BankOutlined, InfoCircleOutlined } from '@a
 import { useAuthStore } from '@alblue/auth';
 import { useTranslation } from '@alblue/i18n';
 
-const { Title } = Typography;
-
 export function LoginPage() {
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -29,13 +27,17 @@ export function LoginPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    // Background matches the sidebar navy so the login screen reads as
+    // "same product" rather than a separate site — Milos 14.06.2026.
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#001529' }}>
     <Card style={{ width: 400, boxShadow: token.boxShadow }}>
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0 }}>
-          {t('login.title')}
-        </Title>
-        <Typography.Text type="secondary">{t('login.subtitle')}</Typography.Text>
+        <img
+          src="/mpms-logo-text.png"
+          alt="MPMS"
+          style={{ height: 96, objectFit: 'contain', marginBottom: 8 }}
+        />
+        <Typography.Text type="secondary" style={{ display: 'block' }}>{t('login.subtitle')}</Typography.Text>
       </div>
 
       {error && (
