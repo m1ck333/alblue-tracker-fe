@@ -7,6 +7,12 @@ export const usersApi = {
     return apiClient.get<PagedResult<UserDto>>('/users', { params });
   },
 
+  // SuperAdmin-only: every SuperAdmin across every tenant. BE returns a
+  // plain list (not paged) — SA count is small (<20 expected).
+  getSuperAdmins() {
+    return apiClient.get<UserDto[]>('/users/super-admins');
+  },
+
   getById(id: string) {
     return apiClient.get<UserDto>(`/users/${id}`);
   },

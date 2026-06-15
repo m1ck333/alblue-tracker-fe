@@ -30,6 +30,13 @@ const FORBIDDEN_MESSAGE_KEY: Record<string, string> = {
   CHANGE_PASSWORD_NOT_SELF: 'errors.changePasswordNotSelf',
 };
 setOnForbidden((code) => {
+  // If the code already has a per-form translation in common:errors, the
+  // page-level mutation onError will surface it via getTranslatedError —
+  // staying silent here prevents the duplicate toast (Milos 15.06.2026,
+  // two stacked toasts for READ_ONLY_CROSS_TENANT in different locales).
+  if (code && i18n.t(`common:errors.${code}`, { defaultValue: '' })) {
+    return;
+  }
   const key = (code && FORBIDDEN_MESSAGE_KEY[code]) ?? 'errors.forbiddenGeneric';
   message.error(i18n.t(key));
 });

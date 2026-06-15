@@ -27,7 +27,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationsApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
-import { useTranslation } from '@alblue/i18n';
+import { useTranslation, useEnumTranslation } from '@alblue/i18n';
 import type { NotificationDto } from '@alblue/shared-types';
 import { NotificationType } from '@alblue/shared-types';
 import { useSignalREvent, SignalREvents } from '@alblue/signalr-client';
@@ -126,6 +126,7 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const { t, i18n } = useTranslation('dashboard');
+  const { tEnum } = useEnumTranslation();
   const queryClient = useQueryClient();
   const { token } = theme.useToken();
   const themeMode = useThemeStore((s) => s.mode);
@@ -380,7 +381,7 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
     <div style={{ width: 240 }}>
       <Space direction="vertical" size={0} style={{ width: '100%' }}>
         <Text strong>{user?.fullName}</Text>
-        <Text type="secondary" style={{ fontSize: 12 }}>{user?.role}</Text>
+        <Text type="secondary" style={{ fontSize: 12 }}>{user?.role ? tEnum('UserRole', user.role) : ''}</Text>
       </Space>
       <Divider style={{ margin: '12px 0' }} />
       <Space direction="vertical" size={10} style={{ width: '100%' }}>

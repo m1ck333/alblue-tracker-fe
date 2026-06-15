@@ -1,8 +1,9 @@
 import { useState, useEffect, Suspense } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
-import { Layout, theme, Grid, Button, Drawer, Spin } from 'antd';
-import { MenuOutlined, CloseOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Layout, theme, Grid, Button, Drawer, Spin, Alert } from 'antd';
+import { MenuOutlined, CloseOutlined, LeftOutlined, RightOutlined, EyeOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuthStore } from '@alblue/auth';
+import { useTranslation } from '@alblue/i18n';
 import {
   createConnection,
   startConnection,
@@ -13,6 +14,7 @@ import { SidebarMenu } from '../components/SidebarMenu';
 import { SidebarFooter } from '../components/SidebarFooter';
 import { ConnectionAlert } from '../components/ConnectionAlert';
 import { useSignalRQueryInvalidation } from '../hooks/useSignalRQueryInvalidation';
+import { useTenantLogo } from '../hooks/useTenantLogo';
 import { useLayoutStore } from '../stores/layout-store';
 
 const { Sider, Content } = Layout;
@@ -21,6 +23,10 @@ export function MainLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const tenantId = useAuthStore((s) => s.tenantId);
+  const isCrossTenantSession = useAuthStore((s) => s.isCrossTenantSession);
+  const logout = useAuthStore((s) => s.logout);
+  const navigate = useNavigate();
+  const { t } = useTranslation('dashboard');
   const { token: themeToken } = theme.useToken();
   const fullscreen = useLayoutStore((s) => s.fullscreen);
   const screens = Grid.useBreakpoint();
@@ -29,6 +35,7 @@ export function MainLayout() {
   // hamburger button that opens a Drawer with the menu.
   const isMobile = screens.lg === false;
   const location = useLocation();
+  const tenantLogoUrl = useTenantLogo();
 
   // Auto-close the mobile drawer whenever the route changes (clicking a
   // menu item navigates, so the user expects the menu to dismiss).
@@ -82,14 +89,14 @@ export function MainLayout() {
           gap: 8,
         }}
       >
-        {/* Top of sidebar — Saša 14.06.2026 convention: this slot belongs
-            to the per-tenant CLIENT logo once Tenant.LogoUrl lands. For now
-            (Phase 1 of the MPMS rebrand) we just put the MPMS mark here
-            too so the layout doesn't have an empty box. Replace src with
-            the resolved tenant logo URL when that field exists. */}
+        {/* Top of sidebar — Saša 14.06.2026 convention: this slot is the
+            per-tenant CLIENT logo. When the tenant hasn't uploaded one yet
+            (or while the blob is loading) we fall back to the MPMS mark so
+            the layout never has an empty box. Bottom of sidebar always
+            stays MPMS — that's the product brand, not the client's. */}
         <img
-          src={isMobile || !collapsed ? '/mpms-logo-text.png' : '/mpms-logo.png'}
-          alt="MPMS"
+          src={tenantLogoUrl ?? (isMobile || !collapsed ? '/mpms-logo-text.png' : '/mpms-logo.png')}
+          alt={tenantLogoUrl ? 'Logo' : 'MPMS'}
           style={{ height: isMobile || !collapsed ? 56 : 36, objectFit: 'contain' }}
         />
         {isMobile && (
@@ -219,6 +226,32 @@ export function MainLayout() {
           }}
         >
           {!fullscreen && <ConnectionAlert />}
+          {!fullscreen && isCrossTenantSession && (
+            // Persistent banner during cross-tenant SuperAdmin sessions.
+            // Eye icon + warning color + "vrati se" CTA so the operator can
+            // never confuse this session with their normal home-tenant one.
+            // BE middleware enforces read-only too — banner is the UX cue.
+            <Alert
+              type="warning"
+              showIcon
+              icon={<EyeOutlined />}
+              message={t('crossTenant.banner')}
+              style={{ marginBottom: 16 }}
+              action={
+                <Button
+                  size="small"
+                  type="primary"
+                  icon={<LogoutOutlined />}
+                  onClick={() => {
+                    logout();
+                    navigate('/login', { replace: true });
+                  }}
+                >
+                  {t('crossTenant.exit')}
+                </Button>
+              }
+            />
+          )}
           <Suspense
             fallback={
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, minHeight: 200 }}>

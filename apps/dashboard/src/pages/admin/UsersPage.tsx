@@ -120,7 +120,13 @@ function RoleHistorySection({ userId }: { userId: string }) {
   );
 }
 
-export function UsersPage() {
+interface UsersPageProps {
+  /** When true, suppress the top PageHeader — used when embedding as a
+   *  tab panel inside KorisniciPage so the parent owns the header. */
+  hideHeader?: boolean;
+}
+
+export function UsersPage({ hideHeader = false }: UsersPageProps = {}) {
   const tenantId = useAuthStore((s) => s.tenantId);
   const currentUserId = useAuthStore((s) => s.user?.id);
   const currentUserRole = useAuthStore((s) => s.user?.role);
@@ -368,9 +374,28 @@ export function UsersPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <PageHeader
-        title={t('admin.users.title')}
-        actions={<><div style={{ display: 'flex', gap: 8 }}>
+      {!hideHeader && (
+        <PageHeader
+          title={t('admin.users.title')}
+          actions={<><div style={{ display: 'flex', gap: 8 }}>
+            <TableExportButton
+              onFetchAll={fetchAllUsers}
+              columns={exportColumns}
+              options={{
+                fileName: `users-${dayjs().format('YYYY-MM-DD')}`,
+                title: `${t('common:appName')} — ${t('admin.users.title')}`,
+                filters: exportFilters,
+                sheetName: t('admin.users.title'),
+              }}
+            />
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+              {t('admin.users.addUser')}
+            </Button>
+          </div></>}
+        />
+      )}
+      {hideHeader && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 16 }}>
           <TableExportButton
             onFetchAll={fetchAllUsers}
             columns={exportColumns}
@@ -384,8 +409,8 @@ export function UsersPage() {
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
             {t('admin.users.addUser')}
           </Button>
-        </div></>}
-      />
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16 , flexWrap: 'wrap' }}>
         <Input.Search

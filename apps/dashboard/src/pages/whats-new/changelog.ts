@@ -46,6 +46,32 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    id: '2026-06-15-firma-logo',
+    date: '2026-06-15',
+    title: {
+      sr: 'Firma — logo i objedinjene stranice',
+      en: 'Company — logo upload and unified pages',
+    },
+    bullets: [
+      {
+        sr: 'Nova sidebar stavka „Firma" objedinjuje sve što se ranije zvalo „Profil firme" — podešavanja firme su sad na jednom mestu, jedan klik manje u meniju.',
+        en: 'New sidebar item "Company" unifies what used to be "Company profile" — every firm-level setting is in one place, one fewer click in the menu.',
+      },
+      {
+        sr: 'Nova sekcija „Logo firme" na stranici Firma — Admin može da otpremi logo (PNG, JPG ili SVG, do 2 MB). Otpremljeni logo se odmah prikazuje gore-levo u sidebaru kao zaglavlje aplikacije, umesto podrazumevanog. Slika se automatski smanjuje na razumnu veličinu, kliknom na pregled otvara se uvećani prikaz, a postoji i dugme „Ukloni logo".',
+        en: 'New "Company logo" section on the Company page — Admin can upload a logo (PNG, JPG, or SVG, up to 2 MB). The uploaded logo immediately replaces the default mark at the top of the sidebar. The image is auto-compressed to a sensible size, clicking the preview opens a larger view, and there\'s a "Remove logo" button.',
+      },
+      {
+        sr: 'Stranica Firma prikazuje pune vrednosti odmah po otvaranju (rokovi narudžbina, boje upozorenja) — više nema kratkog praznog stanja dok se podaci učitavaju.',
+        en: 'The Company page shows full values immediately on open (order deadlines, warning colors) — no more brief empty state while data loads.',
+      },
+      {
+        sr: 'Sitno: na listi firmi i u formama svuda gde je pisalo „Šifra" stoji „Kod" — „šifra" se u srpskom često meša sa lozinkom, „kod" je jasniji izraz.',
+        en: 'Minor: across the Tenants list and forms, "Šifra" was renamed to "Kod" (Serbian for "code") — "šifra" was easily confused with "password".',
+      },
+    ],
+  },
+  {
     id: '2026-06-10-magacin-finishing-touches',
     date: '2026-06-10',
     title: {
@@ -78,8 +104,8 @@ export const changelog: ChangelogEntry[] = [
         en: 'Issue form: if the requested quantity exceeds the on-hand amount, the system rejects the entry with "Insufficient stock for CODE — NAME: currently X UoM, requested Y UoM" — stock cannot go below zero.',
       },
       {
-        sr: 'Alarm za minimum zaliha (po potvrdi Saše): kada Izlaz prevede materijal iz stanja iznad minimuma u stanje ispod minimuma, na kontrolnoj tabli koordinatora pojavi se brojač „Materijali ispod min" (crveni broj klikom vodi na Stanje sa filterom „Ispod min"), a u zvoncetu se kreira obaveštenje „Materijal ispod minimuma: KOD — NAZIV" za sve menadžment uloge (SuperAdmin, Admin, Menadžer, Koordinator). Ako je materijal već bio ispod min, dodatni Izlazi ne stvaraju nove notifikacije — tek kad se vrati iznad min i ponovo padne ispod.',
-        en: 'Low-stock alarm (per Saša\'s confirmation): when an Issue brings a material from at-or-above min down to below min, the coordinator dashboard shows a "Materials below min" counter (the red number is clickable and navigates to Stock filtered to "Below min"), and a "Material below minimum: CODE — NAME" notification is created in the bell for every management user (SuperAdmin, Admin, Manager, Coordinator). If the material was already below min, follow-up Issues don\'t create extra notifications — a new one fires only after the stock is restored above min and crosses back below.',
+        sr: 'Alarm za minimum zaliha (po potvrdi Saše): kada Izlaz prevede materijal iz stanja iznad minimuma u stanje ispod minimuma, na kontrolnoj tabli koordinatora pojavi se brojač „Materijali ispod min" (crveni broj klikom vodi na Stanje sa filterom „Ispod min"), a u zvoncetu se kreira obaveštenje „Materijal ispod minimuma: KOD — NAZIV" za sve menadžment uloge (Super administrator, Administrator, Menadžer, Koordinator). Ako je materijal već bio ispod min, dodatni Izlazi ne stvaraju nove notifikacije — tek kad se vrati iznad min i ponovo padne ispod.',
+        en: 'Low-stock alarm (per Saša\'s confirmation): when an Issue brings a material from at-or-above min down to below min, the coordinator dashboard shows a "Materials below min" counter (the red number is clickable and navigates to Stock filtered to "Below min"), and a "Material below minimum: CODE — NAME" notification is created in the bell for every management user (Super Administrator, Administrator, Manager, Coordinator). If the material was already below min, follow-up Issues don\'t create extra notifications — a new one fires only after the stock is restored above min and crosses back below.',
       },
       {
         sr: 'Obaveštenja prate jezik aplikacije: tekst „Materijal ispod minimuma…" se odmah prepravlja kada se jezik promeni u profilu, bez osvežavanja stranice.',
@@ -380,8 +406,8 @@ export const changelog: ChangelogEntry[] = [
         en: 'Blocked deletion of the last Admin in a company — a company can never end up without an administrator.',
       },
       {
-        sr: 'Promena uloge korisnika sada zahteva SuperAdmin pravo.',
-        en: 'Changing a user role now requires SuperAdmin privileges.',
+        sr: 'Promena uloge korisnika sada zahteva nivo super administratora.',
+        en: 'Changing a user role now requires Super Administrator privileges.',
       },
       {
         sr: 'Prilikom promene uloge korisnika, njegove postojeće sesije se odjavljuju — stara prava ne mogu da nastave da važe.',

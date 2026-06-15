@@ -460,6 +460,7 @@ Open to Admin and Manager roles.
 | **Order types** | Standard, Complaint etc. "Manual process selection" toggle. |
 | **Special request types** | Per-item process modifiers (add/remove/only listed). |
 | **Shifts** | Define work shifts. Per-shift settings: break, max overtime, **auto-logout overtime** (per session), alarm before logout, and **auto-logout regular (h)** — the time after which the system automatically closes a worker's session (e.g. 8.5h for an 8h shift with 30 min grace). |
+| **Company** | Settings for your own firm: logo (PNG/JPG/SVG, up to 2 MB — shown top-left in the sidebar), order deadlines (days before delivery for yellow warning and red critical), and warning colors. Upload a logo with "Upload logo" (or "Replace logo" if one exists); click the preview to open an enlarged view. |
 
 ### 3.9 Coordinator dashboard
 
@@ -505,7 +506,7 @@ first sign-in (the system asks for permission).
 
 ### 3.11 Warehouse
 
-Open for roles Admin, Manager, Coordinator, SuperAdmin, and **Warehouse
+Open for roles Administrator, Manager, Coordinator, Super Administrator, and **Warehouse
 worker** (Magacioner). Warehouse worker is a separate role that can be
 assigned alongside another (e.g. coordinator + warehouse worker at
 once). The warehouse worker has access to every warehouse page and
@@ -665,8 +666,8 @@ below the minimum, the system automatically notifies management:
   **Materials below min** cell showing how many materials are
   currently below their minimum. The red number is clickable and
   navigates to Warehouse stock with the "Below min" filter applied.
-- **Notification bell** — every user with role SuperAdmin, Admin,
-  Manager, or Coordinator (and combinations including the Warehouse
+- **Notification bell** — every user with role Super Administrator,
+  Administrator, Manager, or Coordinator (and combinations including the Warehouse
   worker role) receives a "**Material below minimum: CODE — NAME**"
   notification with the current on-hand quantity, the minimum, and
   the unit of measure. The text follows the active app language and

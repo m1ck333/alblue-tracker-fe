@@ -11,12 +11,18 @@
     "bootFallback": "Došlo je do greške. Pokušajte ponovo."
   },
   "errors": {
-    "forbiddenRoleChange": "Samo SuperAdmin može da menja ulogu korisnika.",
+    "forbiddenRoleChange": "Samo super administrator može da menja ulogu korisnika.",
     "lastAdminRemoval": "Nije moguće ukloniti poslednjeg aktivnog Admina u sistemu.",
     "selfDeleteForbidden": "Ne možete obrisati sopstveni nalog.",
-    "superAdminDeleteForbidden": "Samo SuperAdmin može da obriše SuperAdmin nalog.",
+    "superAdminDeleteForbidden": "Samo super administrator može da obriše nalog drugog super administratora.",
     "changePasswordNotSelf": "Možete menjati samo sopstvenu lozinku.",
-    "forbiddenGeneric": "Vaša uloga nema dozvolu za ovu akciju."
+    "forbiddenGeneric": "Vaša uloga nema dozvolu za ovu akciju.",
+    "readOnlyCrossTenant": "Pristup je samo za pregled — ne možete menjati podatke u tuđoj firmi.",
+    "peerSuperAdmin": "Nalozi super administratora ne mogu da se menjaju, brišu ili da im se resetuje lozinka — to mora vlasnik naloga preko svog profila."
+  },
+  "crossTenant": {
+    "banner": "Prijavljen si kao super administrator u tuđoj firmi — pristup je samo za pregled.",
+    "exit": "Vrati se na svoj nalog"
   },
   "nav": {
     "dashboard": "Kontrolna tabla",
@@ -31,6 +37,8 @@
     "orderTypes": "Tipovi narudžbine",
     "specialRequests": "Specijalni zahtevi",
     "tenants": "Firme",
+    "tenantProfile": "Profil firme",
+    "firma": "Firma",
     "shifts": "Smene",
     "materials": "Materijali",
     "warehouse": "Magacin",
@@ -460,6 +468,11 @@
       "deactivate": "Deaktiviraj",
       "deactivated": "Firma deaktivirana",
       "deactivateConfirm": "Da li ste sigurni da želite da deaktivirate ovu firmu?",
+      "activate": "Aktiviraj",
+      "activated": "Firma aktivirana",
+      "activateConfirm": "Da li ste sigurni da želite da aktivirate ovu firmu?",
+      "initialAdmin": "Inicijalni Admin firme",
+      "adminCreateFailed": "Firma kreirana, ali inicijalni Admin nije. Kreiraj Admina ručno za ovu firmu.",
       "defaultWarningDays": "Dani upozorenja",
       "defaultCriticalDays": "Kritični dani",
       "warningColor": "Boja upozorenja",
@@ -597,7 +610,7 @@
     "statusBelowNorm": "Ispod norme",
     "statusUnacceptable": "Neprihvatljivo",
     "chartWorkDistribution": "Raspodela radnog vremena po radniku",
-    "processCode": "Šifra",
+    "processCode": "Kod",
     "processName": "Proces",
     "complexityT": "Teško",
     "complexityS": "Srednje",

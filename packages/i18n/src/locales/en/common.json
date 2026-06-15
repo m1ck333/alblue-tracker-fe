@@ -101,6 +101,8 @@
     "INVALID_NAME": "Name is required",
     "INVALID_CURRENT_PASSWORD": "Current password is incorrect",
     "INVALID_REFRESH_TOKEN": "Session expired, please sign in again",
+    "READ_ONLY_CROSS_TENANT": "Read-only access — you can't modify another tenant's data.",
+    "FORBIDDEN_PEER_SUPERADMIN": "Super Administrator accounts can't be edited, deleted, or have their password reset — the owner must do it through their own profile.",
     "NOT_FOUND": "The requested item was not found",
     "PROCESS_NOT_STARTED": "The parent process must be started first",
     "PROCESS_NOT_IN_CATEGORY": "Process is not in this category",
@@ -193,7 +195,7 @@
       "PriorityChange": "Priority Change"
     },
     "UserRole": {
-      "SuperAdmin": "Super Admin",
+      "SuperAdmin": "Super Administrator",
       "Admin": "Admin",
       "Manager": "Manager",
       "Coordinator": "Coordinator",

@@ -465,6 +465,7 @@ Otvoreno za uloge Admin i Manager.
 | **Tipovi narudžbina** | Standardna, Reklamacija itd. Prekidač "Ručni izbor procesa". |
 | **Tipovi specijalnih zahteva** | Modifikatori procesa po stavki (dodaj/ukloni/samo navedene). |
 | **Smene** | Definisanje radnih smena. Podešavanja po smeni: pauza, max prekovremeno, **auto-odjava prekovremeno** (po sesiji), alarm pre odjave, i **auto-odjava redovan rad (h)** — vreme posle koga sistem automatski zatvara radnikovu sesiju (npr. 8.5h za smenu od 8h sa 30 min produžetka). |
+| **Firma** | Podešavanja sopstvene firme: logo (PNG/JPG/SVG, do 2 MB — prikazuje se gore-levo u sidebaru), rokovi narudžbina (broj dana pre roka isporuke za žuto upozorenje i crveno kritično), i boje upozorenja. Logo se otprema klikom na „Otpremi logo" (ili „Zameni logo" ako već postoji), a klik na pregled otvara uvećani prikaz. |
 
 ### 3.9 Kontrolna tabla koordinatora
 
@@ -510,7 +511,7 @@ prijave (sistem traži dozvolu).
 
 ### 3.11 Magacin
 
-Otvoreno za uloge Admin, Manager, Coordinator, SuperAdmin i
+Otvoreno za uloge Administrator, Menadžer, Koordinator, Super administrator i
 **Magacioner**. Magacioner je posebna uloga koja se može dodeliti
 nekom korisniku pored njegove glavne uloge (npr. koordinator + magacioner
 istovremeno). Magacioner ima pristup svim stranicama Magacina i može da
@@ -671,8 +672,8 @@ ispod minimuma, sistem automatski obaveštava menadžment:
   materijala koji su trenutno ispod svog minimuma. Crveni broj
   klikom vodi na Stanje magacina sa već primenjenim filterom „Ispod
   min".
-- **Obaveštenje u zvoncetu** — svaki korisnik sa ulogom SuperAdmin,
-  Admin, Manager ili Koordinator (uključujući kombinacije sa
+- **Obaveštenje u zvoncetu** — svaki korisnik sa ulogom Super administrator,
+  Administrator, Menadžer ili Koordinator (uključujući kombinacije sa
   Magacioner ulogom) dobija obaveštenje „**Materijal ispod
   minimuma: KOD — NAZIV**" sa detaljima trenutnog stanja, minimuma
   i jedinice mere. Tekst obaveštenja prati izabrani jezik aplikacije

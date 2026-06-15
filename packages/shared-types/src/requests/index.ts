@@ -21,6 +21,12 @@ export interface CreateUserRequest {
   lastName: string;
   role: UserRole;
   processIds?: string[];
+  /**
+   * Override the tenant this user is created in. SuperAdmin only — BE
+   * rejects this for non-SuperAdmin callers. Used by the tenant-creation
+   * flow to seed the initial Admin in the freshly-created tenant.
+   */
+  tenantId?: string;
 }
 
 export interface UpdateUserRequest {

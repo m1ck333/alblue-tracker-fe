@@ -11,12 +11,18 @@
     "bootFallback": "An error occurred. Please try again."
   },
   "errors": {
-    "forbiddenRoleChange": "Only a SuperAdmin can change user roles.",
+    "forbiddenRoleChange": "Only a Super Administrator can change user roles.",
     "lastAdminRemoval": "Cannot remove the last active Admin from the system.",
     "selfDeleteForbidden": "You cannot delete your own account.",
-    "superAdminDeleteForbidden": "Only a SuperAdmin can delete a SuperAdmin account.",
+    "superAdminDeleteForbidden": "Only a Super Administrator can delete another Super Administrator's account.",
     "changePasswordNotSelf": "You can only change your own password.",
-    "forbiddenGeneric": "Your role does not have permission for this action."
+    "forbiddenGeneric": "Your role does not have permission for this action.",
+    "readOnlyCrossTenant": "Read-only access — you can't modify another tenant's data.",
+    "peerSuperAdmin": "Super Administrator accounts can't be edited, deleted, or have their password reset — the owner must do it through their own profile."
+  },
+  "crossTenant": {
+    "banner": "Signed in as Super Administrator to another tenant — read-only access.",
+    "exit": "Return to your own account"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -31,6 +37,8 @@
     "orderTypes": "Order Types",
     "specialRequests": "Special Requests",
     "tenants": "Tenants",
+    "tenantProfile": "Company profile",
+    "firma": "Company",
     "shifts": "Shifts",
     "materials": "Materials",
     "warehouse": "Warehouse",
@@ -458,6 +466,11 @@
       "deactivate": "Deactivate",
       "deactivated": "Tenant deactivated",
       "deactivateConfirm": "Are you sure you want to deactivate this tenant?",
+      "activate": "Activate",
+      "activated": "Tenant activated",
+      "activateConfirm": "Are you sure you want to activate this tenant?",
+      "initialAdmin": "Initial Tenant Admin",
+      "adminCreateFailed": "Tenant created, but initial Admin was not. Create an Admin for this tenant manually.",
       "defaultWarningDays": "Warning Days",
       "defaultCriticalDays": "Critical Days",
       "warningColor": "Warning Color",

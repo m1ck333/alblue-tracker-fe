@@ -486,6 +486,10 @@ export interface TenantDto {
   isActive: boolean;
   createdAt: string;
   updatedAt: string | null;
+  /** Relative path to the uploaded client logo (e.g. "tenant-logos/{id}.png").
+   *  Null when the tenant hasn't uploaded one; sidebar falls back to the
+   *  default MPMS mark. Streamed via GET /api/tenants/me/logo. */
+  logoUrl: string | null;
 }
 
 export interface TenantSettingsDto {

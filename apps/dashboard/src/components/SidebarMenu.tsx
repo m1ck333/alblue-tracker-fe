@@ -131,10 +131,10 @@ export function SidebarMenu({ collapsed: _collapsed }: SidebarMenuProps) {
         { key: '/admin/order-types', icon: <ProfileOutlined />, label: t('nav.orderTypes') },
         { key: '/admin/special-request-types', icon: <TagOutlined />, label: t('nav.specialRequests') },
         { key: '/admin/materials', icon: <BlockOutlined />, label: t('nav.materials') },
-        role === UserRole.SuperAdmin && {
-          key: '/admin/tenants',
+        {
+          key: '/admin/firma',
           icon: <BankOutlined />,
-          label: t('nav.tenants'),
+          label: t('nav.firma', { defaultValue: 'Firma' }),
         },
         { key: '/admin/shifts', icon: <ClockCircleOutlined />, label: t('nav.shifts') },
       ].filter(Boolean),
