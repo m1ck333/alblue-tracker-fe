@@ -23,7 +23,7 @@ export function StatusBar() {
         <img
           src={tenantLogoUrl ?? '/mpms-logo-text.png'}
           alt={tenantLogoUrl ? 'Logo' : 'MPMS'}
-          className="h-6 object-contain flex-shrink-0"
+          className="h-10 object-contain flex-shrink-0"
         />
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
