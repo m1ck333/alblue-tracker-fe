@@ -106,8 +106,7 @@
       "JWT authentication with roles (Admin, Manager, Coordinator, Sales, Department)"
     ],
     "ctaTitle": "Interested?",
-    "ctaText": "Get in touch:",
-    "ctaEmail": "sales@algreen.rs",
+    "ctaText": "For access and support, contact your company administrator.",
     "backToLogin": "Back to sign in",
     "learnMore": "Learn more about the app"
   },

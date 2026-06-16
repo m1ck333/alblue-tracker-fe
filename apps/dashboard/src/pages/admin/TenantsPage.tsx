@@ -22,7 +22,7 @@ import { getTranslatedError } from '../../utils/errors';
 // Defaults for warning / critical days seeded at tenant creation time so
 // the new tenant's Admin has something sensible until they tune them via
 // Profil firme (Milos 15.06.2026 — those numbers are the tenant's own
-// settings, not Skysoft's concern).
+// settings, not a SuperAdmin concern).
 const DEFAULT_WARNING_DAYS = 7;
 const DEFAULT_CRITICAL_DAYS = 3;
 
@@ -80,8 +80,8 @@ export function TenantsPage({ hideHeader = false }: TenantsPageProps = {}) {
   // Tenant creation is a two-step server-side flow because tenant + user
   // live in different modules with different DbContexts (no shared
   // transaction). On admin-creation failure the tenant exists but is
-  // adminless — we surface a clear error so Skysoft can recover from DB,
-  // and a future commit will add a "create Admin for tenant X" button.
+  // adminless — we surface a clear error so a SuperAdmin can recover from
+  // DB, and a future commit will add a "create Admin for tenant X" button.
   const createMutation = useMutation({
     mutationFn: async (values: Record<string, unknown>) => {
       const tenant = await tenantsApi.create({
@@ -402,10 +402,10 @@ export function TenantsPage({ hideHeader = false }: TenantsPageProps = {}) {
           <Form.Item name="code" label={t('common:labels.code')} rules={[{ required: true }]}>
             <Input disabled={!isCreating} />
           </Form.Item>
-          {/* Initial Admin user — only on creation. Skysoft (SuperAdmin)
-              creates the tenant + first Admin in one drawer; the new
-              Admin then manages everything else (warning/critical days,
-              theme colors, later logo) from Profil firme. */}
+          {/* Initial Admin user — only on creation. A SuperAdmin creates
+              the tenant + first Admin in one drawer; the new Admin then
+              manages everything else (warning/critical days, theme
+              colors, later logo) from Profil firme. */}
           {isCreating && (
             <>
               <Divider>{t('admin.tenants.initialAdmin', { defaultValue: 'Inicijalni Admin firme' })}</Divider>

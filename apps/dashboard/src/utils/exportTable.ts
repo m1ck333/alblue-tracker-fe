@@ -177,7 +177,7 @@ export async function exportToXlsx<T>(
   ]);
   const workbook = new ExcelJS.Workbook();
   workbook.created = new Date();
-  workbook.creator = 'Algreen MES';
+  workbook.creator = 'MPMS';
   const sheet = workbook.addWorksheet(options.sheetName ?? 'Sheet1');
 
   const colCount = columns.length;

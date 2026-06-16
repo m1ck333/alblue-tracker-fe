@@ -24,8 +24,8 @@ settings.
 
 | Application | URL |
 |---|---|
-| Dashboard | https://alblue.duckdns.org/login |
-| Tablet | https://alblue-tablet.duckdns.org/login |
+| Dashboard | The URL provided by your company administrator |
+| Tablet | The tablet URL provided by your company administrator |
 
 Sign-in fields:
 
@@ -692,8 +692,8 @@ below the minimum, the system automatically notifies management:
 
 ### 4.1 Installation
 
-1. Open https://alblue-tablet.duckdns.org in Chrome (Android) or
-   Safari (iOS).
+1. Open the tablet app URL (provided by your administrator) in
+   Chrome (Android) or Safari (iOS).
 2. Browser menu → **Add to Home screen**.
 3. The icon appears on the home screen. The app behaves like a native
    app (offline, push notifications).
@@ -886,4 +886,4 @@ language is detected from the visitor's browser preferences.
 
 ---
 
-*For any questions or feedback: **sales@algreen.rs***
+*For any questions or feedback, contact your company administrator.*

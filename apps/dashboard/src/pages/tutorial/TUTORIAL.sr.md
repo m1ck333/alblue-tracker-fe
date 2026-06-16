@@ -25,8 +25,8 @@ podešavanja.
 
 | Aplikacija | URL |
 |---|---|
-| Kontrolna tabla | https://alblue.duckdns.org/login |
-| Tablet | https://alblue-tablet.duckdns.org/login |
+| Kontrolna tabla | URL koji vam je dao administrator vaše firme |
+| Tablet | URL tablet aplikacije koji vam je dao administrator |
 
 Polja prilikom prijave:
 
@@ -696,8 +696,8 @@ ispod minimuma, sistem automatski obaveštava menadžment:
 
 ### 4.1 Instalacija
 
-1. Otvori https://alblue-tablet.duckdns.org u Chrome (Android) ili
-   Safari (iOS).
+1. Otvori URL tablet aplikacije (koji vam je dao administrator) u
+   Chrome (Android) ili Safari (iOS).
 2. Meni pretraživača → **Add to Home screen** / **Dodaj na početni
    ekran**.
 3. Ikona se pojavljuje na home screen-u. Aplikacija se ponaša kao
@@ -886,4 +886,4 @@ prema podešavanju pretraživača posetioca.
 
 ---
 
-*Za sva pitanja i komentare: **sales@algreen.rs***
+*Za sva pitanja i komentare obratite se administratoru vaše firme.*

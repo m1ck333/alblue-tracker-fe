@@ -24,9 +24,9 @@ function resolveColor(value: unknown, fallback: string): string {
 /**
  * "Profil firme" — the tenant's own configuration page. Admin role of the
  * tenant manages the per-tenant settings here (warning / critical days,
- * theme colors, later: logo upload). Skysoft (SuperAdmin) is intentionally
- * NOT involved in these — they only create the tenant + initial Admin
- * from TenantsPage, then the tenant runs its own brand/threshold tuning.
+ * theme colors, later: logo upload). SuperAdmins are intentionally NOT
+ * involved in these — they only create the tenant + initial Admin from
+ * TenantsPage, then the tenant runs its own brand/threshold tuning.
  *
  * Backed by GET/PUT /api/tenants/me/settings — both resolve the current
  * tenant from the JWT so this page doesn't need to know its own tenant id.
