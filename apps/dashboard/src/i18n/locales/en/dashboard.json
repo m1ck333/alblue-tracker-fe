@@ -16,9 +16,7 @@
     "selfDeleteForbidden": "You cannot delete your own account.",
     "superAdminDeleteForbidden": "Only a Super Administrator can delete another Super Administrator's account.",
     "changePasswordNotSelf": "You can only change your own password.",
-    "forbiddenGeneric": "Your role does not have permission for this action.",
-    "readOnlyCrossTenant": "Read-only access — you can't modify another tenant's data.",
-    "peerSuperAdmin": "Super Administrator accounts can't be edited, deleted, or have their password reset — the owner must do it through their own profile."
+    "forbiddenGeneric": "Your role does not have permission for this action."
   },
   "crossTenant": {
     "banner": "Signed in as Super Administrator to another tenant — read-only access.",

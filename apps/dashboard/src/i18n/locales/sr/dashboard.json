@@ -16,9 +16,7 @@
     "selfDeleteForbidden": "Ne možete obrisati sopstveni nalog.",
     "superAdminDeleteForbidden": "Samo super administrator može da obriše nalog drugog super administratora.",
     "changePasswordNotSelf": "Možete menjati samo sopstvenu lozinku.",
-    "forbiddenGeneric": "Vaša uloga nema dozvolu za ovu akciju.",
-    "readOnlyCrossTenant": "Pristup je samo za pregled — ne možete menjati podatke u tuđoj firmi.",
-    "peerSuperAdmin": "Nalozi super administratora ne mogu da se menjaju, brišu ili da im se resetuje lozinka — to mora vlasnik naloga preko svog profila."
+    "forbiddenGeneric": "Vaša uloga nema dozvolu za ovu akciju."
   },
   "crossTenant": {
     "banner": "Prijavljen si kao super administrator u tuđoj firmi — pristup je samo za pregled.",
