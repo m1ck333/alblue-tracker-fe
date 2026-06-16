@@ -610,10 +610,6 @@ function WorkPanel({
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const daysUntilDelivery = activeWork
-    ? Math.ceil((new Date(activeWork.deliveryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-    : null;
-
   return (
     <div className="border-t border-gray-200 mt-3 pt-3 space-y-4">
       {/* Order details */}

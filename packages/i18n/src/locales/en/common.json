@@ -7,18 +7,12 @@
     "confirm": "Confirm",
     "yes": "Yes",
     "no": "No",
-    "create": "Create",
     "back": "Back",
-    "view": "View",
     "approve": "Approve",
     "reject": "Reject",
     "logout": "Logout",
     "signIn": "Sign In",
-    "filter": "Filter",
-    "configure": "Configure",
     "add": "Add",
-    "done": "Done",
-    "edit": "Edit",
     "delete": "Delete",
     "search": "Search...",
     "fullscreen": "Fullscreen",
@@ -61,7 +55,6 @@
   },
   "validation": {
     "required": "Required field",
-    "invalidEmail": "Please enter a valid email address",
     "enterTenantCode": "Please enter tenant code",
     "enterEmail": "Please enter your email",
     "enterPassword": "Please enter your password",
@@ -73,8 +66,6 @@
     "passwordNeedsDigit": "Password must contain at least one digit"
   },
   "messages": {
-    "noDataAvailable": "No data available",
-    "notFound": "Not found",
     "loading": "Loading...",
     "unsavedChanges": "Unsaved Changes",
     "unsavedChangesDescription": "You have unsaved changes that will be lost."

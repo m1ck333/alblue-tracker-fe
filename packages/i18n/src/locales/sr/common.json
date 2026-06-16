@@ -7,18 +7,12 @@
     "confirm": "Potvrdi",
     "yes": "Da",
     "no": "Ne",
-    "create": "Kreiraj",
     "back": "Nazad",
-    "view": "Pogledaj",
     "approve": "Odobri",
     "reject": "Odbij",
     "logout": "Odjavi se",
     "signIn": "Prijavi se",
-    "filter": "Filtriraj",
-    "configure": "Podesi",
     "add": "Dodaj",
-    "done": "Gotovo",
-    "edit": "Izmeni",
     "delete": "Obriši",
     "search": "Pretraži...",
     "fullscreen": "Ceo ekran",
@@ -61,7 +55,6 @@
   },
   "validation": {
     "required": "Obavezno polje",
-    "invalidEmail": "Unesite ispravnu email adresu",
     "enterTenantCode": "Unesite kod firme",
     "enterEmail": "Unesite email",
     "enterPassword": "Unesite lozinku",
@@ -73,8 +66,6 @@
     "passwordNeedsDigit": "Lozinka mora sadržati bar jednu cifru"
   },
   "messages": {
-    "noDataAvailable": "Nema dostupnih podataka",
-    "notFound": "Nije pronađeno",
     "loading": "Učitavanje...",
     "unsavedChanges": "Nesačuvane izmene",
     "unsavedChangesDescription": "Imate nesačuvane izmene koje će biti izgubljene."
