@@ -969,6 +969,21 @@ export function OrderListPage() {
     user?.role === UserRole.SuperAdmin;
 
   const onCreateFinish = async (values: Record<string, unknown>) => {
+    // Empty-order guard (Milos 16.06.2026): without this it's possible to
+    // hit Save with no items and no manual processes added, which produces
+    // an empty order header — useless and confusing on the drawer.
+    // OrderTypes with AllowsManualProcesses=true are intentionally exempted
+    // when at least one manual process is picked, so the "rework" / "complaint"
+    // flow (where items may come later) isn't blocked.
+    const hasItems = createPendingItems.length > 0;
+    const hasManualProcesses =
+      !!watchedOrderTypeMeta?.allowsManualProcesses && manualProcessIds.length > 0;
+    if (!hasItems && !hasManualProcesses) {
+      message.error(t('orders.emptyOrderError', {
+        defaultValue: 'Dodajte bar jednu stavku pre čuvanja narudžbine.',
+      }));
+      return;
+    }
     try {
       // Compress order-level attachments
       const orderFiles = pendingFiles.get(-1) ?? [];

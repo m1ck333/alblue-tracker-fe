@@ -184,6 +184,7 @@
     "qty": "Kol: {{count}}",
     "createdSuccess": "Narudžbina uspešno kreirana",
     "createFailed": "Kreiranje narudžbine nije uspelo",
+    "emptyOrderError": "Dodajte bar jednu stavku pre čuvanja narudžbine.",
     "updatedSuccess": "Narudžbina ažurirana",
     "updateFailed": "Ažuriranje narudžbine nije uspelo",
     "cancelledSuccess": "Narudžbina otkazana",

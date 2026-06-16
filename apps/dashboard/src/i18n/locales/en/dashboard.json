@@ -184,6 +184,7 @@
     "qty": "Qty: {{count}}",
     "createdSuccess": "Order created successfully",
     "createFailed": "Failed to create order",
+    "emptyOrderError": "Add at least one item before saving the order.",
     "updatedSuccess": "Order updated",
     "updateFailed": "Failed to update order",
     "cancelledSuccess": "Order cancelled",
