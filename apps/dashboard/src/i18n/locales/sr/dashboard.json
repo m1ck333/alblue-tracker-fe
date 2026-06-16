@@ -57,7 +57,16 @@
     "theme": "Tema",
     "themeLight": "Svetla",
     "themeDark": "Tamna",
-    "language": "Jezik"
+    "language": "Jezik",
+    "changePassword": "Promeni lozinku",
+    "currentPassword": "Trenutna lozinka",
+    "currentPasswordRequired": "Unesi trenutnu lozinku",
+    "newPassword": "Nova lozinka",
+    "confirmPassword": "Potvrdi novu lozinku",
+    "confirmPasswordRequired": "Potvrdi novu lozinku",
+    "confirmPasswordMismatch": "Lozinke se ne poklapaju",
+    "passwordChanged": "Lozinka uspešno promenjena",
+    "passwordChangeFailed": "Greška pri menjanju lozinke"
   },
   "about": {
     "title": "O aplikaciji",

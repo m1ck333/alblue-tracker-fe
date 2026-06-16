@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Badge, Button, Popover, List, Menu, Typography, Space, Empty, Tooltip, Divider, Segmented, theme, Grid, Drawer } from 'antd';
+import { Badge, Button, Popover, List, Menu, Typography, Space, Empty, Tooltip, Divider, Segmented, theme, Grid, Drawer, Modal, Form, Input, App } from 'antd';
 import {
   BellOutlined,
   UserOutlined,
@@ -14,6 +14,7 @@ import {
   InfoCircleOutlined,
   BookOutlined,
   HistoryOutlined,
+  LockOutlined,
   ClockCircleOutlined,
   AlertOutlined,
   StopOutlined,
@@ -25,13 +26,15 @@ import {
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { notificationsApi } from '@alblue/api-client';
+import { notificationsApi, usersApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
 import { useTranslation, useEnumTranslation } from '@alblue/i18n';
 import type { NotificationDto } from '@alblue/shared-types';
 import { NotificationType } from '@alblue/shared-types';
 import { useSignalREvent, SignalREvents } from '@alblue/signalr-client';
 import { useThemeStore } from '../stores/theme-store';
+import { passwordRules } from '../utils/password';
+import { getTranslatedError } from '../utils/errors';
 
 const { Text } = Typography;
 const PAGE_SIZE = 15;
@@ -138,6 +141,24 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
   const isMobile = screens.lg === false;
   const [profileOpen, setProfileOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [changePwOpen, setChangePwOpen] = useState(false);
+  const [pwForm] = Form.useForm();
+  const { message } = App.useApp();
+
+  // Self-service password change (Milos 16.06.2026). Strictly self-only on
+  // the BE — even SuperAdmin can't change another user's password through
+  // this endpoint. Admin-initiated reset is /reset-password (separate UI).
+  const changePasswordMutation = useMutation({
+    mutationFn: (values: { currentPassword: string; newPassword: string }) =>
+      usersApi.changePassword(user!.id, values),
+    onSuccess: () => {
+      message.success(t('profile.passwordChanged', { defaultValue: 'Lozinka uspešno promenjena' }));
+      setChangePwOpen(false);
+      pwForm.resetFields();
+    },
+    onError: (err) => message.error(getTranslatedError(err, t,
+      t('profile.passwordChangeFailed', { defaultValue: 'Greška pri menjanju lozinke' }))),
+  });
 
   // Info group rendered as a real antd Menu so the flyout (collapsed) and
   // inline-expansion (expanded) behaviour matches every other parent item
@@ -417,6 +438,14 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
       <Divider style={{ margin: '12px 0' }} />
       <Button
         block
+        icon={<LockOutlined />}
+        onClick={() => { setProfileOpen(false); setChangePwOpen(true); }}
+        style={{ marginBottom: 8 }}
+      >
+        {t('profile.changePassword', { defaultValue: 'Promeni lozinku' })}
+      </Button>
+      <Button
+        block
         danger
         icon={<LogoutOutlined />}
         onClick={() => { setProfileOpen(false); queryClient.clear(); logout(); }}
@@ -424,6 +453,60 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
         {t('common:actions.logout')}
       </Button>
     </div>
+  );
+
+  const changePasswordModal = (
+    <Modal
+      open={changePwOpen}
+      onCancel={() => { setChangePwOpen(false); pwForm.resetFields(); }}
+      title={t('profile.changePassword', { defaultValue: 'Promeni lozinku' })}
+      okText={t('common:actions.save')}
+      cancelText={t('common:actions.cancel')}
+      confirmLoading={changePasswordMutation.isPending}
+      onOk={() => pwForm.submit()}
+      destroyOnHidden
+    >
+      <Form
+        form={pwForm}
+        layout="vertical"
+        onFinish={(values) => changePasswordMutation.mutate({
+          currentPassword: values.currentPassword,
+          newPassword: values.newPassword,
+        })}
+      >
+        <Form.Item
+          name="currentPassword"
+          label={t('profile.currentPassword', { defaultValue: 'Trenutna lozinka' })}
+          rules={[{ required: true, message: t('profile.currentPasswordRequired', { defaultValue: 'Unesi trenutnu lozinku' }) }]}
+        >
+          <Input.Password autoComplete="current-password" autoFocus />
+        </Form.Item>
+        <Form.Item
+          name="newPassword"
+          label={t('profile.newPassword', { defaultValue: 'Nova lozinka' })}
+          rules={passwordRules(t)}
+        >
+          <Input.Password autoComplete="new-password" />
+        </Form.Item>
+        <Form.Item
+          name="confirmPassword"
+          label={t('profile.confirmPassword', { defaultValue: 'Potvrdi novu lozinku' })}
+          dependencies={['newPassword']}
+          rules={[
+            { required: true, message: t('profile.confirmPasswordRequired', { defaultValue: 'Potvrdi novu lozinku' }) },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue('newPassword') === value) return Promise.resolve();
+                return Promise.reject(new Error(
+                  t('profile.confirmPasswordMismatch', { defaultValue: 'Lozinke se ne poklapaju' })));
+              },
+            }),
+          ]}
+        >
+          <Input.Password autoComplete="new-password" />
+        </Form.Item>
+      </Form>
+    </Modal>
   );
 
   const rowStyle: React.CSSProperties = {
@@ -533,6 +616,7 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
           </div>
         </Tooltip>
       </Popover>
+      {changePasswordModal}
     </div>
   );
 }

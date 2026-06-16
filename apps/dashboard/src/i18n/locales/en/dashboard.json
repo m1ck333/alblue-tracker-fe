@@ -57,7 +57,16 @@
     "theme": "Theme",
     "themeLight": "Light",
     "themeDark": "Dark",
-    "language": "Language"
+    "language": "Language",
+    "changePassword": "Change password",
+    "currentPassword": "Current password",
+    "currentPasswordRequired": "Enter your current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "confirmPasswordRequired": "Confirm the new password",
+    "confirmPasswordMismatch": "Passwords don't match",
+    "passwordChanged": "Password changed",
+    "passwordChangeFailed": "Failed to change password"
   },
   "about": {
     "title": "About the app",
