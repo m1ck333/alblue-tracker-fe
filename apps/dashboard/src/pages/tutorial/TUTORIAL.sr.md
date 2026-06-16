@@ -53,7 +53,12 @@ Klik na avatar u donjem levom uglu otvara profil:
 
 - **Tema:** Svetla / Tamna.
 - **Jezik:** Srpski / Engleski. Promena je trenutna; izbor se pamti.
-- **Promena lozinke**.
+- **Promena lozinke** — otvara panel sa desne strane. Unosi se trenutna
+  lozinka, pa nova, pa potvrda nove. Posle čuvanja ostajete prijavljeni
+  na trenutnoj sesiji, ali za sledeću prijavu (ili posle neaktivnosti)
+  treba nova lozinka. Menja se samo sopstvena lozinka — administrator
+  ne može menjati tuđu kroz ovaj panel; ako je korisnik zaboravio
+  lozinku, koristi se „Resetuj lozinku" na njegovom redu u Korisnicima.
 - **Odjava**.
 
 Na javnim stranicama (prijava, *O aplikaciji*) jezik se može promeniti

@@ -53,7 +53,13 @@ Click the avatar in the bottom-left corner to open the profile:
 - **Theme:** Light / Dark.
 - **Language:** Serbian / English. Change is instant; the choice is
   remembered.
-- **Change password**.
+- **Change password** — opens a side panel. Enter the current password,
+  then the new one, then confirm. You stay signed in on the current
+  session after saving, but the next sign-in (or after inactivity) needs
+  the new password. Only your own password can be changed here — admins
+  can't change someone else's through this panel; if a user has
+  forgotten theirs, use the "Reset password" action on their row in
+  Users.
 - **Sign out**.
 
 On public pages (Sign in, *About*) the language can also be switched

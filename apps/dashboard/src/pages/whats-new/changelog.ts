@@ -46,6 +46,24 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    id: '2026-06-16-change-password',
+    date: '2026-06-16',
+    title: {
+      sr: 'Promena sopstvene lozinke',
+      en: 'Self-service password change',
+    },
+    bullets: [
+      {
+        sr: 'U profilu (klik na ime u donjem levom uglu) je dodato dugme „Promeni lozinku". Otvara panel sa desne strane sa tri polja: trenutna lozinka, nova, potvrda nove. Posle čuvanja ostajete prijavljeni na trenutnoj sesiji, ali sledeća prijava traži novu lozinku.',
+        en: 'A "Change password" button has been added in the profile (click your name in the bottom-left corner). It opens a side panel with three fields: current password, new password, confirm new password. After saving, you stay signed in on the current session, but the next sign-in requires the new password.',
+      },
+      {
+        sr: 'Svako menja samo svoju lozinku. Ako je neko zaboravio lozinku, administrator je resetuje na njegovom redu u listi Korisnika (akcija „Resetuj lozinku") — bez potrebe za starom lozinkom.',
+        en: 'Each user can only change their own password. If someone has forgotten theirs, an admin resets it from their row in the Users list (action "Reset password") — no current password required.',
+      },
+    ],
+  },
+  {
     id: '2026-06-15-firma-logo',
     date: '2026-06-15',
     title: {

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Badge, Button, Popover, List, Menu, Typography, Space, Empty, Tooltip, Divider, Segmented, theme, Grid, Drawer, Modal, Form, Input, App } from 'antd';
+import { Badge, Button, Popover, List, Menu, Typography, Space, Empty, Tooltip, Divider, Segmented, theme, Grid, Drawer, Form, Input, App } from 'antd';
 import {
   BellOutlined,
   UserOutlined,
@@ -455,15 +455,21 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
     </div>
   );
 
-  const changePasswordModal = (
-    <Modal
+  const changePasswordDrawer = (
+    <Drawer
       open={changePwOpen}
-      onCancel={() => { setChangePwOpen(false); pwForm.resetFields(); }}
+      onClose={() => { setChangePwOpen(false); pwForm.resetFields(); }}
       title={t('profile.changePassword', { defaultValue: 'Promeni lozinku' })}
-      okText={t('common:actions.save')}
-      cancelText={t('common:actions.cancel')}
-      confirmLoading={changePasswordMutation.isPending}
-      onOk={() => pwForm.submit()}
+      width={Math.min(480, window.innerWidth)}
+      extra={
+        <Button
+          type="primary"
+          onClick={() => pwForm.submit()}
+          loading={changePasswordMutation.isPending}
+        >
+          {t('common:actions.save')}
+        </Button>
+      }
       destroyOnHidden
     >
       <Form
@@ -506,7 +512,7 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
           <Input.Password autoComplete="new-password" />
         </Form.Item>
       </Form>
-    </Modal>
+    </Drawer>
   );
 
   const rowStyle: React.CSSProperties = {
@@ -616,7 +622,7 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
           </div>
         </Tooltip>
       </Popover>
-      {changePasswordModal}
+      {changePasswordDrawer}
     </div>
   );
 }
