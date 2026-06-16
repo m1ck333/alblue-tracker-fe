@@ -122,9 +122,13 @@ function formatTimeAgo(dateStr: string): string {
 
 interface SidebarFooterProps {
   collapsed: boolean;
+  /** Called when an in-popover action opens its own overlay (Drawer / Modal)
+   *  — used by MainLayout to dismiss the mobile sidebar Drawer so it doesn't
+   *  sit visible behind the new overlay. No-op on desktop. */
+  onOverlayAction?: () => void;
 }
 
-export function SidebarFooter({ collapsed }: SidebarFooterProps) {
+export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps) {
   const userId = useAuthStore((s) => s.user?.id);
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
@@ -439,7 +443,7 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
       <Button
         block
         icon={<LockOutlined />}
-        onClick={() => { setProfileOpen(false); setChangePwOpen(true); }}
+        onClick={() => { setProfileOpen(false); onOverlayAction?.(); setChangePwOpen(true); }}
         style={{ marginBottom: 8 }}
       >
         {t('profile.changePassword', { defaultValue: 'Promeni lozinku' })}

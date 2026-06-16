@@ -107,7 +107,10 @@ export function MainLayout() {
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         <SidebarMenu collapsed={isMobile ? false : collapsed} />
       </div>
-      <SidebarFooter collapsed={isMobile ? false : collapsed} />
+      <SidebarFooter
+        collapsed={isMobile ? false : collapsed}
+        onOverlayAction={() => setMobileDrawerOpen(false)}
+      />
       {/* Single footer row combining the MPMS product mark + the
           sidebar collapse toggle. antd Sider's default `trigger` is
           disabled below (`trigger={null}`) so this is the only thing
