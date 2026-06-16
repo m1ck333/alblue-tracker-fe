@@ -101,7 +101,7 @@
     "INVALID_NAME": "Naziv je obavezan",
     "INVALID_CURRENT_PASSWORD": "Trenutna lozinka nije ispravna",
     "INVALID_REFRESH_TOKEN": "Sesija je istekla, prijavite se ponovo",
-    "READ_ONLY_CROSS_TENANT": "Pristup je samo za pregled — ne možete menjati podatke u tuđoj firmi.",
+    "SUPERADMIN_READ_ONLY": "Pristup super administratora je samo za pregled — menjanje podataka klijenata nije dozvoljeno.",
     "FORBIDDEN_PEER_SUPERADMIN": "Nalozi super administratora ne mogu da se menjaju, brišu ili da im se resetuje lozinka — to mora vlasnik naloga preko svog profila.",
     "NOT_FOUND": "Tražena stavka nije pronađena",
     "PROCESS_NOT_STARTED": "Glavni proces mora biti pokrenut prvo",

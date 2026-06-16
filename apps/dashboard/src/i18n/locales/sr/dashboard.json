@@ -18,10 +18,6 @@
     "changePasswordNotSelf": "Možete menjati samo sopstvenu lozinku.",
     "forbiddenGeneric": "Vaša uloga nema dozvolu za ovu akciju."
   },
-  "crossTenant": {
-    "banner": "Prijavljen si kao super administrator u tuđoj firmi — pristup je samo za pregled.",
-    "exit": "Vrati se na svoj nalog"
-  },
   "nav": {
     "dashboard": "Kontrolna tabla",
     "orders": "Narudžbine",

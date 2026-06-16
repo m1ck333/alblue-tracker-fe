@@ -1,9 +1,8 @@
 import { useState, useEffect, Suspense } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Layout, theme, Grid, Button, Drawer, Spin, Alert } from 'antd';
-import { MenuOutlined, CloseOutlined, LeftOutlined, RightOutlined, EyeOutlined, LogoutOutlined } from '@ant-design/icons';
+import { Outlet, useLocation } from 'react-router-dom';
+import { Layout, theme, Grid, Button, Drawer, Spin } from 'antd';
+import { MenuOutlined, CloseOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { useAuthStore } from '@alblue/auth';
-import { useTranslation } from '@alblue/i18n';
 import {
   createConnection,
   startConnection,
@@ -23,10 +22,6 @@ export function MainLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const tenantId = useAuthStore((s) => s.tenantId);
-  const isCrossTenantSession = useAuthStore((s) => s.isCrossTenantSession);
-  const logout = useAuthStore((s) => s.logout);
-  const navigate = useNavigate();
-  const { t } = useTranslation('dashboard');
   const { token: themeToken } = theme.useToken();
   const fullscreen = useLayoutStore((s) => s.fullscreen);
   const screens = Grid.useBreakpoint();
@@ -226,32 +221,6 @@ export function MainLayout() {
           }}
         >
           {!fullscreen && <ConnectionAlert />}
-          {!fullscreen && isCrossTenantSession && (
-            // Persistent banner during cross-tenant SuperAdmin sessions.
-            // Eye icon + warning color + "vrati se" CTA so the operator can
-            // never confuse this session with their normal home-tenant one.
-            // BE middleware enforces read-only too — banner is the UX cue.
-            <Alert
-              type="warning"
-              showIcon
-              icon={<EyeOutlined />}
-              message={t('crossTenant.banner')}
-              style={{ marginBottom: 16 }}
-              action={
-                <Button
-                  size="small"
-                  type="primary"
-                  icon={<LogoutOutlined />}
-                  onClick={() => {
-                    logout();
-                    navigate('/login', { replace: true });
-                  }}
-                >
-                  {t('crossTenant.exit')}
-                </Button>
-              }
-            />
-          )}
           <Suspense
             fallback={
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, minHeight: 200 }}>

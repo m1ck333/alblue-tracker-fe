@@ -18,10 +18,6 @@
     "changePasswordNotSelf": "You can only change your own password.",
     "forbiddenGeneric": "Your role does not have permission for this action."
   },
-  "crossTenant": {
-    "banner": "Signed in as Super Administrator to another tenant — read-only access.",
-    "exit": "Return to your own account"
-  },
   "nav": {
     "dashboard": "Dashboard",
     "orders": "Orders",
