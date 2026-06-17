@@ -516,7 +516,7 @@ prijave (sistem traži dozvolu).
 
 ### 3.11 Magacin
 
-Otvoreno za uloge Administrator, Menadžer, Koordinator, Super administrator i
+Otvoreno za uloge Administrator, Menadžer, Koordinator i
 **Magacioner**. Magacioner je posebna uloga koja se može dodeliti
 nekom korisniku pored njegove glavne uloge (npr. koordinator + magacioner
 istovremeno). Magacioner ima pristup svim stranicama Magacina i može da
@@ -677,7 +677,7 @@ ispod minimuma, sistem automatski obaveštava menadžment:
   materijala koji su trenutno ispod svog minimuma. Crveni broj
   klikom vodi na Stanje magacina sa već primenjenim filterom „Ispod
   min".
-- **Obaveštenje u zvoncetu** — svaki korisnik sa ulogom Super administrator,
+- **Obaveštenje u zvoncetu** — svaki korisnik sa ulogom
   Administrator, Menadžer ili Koordinator (uključujući kombinacije sa
   Magacioner ulogom) dobija obaveštenje „**Materijal ispod
   minimuma: KOD — NAZIV**" sa detaljima trenutnog stanja, minimuma

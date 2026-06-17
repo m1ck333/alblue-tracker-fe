@@ -122,8 +122,8 @@ export const changelog: ChangelogEntry[] = [
         en: 'Issue form: if the requested quantity exceeds the on-hand amount, the system rejects the entry with "Insufficient stock for CODE — NAME: currently X UoM, requested Y UoM" — stock cannot go below zero.',
       },
       {
-        sr: 'Alarm za minimum zaliha (po potvrdi Saše): kada Izlaz prevede materijal iz stanja iznad minimuma u stanje ispod minimuma, na kontrolnoj tabli koordinatora pojavi se brojač „Materijali ispod min" (crveni broj klikom vodi na Stanje sa filterom „Ispod min"), a u zvoncetu se kreira obaveštenje „Materijal ispod minimuma: KOD — NAZIV" za sve menadžment uloge (Super administrator, Administrator, Menadžer, Koordinator). Ako je materijal već bio ispod min, dodatni Izlazi ne stvaraju nove notifikacije — tek kad se vrati iznad min i ponovo padne ispod.',
-        en: 'Low-stock alarm (per Saša\'s confirmation): when an Issue brings a material from at-or-above min down to below min, the coordinator dashboard shows a "Materials below min" counter (the red number is clickable and navigates to Stock filtered to "Below min"), and a "Material below minimum: CODE — NAME" notification is created in the bell for every management user (Super Administrator, Administrator, Manager, Coordinator). If the material was already below min, follow-up Issues don\'t create extra notifications — a new one fires only after the stock is restored above min and crosses back below.',
+        sr: 'Alarm za minimum zaliha (po potvrdi Saše): kada Izlaz prevede materijal iz stanja iznad minimuma u stanje ispod minimuma, na kontrolnoj tabli koordinatora pojavi se brojač „Materijali ispod min" (crveni broj klikom vodi na Stanje sa filterom „Ispod min"), a u zvoncetu se kreira obaveštenje „Materijal ispod minimuma: KOD — NAZIV" za sve menadžment uloge (Administrator, Menadžer, Koordinator). Ako je materijal već bio ispod min, dodatni Izlazi ne stvaraju nove notifikacije — tek kad se vrati iznad min i ponovo padne ispod.',
+        en: 'Low-stock alarm (per Saša\'s confirmation): when an Issue brings a material from at-or-above min down to below min, the coordinator dashboard shows a "Materials below min" counter (the red number is clickable and navigates to Stock filtered to "Below min"), and a "Material below minimum: CODE — NAME" notification is created in the bell for every management user (Administrator, Manager, Coordinator). If the material was already below min, follow-up Issues don\'t create extra notifications — a new one fires only after the stock is restored above min and crosses back below.',
       },
       {
         sr: 'Obaveštenja prate jezik aplikacije: tekst „Materijal ispod minimuma…" se odmah prepravlja kada se jezik promeni u profilu, bez osvežavanja stranice.',
@@ -422,10 +422,6 @@ export const changelog: ChangelogEntry[] = [
       {
         sr: 'Sprečeno brisanje poslednjeg Admin korisnika — firma ne može da ostane bez administratora.',
         en: 'Blocked deletion of the last Admin in a company — a company can never end up without an administrator.',
-      },
-      {
-        sr: 'Promena uloge korisnika sada zahteva nivo super administratora.',
-        en: 'Changing a user role now requires Super Administrator privileges.',
       },
       {
         sr: 'Prilikom promene uloge korisnika, njegove postojeće sesije se odjavljuju — stara prava ne mogu da nastave da važe.',

@@ -4,13 +4,13 @@ import { useTableHeight } from '../../hooks/useTableHeight';
 import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
 import {
   Table, Button, Drawer, Form, Input, Tag, App,
-  Divider, Popconfirm, Select, DatePicker,
+  Divider, Popconfirm, Select, DatePicker, Alert, InputNumber, Empty, Typography, Tooltip,
 } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, StopOutlined, CheckCircleOutlined, EditOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { tenantsApi, usersApi } from '@alblue/api-client';
 import { UserRole } from '@alblue/shared-types';
-import type { TenantDto } from '@alblue/shared-types';
+import type { TenantDto, TenantPaymentDto } from '@alblue/shared-types';
 import { useTranslation } from '@alblue/i18n';
 import { passwordRules } from '../../utils/password';
 import dayjs from 'dayjs';
@@ -43,6 +43,15 @@ export function TenantsPage({ hideHeader = false }: TenantsPageProps = {}) {
 
   const { ref: tableWrapperRef, height: tableBodyHeight } = useTableHeight();
   const { guardedClose: guardedDrawerClose, onValuesChange: onDrawerValuesChange, markClean: markDrawerClean } = useUnsavedChanges(drawerOpen);
+
+  // Naplata (billing) drawer state — nested inside the tenant edit Drawer
+  // so a SA can record a new payment without losing the tenant they're on.
+  const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<TenantPaymentDto | null>(null);
+  const [paymentForm] = Form.useForm();
+  const [blockReasonOpen, setBlockReasonOpen] = useState(false);
+  const [blockReason, setBlockReason] = useState('');
+  const [paymentsYearFilter, setPaymentsYearFilter] = useState<number | undefined>(undefined);
 
   // ─── Filter & Pagination State ──────────────────────────
   const [search, setSearch] = useState('');
@@ -118,10 +127,7 @@ export function TenantsPage({ hideHeader = false }: TenantsPageProps = {}) {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: Record<string, unknown> }) =>
-      tenantsApi.update(id, {
-        name: values.name as string,
-        isActive: currentDetail!.isActive,
-      }),
+      tenantsApi.update(id, { name: values.name as string }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] });
       message.success(t('admin.tenants.updated'));
@@ -130,26 +136,76 @@ export function TenantsPage({ hideHeader = false }: TenantsPageProps = {}) {
     onError: (err) => message.error(getTranslatedError(err, t, t('admin.tenants.updateFailed'))),
   });
 
-  const deactivateMutation = useMutation({
-    mutationFn: (tenant: TenantDto) =>
-      tenantsApi.update(tenant.id, { name: tenant.name, isActive: false }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tenants'] });
-      closeDrawer();
-      message.success(t('admin.tenants.deactivated'));
-    },
-    onError: (err) => message.error(getTranslatedError(err, t, t('admin.tenants.updateFailed'))),
+  // ─── Naplata (billing) — payments + block/unblock ──────────
+  const { data: payments = [], isLoading: paymentsLoading } = useQuery({
+    queryKey: ['tenant-payments', editTenant?.id],
+    queryFn: () => tenantsApi.listPayments(editTenant!.id).then((r) => r.data),
+    enabled: !!editTenant?.id && drawerOpen,
   });
 
-  const activateMutation = useMutation({
-    mutationFn: (tenant: TenantDto) =>
-      tenantsApi.update(tenant.id, { name: tenant.name, isActive: true }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tenants'] });
-      closeDrawer();
-      message.success(t('admin.tenants.activated', { defaultValue: 'Firma aktivirana' }));
+  const savePaymentMutation = useMutation({
+    mutationFn: (values: Record<string, unknown>) => {
+      const period = values.period as [dayjs.Dayjs, dayjs.Dayjs];
+      const paidAt = values.paidAt as dayjs.Dayjs;
+      const payload = {
+        periodStart: period[0].format('YYYY-MM-DD'),
+        periodEnd: period[1].format('YYYY-MM-DD'),
+        amount: values.amount as number,
+        currency: (values.currency as string)?.trim() || 'EUR',
+        paidAt: paidAt.toISOString(),
+        invoiceNumber: (values.invoiceNumber as string) || null,
+        notes: (values.notes as string) || null,
+      };
+      return editingPayment
+        ? tenantsApi.updatePayment(editTenant!.id, editingPayment.id, payload)
+        : tenantsApi.addPayment(editTenant!.id, payload);
     },
-    onError: (err) => message.error(getTranslatedError(err, t, t('admin.tenants.updateFailed'))),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-payments', editTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ['tenants'] });
+      const wasEdit = !!editingPayment;
+      setPaymentDrawerOpen(false);
+      setEditingPayment(null);
+      paymentForm.resetFields();
+      message.success(
+        wasEdit
+          ? t('admin.tenants.billing.paymentUpdated', { defaultValue: 'Uplata izmenjena' })
+          : t('admin.tenants.billing.paymentAdded', { defaultValue: 'Uplata zabeležena' })
+      );
+    },
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.tenants.billing.paymentSaveFailed', { defaultValue: 'Greška pri čuvanju uplate' }))),
+  });
+
+  const deletePaymentMutation = useMutation({
+    mutationFn: (paymentId: string) => tenantsApi.deletePayment(editTenant!.id, paymentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-payments', editTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ['tenants'] });
+      message.success(t('admin.tenants.billing.paymentDeleted', { defaultValue: 'Uplata obrisana' }));
+    },
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.tenants.billing.paymentDeleteFailed', { defaultValue: 'Greška pri brisanju uplate' }))),
+  });
+
+  const blockMutation = useMutation({
+    mutationFn: (reason: string | null) => tenantsApi.block(editTenant!.id, { reason }),
+    onSuccess: (resp) => {
+      queryClient.invalidateQueries({ queryKey: ['tenants'] });
+      setEditTenant(resp.data);
+      setBlockReasonOpen(false);
+      setBlockReason('');
+      message.success(t('admin.tenants.billing.blocked', { defaultValue: 'Firma blokirana' }));
+    },
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.tenants.billing.blockFailed', { defaultValue: 'Greška pri blokiranju' }))),
+  });
+
+  const unblockMutation = useMutation({
+    mutationFn: () => tenantsApi.unblock(editTenant!.id),
+    onSuccess: (resp) => {
+      queryClient.invalidateQueries({ queryKey: ['tenants'] });
+      setEditTenant(resp.data);
+      message.success(t('admin.tenants.billing.unblocked', { defaultValue: 'Firma odblokirana' }));
+    },
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.tenants.billing.unblockFailed', { defaultValue: 'Greška pri odblokiranju' }))),
   });
 
   const openCreate = () => {
@@ -180,6 +236,12 @@ export function TenantsPage({ hideHeader = false }: TenantsPageProps = {}) {
     }
   };
 
+  // Overdue = no payment covers today. Covers both lapsed (paidThrough
+  // is in the past) and never-paid (no payments at all). The two cases
+  // are distinguished in the "Plaćeno do" column — lapsed shows a date,
+  // never-paid shows "—".
+  const isOverdue = (t: TenantDto) => !t.paidThrough || dayjs(t.paidThrough).endOf('day').isBefore(dayjs());
+
   const columns = [
     {
       title: t('common:labels.name'),
@@ -198,15 +260,44 @@ export function TenantsPage({ hideHeader = false }: TenantsPageProps = {}) {
     {
       title: t('common:labels.status'),
       dataIndex: 'isActive',
-      width: 110,
-      render: (active: boolean) => (
-        <Tag color={active ? 'green' : 'default'}>{active ? t('common:status.active') : t('common:status.inactive')}</Tag>
-      ),
+      width: 140,
+      render: (_: unknown, record: TenantDto) => {
+        if (record.blockedAt) {
+          return <Tag color="red">{t('admin.tenants.billing.statusBlocked', { defaultValue: 'Blokirana' })}</Tag>;
+        }
+        if (isOverdue(record)) {
+          const tooltipText = record.paidThrough
+            ? t('admin.tenants.billing.paidThroughTooltip', { defaultValue: 'Plaćeno do' }) + ' ' + dayjs(record.paidThrough).format('DD.MM.YYYY.')
+            : t('admin.tenants.billing.neverPaidTooltip', { defaultValue: 'Nema zabeleženih uplata' });
+          return (
+            <Tooltip title={tooltipText}>
+              <Tag color="orange">{t('admin.tenants.billing.statusOverdue', { defaultValue: 'Kasni' })}</Tag>
+            </Tooltip>
+          );
+        }
+        return (
+          <Tag color={record.isActive ? 'green' : 'default'}>
+            {record.isActive ? t('common:status.active') : t('common:status.inactive')}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: t('admin.tenants.billing.paidThrough', { defaultValue: 'Plaćeno do' }),
+      dataIndex: 'paidThrough',
+      width: 130,
+      render: (d: string | null) => (d ? dayjs(d).format('DD.MM.YYYY.') : <Typography.Text type="secondary">—</Typography.Text>),
+    },
+    {
+      title: t('admin.tenants.billing.lastPaid', { defaultValue: 'Poslednja uplata' }),
+      dataIndex: 'lastPaidAt',
+      width: 140,
+      render: (d: string | null) => (d ? dayjs(d).format('DD.MM.YYYY.') : <Typography.Text type="secondary">—</Typography.Text>),
     },
     {
       title: t('common:labels.created'),
       dataIndex: 'createdAt',
-      width: 150,
+      width: 130,
       sorter: true,
       sortOrder: sortBy === 'createdAt' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
       render: (d: string) => dayjs(d).format('DD.MM.YYYY.'),
@@ -362,69 +453,331 @@ export function TenantsPage({ hideHeader = false }: TenantsPageProps = {}) {
         title={isCreating ? t('admin.tenants.createTenant') : currentDetail?.name}
         open={drawerOpen}
         onClose={closeDrawer}
-        width={Math.min(480, window.innerWidth)}
+        width={Math.min(560, window.innerWidth)}
         extra={
           <div style={{ display: 'flex', gap: 8 }}>
-            {!isCreating && currentDetail?.isActive && (
+            {isCreating && (
+              <Button
+                type="primary"
+                onClick={() => form.submit()}
+                loading={createMutation.isPending}
+              >
+                {t('common:actions.save')}
+              </Button>
+            )}
+            {!isCreating && currentDetail && !currentDetail.blockedAt && (
+              <Button
+                danger
+                icon={<StopOutlined />}
+                onClick={() => { setBlockReason(''); setBlockReasonOpen(true); }}
+              >
+                {t('admin.tenants.billing.block', { defaultValue: 'Blokiraj' })}
+              </Button>
+            )}
+            {!isCreating && currentDetail && currentDetail.blockedAt && (
               <Popconfirm
-                title={t('admin.tenants.deactivateConfirm')}
-                onConfirm={() => deactivateMutation.mutate(currentDetail)}
+                title={t('admin.tenants.billing.unblockConfirm', { defaultValue: 'Odblokirati firmu?' })}
+                onConfirm={() => unblockMutation.mutate()}
                 okText={t('common:actions.confirm')}
                 cancelText={t('common:actions.cancel')}
               >
-                <Button danger loading={deactivateMutation.isPending}>{t('admin.tenants.deactivate')}</Button>
+                <Button icon={<CheckCircleOutlined />} loading={unblockMutation.isPending}>
+                  {t('admin.tenants.billing.unblock', { defaultValue: 'Odblokiraj' })}
+                </Button>
               </Popconfirm>
             )}
-            {!isCreating && currentDetail && !currentDetail.isActive && (
-              <Popconfirm
-                title={t('admin.tenants.activateConfirm', { defaultValue: 'Aktivirati ovu firmu?' })}
-                onConfirm={() => activateMutation.mutate(currentDetail)}
-                okText={t('common:actions.confirm')}
-                cancelText={t('common:actions.cancel')}
+            {!isCreating && (
+              <Button
+                type="primary"
+                onClick={() => form.submit()}
+                loading={updateMutation.isPending}
               >
-                <Button loading={activateMutation.isPending}>{t('admin.tenants.activate', { defaultValue: 'Aktiviraj' })}</Button>
-              </Popconfirm>
+                {t('common:actions.save')}
+              </Button>
             )}
-            <Button
-              type="primary"
-              onClick={() => form.submit()}
-              loading={createMutation.isPending || updateMutation.isPending}
-            >
-              {t('common:actions.save')}
-            </Button>
           </div>
         }
       >
-        <Form form={form} layout="vertical" scrollToFirstError={{ behavior: 'smooth', block: 'center' }} onFinish={handleFinish} onValuesChange={onDrawerValuesChange}>
-          <Form.Item name="name" label={t('common:labels.name')} rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="code" label={t('common:labels.code')} rules={[{ required: true }]}>
-            <Input disabled={!isCreating} />
-          </Form.Item>
-          {/* Initial Admin user — only on creation. A SuperAdmin creates
-              the tenant + first Admin in one drawer; the new Admin then
-              manages everything else (warning/critical days, theme
-              colors, later logo) from Profil firme. */}
-          {isCreating && (
-            <>
-              <Divider>{t('admin.tenants.initialAdmin', { defaultValue: 'Inicijalni Admin firme' })}</Divider>
-              <Form.Item name="adminEmail" label={t('common:labels.email')} rules={[{ required: true, type: 'email' }]}>
+        {isCreating ? (
+          <Form form={form} layout="vertical" scrollToFirstError={{ behavior: 'smooth', block: 'center' }} onFinish={handleFinish} onValuesChange={onDrawerValuesChange}>
+            <Form.Item name="name" label={t('common:labels.name')} rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item name="code" label={t('common:labels.code')} rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
+            {/* Initial Admin user — only on creation. A SuperAdmin creates
+                the tenant + first Admin in one drawer; the new Admin then
+                manages everything else (warning/critical days, theme
+                colors, later logo) from Profil firme. */}
+            <Divider>{t('admin.tenants.initialAdmin', { defaultValue: 'Inicijalni Admin firme' })}</Divider>
+            <Form.Item name="adminEmail" label={t('common:labels.email')} rules={[{ required: true, type: 'email' }]}>
+              <Input />
+            </Form.Item>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <Form.Item name="adminFirstName" label={t('common:labels.firstName')} rules={[{ required: true }]} style={{ flex: 1 }}>
                 <Input />
               </Form.Item>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <Form.Item name="adminFirstName" label={t('common:labels.firstName')} rules={[{ required: true }]} style={{ flex: 1 }}>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="adminLastName" label={t('common:labels.lastName')} rules={[{ required: true }]} style={{ flex: 1 }}>
-                  <Input />
-                </Form.Item>
-              </div>
-              <Form.Item name="adminPassword" label={t('common:labels.password')} rules={passwordRules(t)}>
-                <Input.Password />
+              <Form.Item name="adminLastName" label={t('common:labels.lastName')} rules={[{ required: true }]} style={{ flex: 1 }}>
+                <Input />
               </Form.Item>
-            </>
-          )}
+            </div>
+            <Form.Item name="adminPassword" label={t('common:labels.password')} rules={passwordRules(t)}>
+              <Input.Password />
+            </Form.Item>
+          </Form>
+        ) : currentDetail && (
+          <>
+            {currentDetail.blockedAt && (
+              <Alert
+                type="error"
+                showIcon
+                style={{ marginBottom: 16 }}
+                message={t('admin.tenants.billing.blockedBanner', {
+                  defaultValue: 'Firma je blokirana — korisnici ne mogu da se prijave.',
+                })}
+                description={
+                  <>
+                    <div>{t('admin.tenants.billing.blockedAt', { defaultValue: 'Datum blokade' })}: {dayjs(currentDetail.blockedAt).format('DD.MM.YYYY. HH:mm')}</div>
+                    {currentDetail.blockedReason && (
+                      <div>{t('admin.tenants.billing.blockedReason', { defaultValue: 'Razlog' })}: {currentDetail.blockedReason}</div>
+                    )}
+                  </>
+                }
+              />
+            )}
+
+            <Form
+              form={form}
+              layout="vertical"
+              scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
+              onFinish={handleFinish}
+              onValuesChange={onDrawerValuesChange}
+            >
+              <Form.Item name="name" label={t('common:labels.name')} rules={[{ required: true }]}>
+                <Input />
+              </Form.Item>
+              <Form.Item name="code" label={t('common:labels.code')}>
+                <Input disabled />
+              </Form.Item>
+            </Form>
+
+            <Divider>{t('admin.tenants.billing.payments', { defaultValue: 'Uplate' })}</Divider>
+
+            {(() => {
+              // Year filter — derived from existing payments so it stays
+              // in sync without a hardcoded range. A short list collapses
+              // to "all years" and we hide the filter.
+              const years = Array.from(new Set(payments.map((p) => dayjs(p.paidAt).year()))).sort((a, b) => b - a);
+              const filtered = paymentsYearFilter
+                ? payments.filter((p) => dayjs(p.paidAt).year() === paymentsYearFilter)
+                : payments;
+              return (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                    <Select
+                      placeholder={t('admin.tenants.billing.filterByYear', { defaultValue: 'Godina' })}
+                      allowClear
+                      value={paymentsYearFilter}
+                      onChange={(v) => setPaymentsYearFilter(v)}
+                      style={{ width: 140 }}
+                      disabled={years.length === 0}
+                      options={years.map((y) => ({ label: String(y), value: y }))}
+                    />
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => {
+                        setEditingPayment(null);
+                        paymentForm.resetFields();
+                        paymentForm.setFieldsValue({ currency: 'EUR', paidAt: dayjs() });
+                        setPaymentDrawerOpen(true);
+                      }}
+                    >
+                      {t('admin.tenants.billing.addPayment', { defaultValue: 'Dodaj uplatu' })}
+                    </Button>
+                  </div>
+
+                  <Table
+                    size="small"
+                    loading={paymentsLoading}
+                    dataSource={filtered}
+                    rowKey="id"
+                    pagination={false}
+                    scroll={{ x: 'max-content' }}
+                    locale={{ emptyText: <Empty description={t('admin.tenants.billing.noPayments', { defaultValue: 'Još nema uplata' })} /> }}
+                    columns={[
+                      {
+                        title: t('admin.tenants.billing.paidAt', { defaultValue: 'Datum' }),
+                        dataIndex: 'paidAt',
+                        sorter: (a: TenantPaymentDto, b: TenantPaymentDto) => dayjs(a.paidAt).valueOf() - dayjs(b.paidAt).valueOf(),
+                        defaultSortOrder: 'descend' as const,
+                        render: (d: string) => dayjs(d).format('DD.MM.YYYY.'),
+                        width: 110,
+                      },
+                      {
+                        title: t('admin.tenants.billing.period', { defaultValue: 'Period' }),
+                        sorter: (a: TenantPaymentDto, b: TenantPaymentDto) => dayjs(a.periodStart).valueOf() - dayjs(b.periodStart).valueOf(),
+                        render: (_: unknown, row: TenantPaymentDto) => (
+                          <span style={{ whiteSpace: 'nowrap' }}>
+                            {`${dayjs(row.periodStart).format('DD.MM.YYYY.')} – ${dayjs(row.periodEnd).format('DD.MM.YYYY.')}`}
+                          </span>
+                        ),
+                        width: 220,
+                      },
+                      {
+                        title: t('admin.tenants.billing.amount', { defaultValue: 'Iznos' }),
+                        sorter: (a: TenantPaymentDto, b: TenantPaymentDto) => a.amount - b.amount,
+                        render: (_: unknown, row: TenantPaymentDto) =>
+                          `${row.amount.toLocaleString('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${row.currency}`,
+                        width: 130,
+                      },
+                      {
+                        title: t('admin.tenants.billing.invoiceNumber', { defaultValue: 'Faktura' }),
+                        dataIndex: 'invoiceNumber',
+                        sorter: (a: TenantPaymentDto, b: TenantPaymentDto) => (a.invoiceNumber ?? '').localeCompare(b.invoiceNumber ?? ''),
+                        render: (v: string | null) => v || <Typography.Text type="secondary">—</Typography.Text>,
+                        width: 130,
+                      },
+                      {
+                        title: t('admin.tenants.billing.notes', { defaultValue: 'Napomena' }),
+                        dataIndex: 'notes',
+                        render: (v: string | null) =>
+                          v
+                            ? (
+                                <Tooltip title={v}>
+                                  <Typography.Text ellipsis style={{ maxWidth: 200, display: 'inline-block' }}>{v}</Typography.Text>
+                                </Tooltip>
+                              )
+                            : <Typography.Text type="secondary">—</Typography.Text>,
+                        width: 200,
+                      },
+                      {
+                        title: '',
+                        width: 90,
+                        fixed: 'right' as const,
+                        render: (_: unknown, row: TenantPaymentDto) => (
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            <Button
+                              type="text"
+                              icon={<EditOutlined />}
+                              onClick={() => {
+                                setEditingPayment(row);
+                                paymentForm.resetFields();
+                                paymentForm.setFieldsValue({
+                                  paidAt: dayjs(row.paidAt),
+                                  period: [dayjs(row.periodStart), dayjs(row.periodEnd)],
+                                  amount: row.amount,
+                                  currency: row.currency,
+                                  invoiceNumber: row.invoiceNumber ?? undefined,
+                                  notes: row.notes ?? undefined,
+                                });
+                                setPaymentDrawerOpen(true);
+                              }}
+                            />
+                            <Popconfirm
+                              title={t('admin.tenants.billing.deletePaymentConfirm', { defaultValue: 'Obrisati uplatu?' })}
+                              onConfirm={() => deletePaymentMutation.mutate(row.id)}
+                              okText={t('common:actions.confirm')}
+                              cancelText={t('common:actions.cancel')}
+                            >
+                              <Button type="text" danger icon={<DeleteOutlined />} />
+                            </Popconfirm>
+                          </div>
+                        ),
+                      },
+                    ]}
+                  />
+                </>
+              );
+            })()}
+          </>
+        )}
+      </Drawer>
+
+      {/* Nested drawer: add OR edit a payment without leaving the tenant
+          drawer. Reused for both flows — `editingPayment` decides which
+          mutation fires and what the header title says. */}
+      <Drawer
+        title={editingPayment
+          ? t('admin.tenants.billing.editPayment', { defaultValue: 'Izmeni uplatu' })
+          : t('admin.tenants.billing.addPayment', { defaultValue: 'Dodaj uplatu' })}
+        open={paymentDrawerOpen}
+        onClose={() => { setPaymentDrawerOpen(false); setEditingPayment(null); }}
+        width={Math.min(420, window.innerWidth)}
+        extra={
+          <Button
+            type="primary"
+            loading={savePaymentMutation.isPending}
+            onClick={() => paymentForm.submit()}
+          >
+            {t('common:actions.save')}
+          </Button>
+        }
+      >
+        <Form
+          form={paymentForm}
+          layout="vertical"
+          onFinish={(values) => savePaymentMutation.mutate(values)}
+        >
+          <Form.Item name="paidAt" label={t('admin.tenants.billing.paidAt', { defaultValue: 'Datum uplate' })} rules={[{ required: true }]}>
+            <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+          </Form.Item>
+          <Form.Item name="period" label={t('admin.tenants.billing.period', { defaultValue: 'Period pretplate' })} rules={[{ required: true }]}>
+            <DatePicker.RangePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+          </Form.Item>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <Form.Item name="amount" label={t('admin.tenants.billing.amount', { defaultValue: 'Iznos' })} rules={[{ required: true, type: 'number', min: 0.01 }]} style={{ flex: 1 }}>
+              <InputNumber style={{ width: '100%' }} min={0.01} step={1} precision={2} />
+            </Form.Item>
+            <Form.Item name="currency" label={t('admin.tenants.billing.currency', { defaultValue: 'Valuta' })} rules={[{ required: true }]} style={{ width: 100 }}>
+              <Input maxLength={8} />
+            </Form.Item>
+          </div>
+          <Form.Item name="invoiceNumber" label={t('admin.tenants.billing.invoiceNumber', { defaultValue: 'Broj fakture' })}>
+            <Input maxLength={100} />
+          </Form.Item>
+          <Form.Item name="notes" label={t('admin.tenants.billing.notes', { defaultValue: 'Napomena' })}>
+            <Input.TextArea rows={3} maxLength={2000} />
+          </Form.Item>
+        </Form>
+      </Drawer>
+
+      {/* Block confirmation modal — a separate drawer keeps the reason field
+          first-class without crowding the Naplata tab. */}
+      <Drawer
+        title={t('admin.tenants.billing.block', { defaultValue: 'Blokiraj firmu' })}
+        open={blockReasonOpen}
+        onClose={() => setBlockReasonOpen(false)}
+        width={Math.min(420, window.innerWidth)}
+        extra={
+          <Button
+            danger
+            type="primary"
+            loading={blockMutation.isPending}
+            onClick={() => blockMutation.mutate(blockReason || null)}
+          >
+            {t('admin.tenants.billing.block', { defaultValue: 'Blokiraj firmu' })}
+          </Button>
+        }
+      >
+        <Typography.Paragraph>
+          {t('admin.tenants.billing.blockWarning', {
+            defaultValue: 'Korisnici ove firme neće moći da se prijave dok ne odblokirate firmu.',
+          })}
+        </Typography.Paragraph>
+        <Form layout="vertical">
+          <Form.Item label={t('admin.tenants.billing.blockedReason', { defaultValue: 'Razlog (opciono)' })}>
+            <Input.TextArea
+              rows={3}
+              maxLength={1000}
+              value={blockReason}
+              onChange={(e) => setBlockReason(e.target.value)}
+              placeholder={t('admin.tenants.billing.blockReasonPlaceholder', {
+                defaultValue: 'npr. Nije plaćena pretplata za poslednji kvartal',
+              })}
+            />
+          </Form.Item>
         </Form>
       </Drawer>
     </div>

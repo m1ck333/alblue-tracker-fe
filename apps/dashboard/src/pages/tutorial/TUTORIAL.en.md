@@ -512,7 +512,7 @@ first sign-in (the system asks for permission).
 
 ### 3.11 Warehouse
 
-Open for roles Administrator, Manager, Coordinator, Super Administrator, and **Warehouse
+Open for roles Administrator, Manager, Coordinator, and **Warehouse
 worker** (Magacioner). Warehouse worker is a separate role that can be
 assigned alongside another (e.g. coordinator + warehouse worker at
 once). The warehouse worker has access to every warehouse page and
@@ -672,7 +672,7 @@ below the minimum, the system automatically notifies management:
   **Materials below min** cell showing how many materials are
   currently below their minimum. The red number is clickable and
   navigates to Warehouse stock with the "Below min" filter applied.
-- **Notification bell** — every user with role Super Administrator,
+- **Notification bell** — every user with role
   Administrator, Manager, or Coordinator (and combinations including the Warehouse
   worker role) receives a "**Material below minimum: CODE — NAME**"
   notification with the current on-hand quantity, the minimum, and

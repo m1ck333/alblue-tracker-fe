@@ -321,11 +321,24 @@ export interface CreateTenantRequest {
 
 export interface UpdateTenantRequest {
   name: string;
-  isActive: boolean;
   defaultWarningDays?: number;
   defaultCriticalDays?: number;
   warningColor?: string;
   criticalColor?: string;
+}
+
+export interface CreateTenantPaymentRequest {
+  periodStart: string;
+  periodEnd: string;
+  amount: number;
+  currency: string;
+  paidAt: string;
+  invoiceNumber?: string | null;
+  notes?: string | null;
+}
+
+export interface BlockTenantRequest {
+  reason?: string | null;
 }
 
 export interface UpdateTenantSettingsRequest {

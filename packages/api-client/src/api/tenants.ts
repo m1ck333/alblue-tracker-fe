@@ -1,5 +1,7 @@
-import type { TenantDto, TenantSettingsDto, PagedResult } from '@alblue/shared-types';
+import type { TenantDto, TenantPaymentDto, TenantSettingsDto, PagedResult } from '@alblue/shared-types';
 import type {
+  BlockTenantRequest,
+  CreateTenantPaymentRequest,
   CreateTenantRequest,
   UpdateTenantRequest,
   UpdateTenantSettingsRequest,
@@ -63,5 +65,30 @@ export const tenantsApi = {
 
   getMyLogoBlob() {
     return apiClient.get<Blob>('/tenants/me/logo', { responseType: 'blob' });
+  },
+
+  // Naplata (billing) — SuperAdmin-only. Payment ledger + manual block.
+  listPayments(tenantId: string) {
+    return apiClient.get<TenantPaymentDto[]>(`/tenants/${tenantId}/payments`);
+  },
+
+  addPayment(tenantId: string, data: CreateTenantPaymentRequest) {
+    return apiClient.post<TenantPaymentDto>(`/tenants/${tenantId}/payments`, data);
+  },
+
+  updatePayment(tenantId: string, paymentId: string, data: CreateTenantPaymentRequest) {
+    return apiClient.put<TenantPaymentDto>(`/tenants/${tenantId}/payments/${paymentId}`, data);
+  },
+
+  deletePayment(tenantId: string, paymentId: string) {
+    return apiClient.delete<void>(`/tenants/${tenantId}/payments/${paymentId}`);
+  },
+
+  block(tenantId: string, data: BlockTenantRequest) {
+    return apiClient.post<TenantDto>(`/tenants/${tenantId}/block`, data);
+  },
+
+  unblock(tenantId: string) {
+    return apiClient.post<TenantDto>(`/tenants/${tenantId}/unblock`, {});
   },
 };

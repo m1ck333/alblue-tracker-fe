@@ -490,6 +490,30 @@ export interface TenantDto {
    *  Null when the tenant hasn't uploaded one; sidebar falls back to the
    *  default MPMS mark. Streamed via GET /api/tenants/me/logo. */
   logoUrl: string | null;
+  /** Set when a SuperAdmin manually blocked the tenant (typically for
+   *  unpaid subscription). Block flips isActive to false; null when the
+   *  tenant has never been blocked (or has been unblocked). */
+  blockedAt: string | null;
+  blockedReason: string | null;
+  /** Most recent payment.paidAt for this tenant, or null when no payments
+   *  have been recorded. SA-only field — never exposed on /tenants/me. */
+  lastPaidAt: string | null;
+  /** Max payment.periodEnd — date through which subscription is paid up.
+   *  Null when no payments yet. FE compares to today to flag overdue. */
+  paidThrough: string | null;
+}
+
+export interface TenantPaymentDto {
+  id: string;
+  tenantId: string;
+  periodStart: string;
+  periodEnd: string;
+  amount: number;
+  currency: string;
+  paidAt: string;
+  invoiceNumber: string | null;
+  notes: string | null;
+  createdAt: string;
 }
 
 export interface TenantSettingsDto {
