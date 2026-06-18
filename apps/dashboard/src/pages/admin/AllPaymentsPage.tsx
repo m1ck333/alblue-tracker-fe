@@ -11,7 +11,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { useTableHeight } from '../../hooks/useTableHeight';
 import { TableExportButton } from '../../components/TableExportButton';
 import type { ExportColumn } from '../../utils/exportTable';
-import { formatMonths } from '../../utils/formatMonths';
+import { paidAtColumn, durationColumn, amountColumn, invoiceColumn, notesColumn } from '../../utils/paymentColumns';
 
 /**
  * "Sve uplate" — SA-only cross-tenant payments view (Saša 17.06.2026
@@ -73,12 +73,19 @@ export function AllPaymentsPage() {
       })
     : rawData;
 
+  // Sort orientation helper: maps the server sortBy/sortDirection state
+  // onto antd's sortOrder API for each column. Server-side sort lives on
+  // the Table's onChange below; columns just need to mark themselves
+  // sortable + show the right arrow.
+  const sortOrderFor = (key: string) =>
+    sortBy === key ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null;
+  const colOpts = { t, language: i18n.language, clientSort: false };
   const columns = [
     {
       title: t('admin.tenants.billing.tenant'),
       key: 'tenantName',
       sorter: true,
-      sortOrder: sortBy === 'tenantName' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
+      sortOrder: sortOrderFor('tenantName'),
       render: (_: unknown, row: AllTenantPaymentDto) => (
         <span>
           <Typography.Text strong>{row.tenantName}</Typography.Text>
@@ -86,59 +93,11 @@ export function AllPaymentsPage() {
         </span>
       ),
     },
-    {
-      title: t('admin.tenants.billing.paidAtColumn'),
-      dataIndex: 'paidAt',
-      key: 'paidAt',
-      width: 130,
-      sorter: true,
-      sortOrder: sortBy === 'paidAt' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
-      render: (d: string) => dayjs(d).format('DD.MM.YYYY.'),
-    },
-    {
-      // Match the per-tenant Naplata table: show duration in months,
-      // not the derived date range (Saša 18.06.2026 — form asks for
-      // months, table should mirror).
-      title: t('admin.tenants.billing.duration'),
-      key: 'periodStart',
-      width: 130,
-      sorter: true,
-      sortOrder: sortBy === 'periodStart' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
-      render: (_: unknown, row: AllTenantPaymentDto) => {
-        const months = Math.max(1, Math.round(dayjs(row.periodEnd).diff(dayjs(row.periodStart), 'month', true)));
-        return <span style={{ whiteSpace: 'nowrap' }}>{formatMonths(months, i18n.language)}</span>;
-      },
-    },
-    {
-      title: t('admin.tenants.billing.amount'),
-      key: 'amount',
-      width: 130,
-      sorter: true,
-      sortOrder: sortBy === 'amount' ? (sortDirection === 'desc' ? ('descend' as const) : ('ascend' as const)) : null,
-      render: (_: unknown, row: AllTenantPaymentDto) =>
-        `${row.amount.toLocaleString('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${row.currency}`,
-    },
-    {
-      title: t('admin.tenants.billing.invoiceNumber'),
-      dataIndex: 'invoiceNumber',
-      key: 'invoiceNumber',
-      width: 130,
-      render: (v: string | null) => v || <Typography.Text type="secondary">—</Typography.Text>,
-    },
-    {
-      title: t('admin.tenants.billing.notes'),
-      dataIndex: 'notes',
-      key: 'notes',
-      width: 200,
-      render: (v: string | null) =>
-        v
-          ? (
-              <Tooltip title={v}>
-                <Typography.Text ellipsis style={{ maxWidth: 200, display: 'inline-block' }}>{v}</Typography.Text>
-              </Tooltip>
-            )
-          : <Typography.Text type="secondary">—</Typography.Text>,
-    },
+    { ...paidAtColumn<AllTenantPaymentDto>(colOpts), key: 'paidAt', sorter: true, sortOrder: sortOrderFor('paidAt') },
+    { ...durationColumn<AllTenantPaymentDto>(colOpts), key: 'periodStart', width: 130, sorter: true, sortOrder: sortOrderFor('periodStart') },
+    { ...amountColumn<AllTenantPaymentDto>(colOpts), sorter: true, sortOrder: sortOrderFor('amount') },
+    { ...invoiceColumn<AllTenantPaymentDto>(colOpts), key: 'invoiceNumber' },
+    { ...notesColumn<AllTenantPaymentDto>(colOpts), key: 'notes' },
   ];
 
   // Currency dropdown options — derived from existing data so it stays in

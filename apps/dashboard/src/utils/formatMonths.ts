@@ -20,3 +20,20 @@ export function formatMonths(months: number, locale = 'sr'): string {
 
   return n === 1 ? `${n} month` : `${n} months`;
 }
+
+/**
+ * Localised day-count label. Serbian: "1 dan" for numbers ending in 1
+ * (except 11), "dana" otherwise. English: "day" / "days".
+ */
+export function formatDays(days: number, locale = 'sr'): string {
+  const n = Math.abs(Math.round(days));
+  if (locale.startsWith('sr')) {
+    const lastTwo = n % 100;
+    const lastOne = n % 10;
+    const isTeen = lastTwo >= 11 && lastTwo <= 14;
+    const word = (!isTeen && lastOne === 1) ? 'dan' : 'dana';
+    return `${n} ${word}`;
+  }
+  return n === 1 ? `${n} day` : `${n} days`;
+}
+

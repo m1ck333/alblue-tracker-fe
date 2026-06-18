@@ -544,6 +544,14 @@
     "delete": "Delete",
     "markUnread": "Mark unread",
     "templates": {
+      "subscriptionExpiring": {
+        "title": "Subscription is expiring soon",
+        "message": "{{daysRemaining}} days remaining — expires on {{paidThrough}}."
+      },
+      "subscriptionExpired": {
+        "title": "Subscription has expired",
+        "message": "Subscription expired on {{paidThrough}}."
+      },
       "materialLowStock": {
         "title": "Material below minimum: {{code}} — {{name}}",
         "message": "Stock of material \"{{code}} — {{name}}\" has fallen below minimum ({{onHand}} {{unit}}, min {{min}} {{unit}})."

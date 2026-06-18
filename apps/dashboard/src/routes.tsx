@@ -153,7 +153,7 @@ export function AppRoutes() {
           }
         />
         <Route
-          path="/admin/firma"
+          path="/admin/company"
           element={
             <RequireRole roles={[UserRole.SuperAdmin, UserRole.Admin]}>
               <FirmaPage />

@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
-import { Form, InputNumber, Button, App, ColorPicker, Divider, Typography, Upload, Popconfirm, Modal, Alert, Table, Tooltip } from 'antd';
+import { useSearchParams } from 'react-router-dom';
+import { Form, InputNumber, Button, App, ColorPicker, Divider, Typography, Upload, Popconfirm, Modal, Table, Tabs, Select, Card, Statistic, Row, Col, theme } from 'antd';
+import { formatDays } from '../../utils/formatMonths';
+import { ClearOutlined } from '@ant-design/icons';
 import type { UploadProps } from 'antd';
 import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { tenantsApi } from '@alblue/api-client';
-import type { TenantPaymentDto } from '@alblue/shared-types';
 import { useTranslation } from '@alblue/i18n';
 import dayjs from 'dayjs';
 import { PageHeader } from '../../components/PageHeader';
 import { getTranslatedError } from '../../utils/errors';
 import { useTenantLogo } from '../../hooks/useTenantLogo';
 import { compressFile } from '../../utils/compressImage';
-import { formatMonths } from '../../utils/formatMonths';
+import { paidAtColumn, durationColumn, amountColumn, invoiceColumn, notesColumn } from '../../utils/paymentColumns';
+import { EmptyState } from '../../components/EmptyState';
 
 const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 const ALLOWED_LOGO_TYPES = ['image/png', 'image/jpeg', 'image/svg+xml'];
@@ -64,15 +67,25 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
     queryFn: () => tenantsApi.listMyPayments().then((r) => r.data),
   });
 
-  // Days until paidThrough — drives the banner severity. Negative = past,
-  // null = no current coverage. We don't show a banner above 14 days
-  // remaining; the explicit Naplata section below carries the date.
+  // Days until paidThrough — drives the Statistic card coloring in the
+  // Naplata tab. Negative = past, null = no current coverage.
   const daysToExpiry = tenant?.paidThrough
     ? dayjs(tenant.paidThrough).endOf('day').diff(dayjs().startOf('day'), 'day')
     : null;
-  const showExpiryBanner = tenant?.blockedAt
-    ? true
-    : daysToExpiry !== null && daysToExpiry <= 14;
+
+  // Tab state — read from ?tab=billing so notifications can deep-link
+  // straight to the Naplata tab. Writes back to the URL on switch so
+  // refresh keeps you on the same tab.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') === 'billing' ? 'billing' : 'settings';
+  const [activeTab, setActiveTabState] = useState<string>(tabFromUrl);
+  useEffect(() => { setActiveTabState(tabFromUrl); }, [tabFromUrl]);
+  const setActiveTab = (key: string) => {
+    setActiveTabState(key);
+    const next = new URLSearchParams(searchParams);
+    if (key === 'billing') next.set('tab', 'billing'); else next.delete('tab');
+    setSearchParams(next, { replace: true });
+  };
 
   useEffect(() => {
     if (settings) {
@@ -87,6 +100,7 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
 
   const logoObjectUrl = useTenantLogo();
   const [logoPreviewOpen, setLogoPreviewOpen] = useState(false);
+  const [paymentsYearFilter, setPaymentsYearFilter] = useState<number | undefined>(undefined);
 
   // Compress (raster only — SVG passes through compressFile unchanged) before
   // upload. Same util OrderAttachments uses, so PNG/JPG logos get capped at
@@ -159,68 +173,50 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
         />
       )}
 
-      {/* Subscription banner — visible only when something needs attention
-          (blocked, expired, or expiring within 14 days). Stays silent at
-          > 14 days so it doesn't become wallpaper the Admin tunes out. */}
-      {showExpiryBanner && tenant && (
-        (() => {
-          if (tenant.blockedAt) {
-            return (
-              <Alert
-                type="error"
-                showIcon
-                style={{ maxWidth: 720, marginBottom: 16 }}
-                message={t('admin.tenantProfile.subBlocked', { defaultValue: 'Firma je blokirana — kontaktirajte podršku za nastavak rada.' })}
-              />
-            );
-          }
-          if (daysToExpiry !== null && daysToExpiry < 0) {
-            return (
-              <Alert
-                type="error"
-                showIcon
-                style={{ maxWidth: 720, marginBottom: 16 }}
-                message={t('admin.tenantProfile.subExpired', {
-                  defaultValue: 'Pretplata je istekla {{date}}. Kontaktirajte podršku za nastavak rada.',
-                  date: dayjs(tenant.paidThrough!).format('DD.MM.YYYY.'),
-                })}
-              />
-            );
-          }
-          if (daysToExpiry !== null && daysToExpiry <= 7) {
-            return (
-              <Alert
-                type="warning"
-                showIcon
-                style={{ maxWidth: 720, marginBottom: 16 }}
-                message={t('admin.tenantProfile.subExpiringSoon', {
-                  defaultValue: 'Pretplata ističe za {{count}} dana ({{date}}). Pripremite uplatu.',
-                  count: daysToExpiry,
-                  date: dayjs(tenant.paidThrough!).format('DD.MM.YYYY.'),
-                })}
-              />
-            );
-          }
-          return (
-            <Alert
-              type="info"
-              showIcon
-              style={{ maxWidth: 720, marginBottom: 16 }}
-              message={t('admin.tenantProfile.subExpiringTwoWeeks', {
-                defaultValue: 'Pretplata ističe {{date}} ({{count}} dana).',
-                count: daysToExpiry ?? 0,
-                date: dayjs(tenant.paidThrough!).format('DD.MM.YYYY.'),
-              })}
-            />
-          );
-        })()
-      )}
+      {/* Two-panel split (Saša 18.06.2026): settings + billing live on
+          separate tabs so neither buries the other. Subscription-expiry
+          warnings live in the notification bell now (daily nudge from
+          BillingReminderService) — no in-page banner. */}
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={[
+          {
+            key: 'settings',
+            label: t('admin.tenantProfile.tabSettings', { defaultValue: 'Podešavanja' }),
+            children: renderSettingsTab(),
+          },
+          {
+            key: 'billing',
+            label: t('admin.tenantProfile.tabBilling', { defaultValue: 'Naplata' }),
+            children: renderBillingTab(),
+          },
+        ]}
+      />
 
-      {/* Render the form immediately with the BE's CreateDefault values
-          (7 / 3 / orange / red — mirrored from TenantSettings.CreateDefault)
-          so the page is never blank. The settings query overwrites these
-          via useEffect when it resolves; in practice the user won't see the
-          flash because settings always exist (seeded at tenant creation). */}
+      {/* Click-to-enlarge — same modal pattern OrderAttachments uses for
+          its image previews. Kept outside the Tabs since it's overlay UI. */}
+      <Modal
+        open={logoPreviewOpen}
+        onCancel={() => setLogoPreviewOpen(false)}
+        footer={null}
+        width="80vw"
+        style={{ top: 20 }}
+        destroyOnHidden
+      >
+        {logoObjectUrl && (
+          <img
+            src={logoObjectUrl}
+            style={{ width: '100%', maxHeight: '80vh', objectFit: 'contain' }}
+            alt="Logo"
+          />
+        )}
+      </Modal>
+    </div>
+  );
+
+  function renderSettingsTab() {
+    return (
       <Form
           form={form}
           layout="vertical"
@@ -331,88 +327,143 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
             </Button>
           </Form.Item>
         </Form>
+    );
+  }
 
-      {/* Read-only billing ledger (Saša 18.06.2026): Admin sees their
-          company's recorded payments so they can verify the last
-          transaction registered. Editing stays SuperAdmin-only. */}
-      <div style={{ maxWidth: 720, marginTop: 8 }}>
-        <Divider orientation="left">{t('admin.tenantProfile.billingHistory', { defaultValue: 'Naplata' })}</Divider>
-        {tenant?.paidThrough && (
-          <Typography.Paragraph type="secondary" style={{ marginBottom: 12 }}>
-            {t('admin.tenantProfile.paidThroughLine', {
-              defaultValue: 'Pretplata pokriva period do {{date}}.',
-              date: dayjs(tenant.paidThrough).format('DD.MM.YYYY.'),
-            })}
-          </Typography.Paragraph>
-        )}
+  function renderBillingTab() {
+    // Client-side sort + Year filter mirror the SA per-tenant Naplata
+    // table; an Admin reading their own history wants the same affordances.
+    const columnOpts = { t, language: i18n.language, clientSort: true };
+    const years = Array.from(new Set(myPayments.map((p) => dayjs(p.paidAt).year()))).sort((a, b) => b - a);
+    const filtered = paymentsYearFilter
+      ? myPayments.filter((p) => dayjs(p.paidAt).year() === paymentsYearFilter)
+      : myPayments;
+    return (
+      <div style={{ maxWidth: 720 }}>
+        <SubscriptionSummaryCard
+          tenant={tenant}
+          daysToExpiry={daysToExpiry}
+          t={t}
+          language={i18n.language}
+        />
+        <div style={{ marginBottom: 16 }}>
+          <Select
+            placeholder={t('admin.tenants.billing.filterByYear')}
+            allowClear
+            value={paymentsYearFilter}
+            onChange={(v) => setPaymentsYearFilter(v)}
+            style={{ width: 140 }}
+            disabled={years.length === 0}
+            options={years.map((y) => ({ label: String(y), value: y }))}
+          />
+        </div>
         <Table
           size="small"
-          dataSource={myPayments}
+          dataSource={filtered}
           rowKey="id"
           pagination={false}
-          locale={{ emptyText: t('admin.tenantProfile.noPayments', { defaultValue: 'Nema zabeleženih uplata.' }) }}
+          locale={{
+            emptyText: (
+              <EmptyState
+                description={paymentsYearFilter
+                  ? t('admin.tenants.billing.noPaymentsForYear')
+                  : t('admin.tenantProfile.noPayments', { defaultValue: 'Nema zabeleženih uplata.' })}
+                action={paymentsYearFilter ? {
+                  label: t('admin.tenants.clearFilters'),
+                  icon: <ClearOutlined />,
+                  onClick: () => setPaymentsYearFilter(undefined),
+                } : undefined}
+              />
+            ),
+          }}
           columns={[
-            {
-              title: t('admin.tenants.billing.paidAtColumn'),
-              dataIndex: 'paidAt',
-              width: 130,
-              render: (d: string) => dayjs(d).format('DD.MM.YYYY.'),
-            },
-            {
-              title: t('admin.tenants.billing.duration'),
-              width: 120,
-              render: (_: unknown, row: TenantPaymentDto) => {
-                const months = Math.max(1, Math.round(dayjs(row.periodEnd).diff(dayjs(row.periodStart), 'month', true)));
-                return <span style={{ whiteSpace: 'nowrap' }}>{formatMonths(months, i18n.language)}</span>;
-              },
-            },
-            {
-              title: t('admin.tenants.billing.amount'),
-              width: 130,
-              render: (_: unknown, row: TenantPaymentDto) =>
-                `${row.amount.toLocaleString('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${row.currency}`,
-            },
-            {
-              title: t('admin.tenants.billing.invoiceNumber'),
-              dataIndex: 'invoiceNumber',
-              width: 130,
-              render: (v: string | null) => v || <Typography.Text type="secondary">—</Typography.Text>,
-            },
-            {
-              title: t('admin.tenants.billing.notes'),
-              dataIndex: 'notes',
-              render: (v: string | null) =>
-                v
-                  ? (
-                      <Tooltip title={v}>
-                        <Typography.Text ellipsis style={{ maxWidth: 220, display: 'inline-block' }}>{v}</Typography.Text>
-                      </Tooltip>
-                    )
-                  : <Typography.Text type="secondary">—</Typography.Text>,
-            },
+            paidAtColumn(columnOpts),
+            durationColumn(columnOpts),
+            amountColumn(columnOpts),
+            invoiceColumn(columnOpts),
+            notesColumn(columnOpts),
           ]}
         />
       </div>
+    );
+  }
+}
 
-      {/* Click-to-enlarge — same modal pattern OrderAttachments uses for
-          its image previews. Keeps the page preview small (120×80) but lets
-          the user actually inspect detail. */}
-      <Modal
-        open={logoPreviewOpen}
-        onCancel={() => setLogoPreviewOpen(false)}
-        footer={null}
-        width="80vw"
-        style={{ top: 20 }}
-        destroyOnHidden
-      >
-        {logoObjectUrl && (
-          <img
-            src={logoObjectUrl}
-            style={{ width: '100%', maxHeight: '80vh', objectFit: 'contain' }}
-            alt="Logo"
+interface SubscriptionSummaryCardProps {
+  tenant: { paidThrough: string | null; blockedAt: string | null } | undefined;
+  daysToExpiry: number | null;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+  language: string;
+}
+
+/**
+ * At-a-glance subscription summary so the Admin doesn't have to mentally
+ * add (paidAt + months) across stacked payments. Three visual states:
+ *   - Active: green Statistic with date + days remaining.
+ *   - Lapsed: red Statistic showing how many days ago it expired.
+ *   - Never paid: neutral placeholder.
+ * Blocked tenants get nothing here — the page-level Alert at the top
+ * already covers that case with a clear "contact support" message.
+ */
+function SubscriptionSummaryCard({ tenant, daysToExpiry, t, language }: SubscriptionSummaryCardProps) {
+  const { token } = theme.useToken();
+  if (!tenant || tenant.blockedAt) return null;
+
+  if (!tenant.paidThrough) {
+    return (
+      <Card style={{ marginBottom: 16 }}>
+        <Typography.Text type="secondary">
+          {t('admin.tenantProfile.subscription.noneYet', { defaultValue: 'Trenutno nemate aktivnu pretplatu.' })}
+        </Typography.Text>
+      </Card>
+    );
+  }
+
+  const dateLabel = dayjs(tenant.paidThrough).format('DD.MM.YYYY.');
+  if (daysToExpiry !== null && daysToExpiry < 0) {
+    const daysAgo = Math.abs(daysToExpiry);
+    return (
+      <Card style={{ marginBottom: 16 }}>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Statistic
+              title={t('admin.tenantProfile.subscription.expiredOn', { defaultValue: 'Pretplata je istekla' })}
+              value={dateLabel}
+              valueStyle={{ color: token.colorError }}
+            />
+          </Col>
+          <Col span={12}>
+            <Statistic
+              title={t('admin.tenantProfile.subscription.lapsedBy', { defaultValue: 'Pre' })}
+              value={formatDays(daysAgo, language)}
+              valueStyle={{ color: token.colorError }}
+            />
+          </Col>
+        </Row>
+      </Card>
+    );
+  }
+
+  const daysRemainingColor = daysToExpiry !== null && daysToExpiry <= 14
+    ? token.colorWarning
+    : token.colorSuccess;
+  return (
+    <Card style={{ marginBottom: 16 }}>
+      <Row gutter={16}>
+        <Col span={12}>
+          <Statistic
+            title={t('admin.tenantProfile.subscription.activeUntil', { defaultValue: 'Pretplata aktivna do' })}
+            value={dateLabel}
           />
-        )}
-      </Modal>
-    </div>
+        </Col>
+        <Col span={12}>
+          <Statistic
+            title={t('admin.tenantProfile.subscription.remaining', { defaultValue: 'Preostalo' })}
+            value={formatDays(daysToExpiry ?? 0, language)}
+            valueStyle={{ color: daysRemainingColor }}
+          />
+        </Col>
+      </Row>
+    </Card>
   );
 }

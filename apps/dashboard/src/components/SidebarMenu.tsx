@@ -139,7 +139,7 @@ export function SidebarMenu({ collapsed: _collapsed }: SidebarMenuProps) {
         { key: '/admin/special-request-types', icon: <TagOutlined />, label: t('nav.specialRequests') },
         magacinEnabled && { key: '/admin/materials', icon: <BlockOutlined />, label: t('nav.materials') },
         {
-          key: '/admin/firma',
+          key: '/admin/company',
           icon: <BankOutlined />,
           label: t('nav.firma', { defaultValue: 'Firma' }),
         },

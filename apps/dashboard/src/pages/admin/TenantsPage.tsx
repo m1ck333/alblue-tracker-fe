@@ -19,7 +19,7 @@ import { TableExportButton } from '../../components/TableExportButton';
 import type { ExportColumn } from '../../utils/exportTable';
 import { PageHeader } from '../../components/PageHeader';
 import { getTranslatedError } from '../../utils/errors';
-import { formatMonths } from '../../utils/formatMonths';
+import { paidAtColumn, durationColumn, amountColumn, invoiceColumn, notesColumn } from '../../utils/paymentColumns';
 
 // Defaults for warning / critical days seeded at tenant creation time so
 // the new tenant's Admin has something sensible until they tune them via
@@ -744,54 +744,11 @@ export function TenantsPage({ hideHeader = false }: TenantsPageProps = {}) {
                       ),
                     }}
                     columns={[
-                      {
-                        title: t('admin.tenants.billing.paidAtColumn'),
-                        dataIndex: 'paidAt',
-                        sorter: (a: TenantPaymentDto, b: TenantPaymentDto) => dayjs(a.paidAt).valueOf() - dayjs(b.paidAt).valueOf(),
-                        defaultSortOrder: 'descend' as const,
-                        render: (d: string) => dayjs(d).format('DD.MM.YYYY.'),
-                        width: 130,
-                      },
-                      {
-                        // Saša 18.06.2026: mirror the input form — show
-                        // duration in months, not the derived date range.
-                        // End date is on the Firme list ("Plaćeno do") for
-                        // the whole tenant; per-row redundancy isn't useful.
-                        title: t('admin.tenants.billing.duration'),
-                        sorter: (a: TenantPaymentDto, b: TenantPaymentDto) => dayjs(a.periodStart).valueOf() - dayjs(b.periodStart).valueOf(),
-                        render: (_: unknown, row: TenantPaymentDto) => {
-                          const months = Math.max(1, Math.round(dayjs(row.periodEnd).diff(dayjs(row.periodStart), 'month', true)));
-                          return <span style={{ whiteSpace: 'nowrap' }}>{formatMonths(months, i18n.language)}</span>;
-                        },
-                        width: 120,
-                      },
-                      {
-                        title: t('admin.tenants.billing.amount'),
-                        sorter: (a: TenantPaymentDto, b: TenantPaymentDto) => a.amount - b.amount,
-                        render: (_: unknown, row: TenantPaymentDto) =>
-                          `${row.amount.toLocaleString('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${row.currency}`,
-                        width: 130,
-                      },
-                      {
-                        title: t('admin.tenants.billing.invoiceNumber'),
-                        dataIndex: 'invoiceNumber',
-                        sorter: (a: TenantPaymentDto, b: TenantPaymentDto) => (a.invoiceNumber ?? '').localeCompare(b.invoiceNumber ?? ''),
-                        render: (v: string | null) => v || <Typography.Text type="secondary">—</Typography.Text>,
-                        width: 130,
-                      },
-                      {
-                        title: t('admin.tenants.billing.notes'),
-                        dataIndex: 'notes',
-                        render: (v: string | null) =>
-                          v
-                            ? (
-                                <Tooltip title={v}>
-                                  <Typography.Text ellipsis style={{ maxWidth: 200, display: 'inline-block' }}>{v}</Typography.Text>
-                                </Tooltip>
-                              )
-                            : <Typography.Text type="secondary">—</Typography.Text>,
-                        width: 200,
-                      },
+                      paidAtColumn<TenantPaymentDto>({ t, language: i18n.language, clientSort: true }),
+                      durationColumn<TenantPaymentDto>({ t, language: i18n.language, clientSort: true }),
+                      amountColumn<TenantPaymentDto>({ t, language: i18n.language, clientSort: true }),
+                      invoiceColumn<TenantPaymentDto>({ t, language: i18n.language, clientSort: true }),
+                      notesColumn<TenantPaymentDto>({ t, language: i18n.language, clientSort: true }),
                       {
                         title: '',
                         width: 90,

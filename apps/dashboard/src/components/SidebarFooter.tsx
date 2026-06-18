@@ -65,6 +65,8 @@ const NOTIFICATION_TEMPLATE_KEY: Partial<Record<NotificationType, string>> = {
   [NotificationType.ChangeRequest]: 'notifications.templates.changeRequest',
   [NotificationType.ChangeRequestApproved]: 'notifications.templates.changeRequestApproved',
   [NotificationType.ChangeRequestRejected]: 'notifications.templates.changeRequestRejected',
+  [NotificationType.SubscriptionExpiring]: 'notifications.templates.subscriptionExpiring',
+  [NotificationType.SubscriptionExpired]: 'notifications.templates.subscriptionExpired',
 };
 
 /**
@@ -87,6 +89,8 @@ const NOTIFICATION_ICON: Partial<Record<NotificationType, NotificationIconSpec>>
   [NotificationType.ChangeRequest]: { icon: EditOutlined, colorToken: 'colorWarning' },
   [NotificationType.ChangeRequestApproved]: { icon: CheckCircleOutlined, colorToken: 'colorSuccess' },
   [NotificationType.ChangeRequestRejected]: { icon: CloseCircleOutlined, colorToken: 'colorError' },
+  [NotificationType.SubscriptionExpiring]: { icon: ClockCircleOutlined, colorToken: 'colorWarning' },
+  [NotificationType.SubscriptionExpired]: { icon: ClockCircleOutlined, colorToken: 'colorError' },
 };
 
 
@@ -233,6 +237,11 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
         break;
       case 'WorkSession':
         navigate('/dashboard');
+        break;
+      case 'Subscription':
+        // Saša 18.06.2026: lands the Admin on Profil firme with the
+        // Naplata tab pre-selected (TenantProfilePage reads ?tab=billing).
+        navigate('/admin/company?tab=billing');
         break;
       default:
         break;

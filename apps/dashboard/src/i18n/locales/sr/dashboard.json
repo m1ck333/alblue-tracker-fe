@@ -544,6 +544,14 @@
     "delete": "Obriši",
     "markUnread": "Označi kao nepročitano",
     "templates": {
+      "subscriptionExpiring": {
+        "title": "Pretplata uskoro ističe",
+        "message": "Ostalo je još {{daysRemaining}} dana — pretplata ističe {{paidThrough}}."
+      },
+      "subscriptionExpired": {
+        "title": "Pretplata je istekla",
+        "message": "Pretplata je istekla {{paidThrough}}."
+      },
       "materialLowStock": {
         "title": "Materijal ispod minimuma: {{code}} — {{name}}",
         "message": "Stanje materijala „{{code}} — {{name}}\" je palo ispod minimuma ({{onHand}} {{unit}}, min {{min}} {{unit}})."

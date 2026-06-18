@@ -46,6 +46,28 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    id: '2026-06-18-firma-naplata',
+    date: '2026-06-18',
+    title: {
+      sr: 'Firma — pregled pretplate i istorija uplata',
+      en: 'Company — subscription overview and payment history',
+    },
+    bullets: [
+      {
+        sr: 'Stranica „Firma" je sad podeljena na dva taba: „Podešavanja" (logo i rokovi narudžbina) i „Naplata" (pregled pretplate). U tabu „Naplata" odmah vidite do kada vam je pretplata aktivna i koliko dana je ostalo — više ne morate da računate sami sabirajući mesece iz pojedinačnih uplata.',
+        en: 'The "Company" page is now split into two tabs: "Settings" (logo and order deadlines) and "Billing" (subscription overview). The Billing tab shows at a glance how long your subscription is active and how many days remain — no more manual math across stacked payments.',
+      },
+      {
+        sr: 'Ispod pregleda je tabela istorije uplata sa kolonama: Datum uplate, Trajanje, Iznos, Faktura i Napomena. Možete sortirati po svakoj koloni i filtrirati po godini. Sve uplate su samo za čitanje — beleži ih tehnička podrška, a vi ovde proveravate da li je vaša poslednja uplata zavedena.',
+        en: 'Below the overview is the payment history table with columns: Payment date, Duration, Amount, Invoice number and Notes. Sortable by each column and filterable by year. Entries are read-only — support records them; this tab lets you confirm your last payment is on file.',
+      },
+      {
+        sr: 'Kada se pretplata bliži kraju (manje od 14 dana) ili je istekla, svako jutro vam stiže obaveštenje u zvoncetu (gore-levo u sidebaru). Klikom na obaveštenje otvarate Firma → Naplata tab — ne morate sami da pratite datume, sistem vas podseća.',
+        en: 'When the subscription is close to expiring (under 14 days) or has lapsed, you receive a morning notification in the bell (bottom-left of the sidebar). Clicking the notification opens Company → Billing — no need to track dates yourself, the system reminds you.',
+      },
+    ],
+  },
+  {
     id: '2026-06-16-change-password',
     date: '2026-06-16',
     title: {
