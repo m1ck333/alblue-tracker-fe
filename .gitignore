@@ -25,3 +25,4 @@ packages/**/*.d.ts.map
 TESTING_CHECKLIST.md
 !CLAUDE.md
 !HANDOFF.md
+_SASA_FEEDBACK_BATCH1.md

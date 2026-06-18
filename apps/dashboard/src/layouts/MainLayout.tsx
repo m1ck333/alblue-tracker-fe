@@ -67,9 +67,11 @@ export function MainLayout() {
   }, [tenantId]);
 
   // Sidebar inner content (logo + menu + footer). Re-used both as the
-  // Sider's children on desktop and as the Drawer's body on mobile. On
-  // mobile the logo row also carries an inline X to close the drawer, so
-  // we don't burn a whole second row on a header title.
+  // Sider's children on desktop and as the Drawer's body on mobile.
+  // Top row: tenant client logo, always centered (Saša 18.06.2026
+  // unified mobile + desktop). Close / collapse action lives in the
+  // bottom row's right corner on every breakpoint so the layout reads
+  // the same.
   const sidebarBody = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div
@@ -78,10 +80,9 @@ export function MainLayout() {
           margin: 16,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: isMobile ? 'space-between' : 'center',
+          justifyContent: 'center',
           overflow: 'hidden',
           flexShrink: 0,
-          gap: 8,
         }}
       >
         {/* Top of sidebar — Saša 14.06.2026 convention: this slot is the
@@ -94,15 +95,6 @@ export function MainLayout() {
           alt={tenantLogoUrl ? 'Logo' : 'MPMS'}
           style={{ height: isMobile || !collapsed ? 56 : 36, objectFit: 'contain' }}
         />
-        {isMobile && (
-          <Button
-            type="text"
-            size="small"
-            icon={<CloseOutlined style={{ color: '#fff', fontSize: 16 }} />}
-            onClick={() => setMobileDrawerOpen(false)}
-            aria-label="Zatvori meni"
-          />
-        )}
       </div>
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         <SidebarMenu collapsed={isMobile ? false : collapsed} />
@@ -111,25 +103,35 @@ export function MainLayout() {
         collapsed={isMobile ? false : collapsed}
         onOverlayAction={() => setMobileDrawerOpen(false)}
       />
-      {/* Single footer row combining the MPMS product mark + the
-          sidebar collapse toggle. antd Sider's default `trigger` is
-          disabled below (`trigger={null}`) so this is the only thing
-          at the bottom — no double footer.
-          Expanded: MPMS logo left, chevron right, one horizontal row.
-          Collapsed: MPMS square + chevron stacked vertically, both
-          centered, keeps the brand visible in icon-rail mode.
-          Mobile: only the MPMS mark (drawer has its own close button
-          in the top logo row). */}
+      {/* Bottom MPMS product mark. Per Saša 17.06.2026: same size as the
+          top logo (56px) and horizontally centered. The close / collapse
+          action sits in the right corner (position: absolute) so it
+          doesn't push the logo off-center — the X close on mobile and
+          the collapse chevron on desktop share this slot for visual
+          consistency (Saša 18.06.2026).
+          Collapsed rail: just the expand chevron, no logo (top of
+          sidebar already carries the square MPMS mark in icon-rail mode). */}
       {isMobile ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '6px 0 10px', opacity: 0.65, flexShrink: 0 }}>
-          <img src="/mpms-logo-text.png" alt="MPMS" style={{ height: 32, objectFit: 'contain' }} />
+        <div style={{
+          position: 'relative',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: 72,
+          margin: 16,
+          flexShrink: 0,
+        }}>
+          <img src="/mpms-logo-text.png" alt="MPMS" style={{ height: 56, objectFit: 'contain' }} />
+          <Button
+            type="text"
+            size="small"
+            icon={<CloseOutlined style={{ color: 'rgba(255,255,255,0.85)', fontSize: 16 }} />}
+            onClick={() => setMobileDrawerOpen(false)}
+            aria-label="Zatvori meni"
+            style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}
+          />
         </div>
       ) : collapsed ? (
-        // Collapsed rail — only the expand chevron. MPMS mark hidden:
-        // the square asset still showed up as a tiny logo above the
-        // chevron and Milos 14.06.2026 found it noisy in icon-rail
-        // mode. Top of sidebar already carries the brand when
-        // collapsed (mpms-logo.png), so we're not losing it product-wide.
         <div style={{ display: 'flex', justifyContent: 'center', padding: '4px 0 8px', flexShrink: 0 }}>
           <Button
             type="text"
@@ -140,19 +142,23 @@ export function MainLayout() {
           />
         </div>
       ) : (
-        // Padding-left 24 aligns the MPMS mark with the menu-item icons
-        // above (Info / Obaveštenja / Admin User); padding-right 16
-        // lines the collapse button up with the dropdown carets antd
-        // renders on expandable menu items. Reads as part of the menu,
-        // not a floating bottom row (Milos screenshot 14.06.2026).
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 16px 8px 24px', flexShrink: 0 }}>
-          <img src="/mpms-logo-text.png" alt="MPMS" style={{ height: 28, objectFit: 'contain', opacity: 0.65 }} />
+        <div style={{
+          position: 'relative',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: 72,
+          margin: 16,
+          flexShrink: 0,
+        }}>
+          <img src="/mpms-logo-text.png" alt="MPMS" style={{ height: 56, objectFit: 'contain' }} />
           <Button
             type="text"
             size="small"
             icon={<LeftOutlined style={{ color: 'rgba(255,255,255,0.85)' }} />}
             onClick={() => setCollapsed(true)}
             aria-label="Skupi sidebar"
+            style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}
           />
         </div>
       )}

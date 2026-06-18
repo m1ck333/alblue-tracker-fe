@@ -19,49 +19,59 @@ function DevErrorDetails({ error }: { error: Error }) {
   );
 }
 
-// Class component can't use hooks, so the i18n-aware UI lives in this
-// child function component. Switching locale re-renders it without
-// reloading the page. The ErrorBoundary mounts ABOVE App.tsx's
-// ConfigProvider, so when it catches we lose the user's dark/light
-// theme — re-apply it here from the persisted theme-store so the error
-// screen doesn't flash white on a dark-mode user.
-function ErrorBoundaryUI({ error }: { error: Error | null }) {
+// Inner: must live INSIDE the ConfigProvider so `theme.useToken()`
+// returns the dark/light tokens the SA actually has selected (the
+// outer wrapper applies the provider). Without this split, useToken
+// returned antd's default light palette regardless of user theme and
+// the Result title was rendered with low-contrast text on a light
+// canvas even for dark-mode users (Saša 18.06.2026).
+function ErrorBoundaryInner({ error }: { error: Error | null }) {
   const { t } = useTranslation('dashboard');
-  const mode = useThemeStore((s) => s.mode);
   const { token } = theme.useToken();
   return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      padding: 24,
+      background: token.colorBgContainer,
+      color: token.colorText,
+    }}>
+      <Result
+        status="500"
+        title={<span style={{ color: token.colorText }}>{t('errorBoundary.title')}</span>}
+        subTitle={<span style={{ color: token.colorTextSecondary }}>{t('errorBoundary.subtitle')}</span>}
+        extra={[
+          <Button
+            type="primary"
+            key="reload"
+            onClick={() => window.location.reload()}
+          >
+            {t('errorBoundary.reload')}
+          </Button>,
+          <Button
+            key="home"
+            onClick={() => { window.location.href = '/'; }}
+          >
+            {t('errorBoundary.home')}
+          </Button>,
+        ]}
+      >
+        {import.meta.env.DEV && error && <DevErrorDetails error={error} />}
+      </Result>
+    </div>
+  );
+}
+
+// Outer: the ErrorBoundary mounts ABOVE App.tsx's ConfigProvider, so
+// when it catches we lose the user's dark/light theme — re-apply it
+// here from the persisted theme-store before rendering the inner UI.
+function ErrorBoundaryUI({ error }: { error: Error | null }) {
+  const mode = useThemeStore((s) => s.mode);
+  return (
     <ConfigProvider theme={mode === 'dark' ? darkTheme : lightTheme}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        padding: 24,
-        background: token.colorBgLayout,
-      }}>
-        <Result
-          status="500"
-          title={t('errorBoundary.title')}
-          subTitle={t('errorBoundary.subtitle')}
-          extra={[
-            <Button
-              type="primary"
-              key="reload"
-              onClick={() => window.location.reload()}
-            >
-              {t('errorBoundary.reload')}
-            </Button>,
-            <Button
-              key="home"
-              onClick={() => { window.location.href = '/'; }}
-            >
-              {t('errorBoundary.home')}
-            </Button>,
-          ]}
-        >
-          {import.meta.env.DEV && error && <DevErrorDetails error={error} />}
-        </Result>
-      </div>
+      <ErrorBoundaryInner error={error} />
     </ConfigProvider>
   );
 }

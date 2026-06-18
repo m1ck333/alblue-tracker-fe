@@ -1,8 +1,9 @@
-import type { TenantDto, TenantPaymentDto, TenantSettingsDto, PagedResult } from '@alblue/shared-types';
+import type { AllTenantPaymentDto, TenantDto, TenantPaymentDto, TenantSettingsDto, PagedResult } from '@alblue/shared-types';
 import type {
   BlockTenantRequest,
   CreateTenantPaymentRequest,
   CreateTenantRequest,
+  UpdateTenantFeaturesRequest,
   UpdateTenantRequest,
   UpdateTenantSettingsRequest,
 } from '@alblue/shared-types';
@@ -90,5 +91,16 @@ export const tenantsApi = {
 
   unblock(tenantId: string) {
     return apiClient.post<TenantDto>(`/tenants/${tenantId}/unblock`, {});
+  },
+
+  // SA-only "Sve uplate" cross-tenant payments view.
+  listAllPayments(params?: { tenantId?: string; paidFrom?: string; paidTo?: string; currency?: string; page?: number; pageSize?: number; sortBy?: string; sortDirection?: string }) {
+    return apiClient.get<PagedResult<AllTenantPaymentDto>>('/tenants/payments', { params });
+  },
+
+  // SA-only feature toggles per tenant. Body lists the DISABLED feature
+  // keys — empty array enables everything.
+  updateFeatures(tenantId: string, data: UpdateTenantFeaturesRequest) {
+    return apiClient.put<TenantDto>(`/tenants/${tenantId}/features`, data);
   },
 };

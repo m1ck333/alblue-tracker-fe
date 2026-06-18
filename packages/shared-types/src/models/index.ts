@@ -501,11 +501,37 @@ export interface TenantDto {
   /** Max payment.periodEnd — date through which subscription is paid up.
    *  Null when no payments yet. FE compares to today to flag overdue. */
   paidThrough: string | null;
+  /** SA-controlled list of feature keys disabled for this tenant.
+   *  Sidebar + routes filter out items whose featureKey appears here.
+   *  Empty array = all features enabled. */
+  disabledFeatures: string[];
 }
+
+/** Known feature keys. Kept in sync with Tenant.KnownFeatures on the BE. */
+export const TenantFeature = {
+  ProcessTimes: 'process-times',
+  Magacin: 'magacin',
+} as const;
+export type TenantFeatureKey = typeof TenantFeature[keyof typeof TenantFeature];
 
 export interface TenantPaymentDto {
   id: string;
   tenantId: string;
+  periodStart: string;
+  periodEnd: string;
+  amount: number;
+  currency: string;
+  paidAt: string;
+  invoiceNumber: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface AllTenantPaymentDto {
+  id: string;
+  tenantId: string;
+  tenantName: string;
+  tenantCode: string;
   periodStart: string;
   periodEnd: string;
   amount: number;

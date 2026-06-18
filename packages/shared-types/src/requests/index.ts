@@ -341,6 +341,10 @@ export interface BlockTenantRequest {
   reason?: string | null;
 }
 
+export interface UpdateTenantFeaturesRequest {
+  disabledFeatures: string[];
+}
+
 export interface UpdateTenantSettingsRequest {
   defaultWarningDays: number;
   defaultCriticalDays: number;
