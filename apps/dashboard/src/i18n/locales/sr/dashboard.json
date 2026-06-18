@@ -498,7 +498,7 @@
         "blockedReason": "Razlog",
         "blockReasonLabel": "Razlog (opciono)",
         "blockedBanner": "Firma je blokirana — korisnici ove firme nemaju pristup aplikaciji.",
-        "blockWarning": "Korisnici ove firme će biti odjavljeni i neće moći da pristupe aplikaciji dok ne odblokirate firmu.",
+        "blockWarning": "Korisnici ove firme će biti odjavljeni pri sledećoj akciji u aplikaciji i neće moći da pristupe dok ne odblokirate firmu.",
         "blockReasonPlaceholder": "npr. Nije plaćena pretplata za poslednji kvartal"
       }
     },

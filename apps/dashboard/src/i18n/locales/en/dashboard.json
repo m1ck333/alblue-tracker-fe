@@ -498,7 +498,7 @@
         "blockedReason": "Reason",
         "blockReasonLabel": "Reason (optional)",
         "blockedBanner": "Company is blocked — its users cannot access the app.",
-        "blockWarning": "Users of this company will be signed out and unable to access the app until you unblock the company.",
+        "blockWarning": "Users of this company will be signed out on their next action and unable to access the app until you unblock the company.",
         "blockReasonPlaceholder": "e.g. Subscription unpaid for the last quarter"
       }
     },
