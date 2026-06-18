@@ -73,6 +73,13 @@ export const tenantsApi = {
     return apiClient.get<TenantPaymentDto[]>(`/tenants/${tenantId}/payments`);
   },
 
+  // Read-only view of the CURRENT tenant's payment history — tenant
+  // Admin can confirm their company's recorded payments without seeing
+  // the SuperAdmin cross-tenant data.
+  listMyPayments() {
+    return apiClient.get<TenantPaymentDto[]>('/tenants/me/payments');
+  },
+
   addPayment(tenantId: string, data: CreateTenantPaymentRequest) {
     return apiClient.post<TenantPaymentDto>(`/tenants/${tenantId}/payments`, data);
   },

@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Form, InputNumber, Button, App, ColorPicker, Divider, Typography, Upload, Popconfirm, Modal } from 'antd';
+import { Form, InputNumber, Button, App, ColorPicker, Divider, Typography, Upload, Popconfirm, Modal, Alert, Table, Tooltip } from 'antd';
 import type { UploadProps } from 'antd';
 import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { tenantsApi } from '@alblue/api-client';
+import type { TenantPaymentDto } from '@alblue/shared-types';
 import { useTranslation } from '@alblue/i18n';
+import dayjs from 'dayjs';
 import { PageHeader } from '../../components/PageHeader';
 import { getTranslatedError } from '../../utils/errors';
 import { useTenantLogo } from '../../hooks/useTenantLogo';
 import { compressFile } from '../../utils/compressImage';
+import { formatMonths } from '../../utils/formatMonths';
 
 const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 const ALLOWED_LOGO_TYPES = ['image/png', 'image/jpeg', 'image/svg+xml'];
@@ -38,7 +41,7 @@ interface TenantProfilePageProps {
 }
 
 export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps = {}) {
-  const { t } = useTranslation('dashboard');
+  const { t, i18n } = useTranslation('dashboard');
   const { message } = App.useApp();
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
@@ -52,6 +55,24 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
     queryKey: ['my-tenant-settings'],
     queryFn: () => tenantsApi.getMySettings().then((r) => r.data),
   });
+
+  // Saša 18.06.2026: Admin gets a read-only view of their own company's
+  // billing history so they can confirm "did our last payment register".
+  // Mutations stay SuperAdmin-only on the {id} routes.
+  const { data: myPayments = [] } = useQuery({
+    queryKey: ['my-tenant-payments'],
+    queryFn: () => tenantsApi.listMyPayments().then((r) => r.data),
+  });
+
+  // Days until paidThrough — drives the banner severity. Negative = past,
+  // null = no current coverage. We don't show a banner above 14 days
+  // remaining; the explicit Naplata section below carries the date.
+  const daysToExpiry = tenant?.paidThrough
+    ? dayjs(tenant.paidThrough).endOf('day').diff(dayjs().startOf('day'), 'day')
+    : null;
+  const showExpiryBanner = tenant?.blockedAt
+    ? true
+    : daysToExpiry !== null && daysToExpiry <= 14;
 
   useEffect(() => {
     if (settings) {
@@ -137,6 +158,64 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
           subtitle={tenant ? <Typography.Text type="secondary">{tenant.name} · {tenant.code}</Typography.Text> : undefined}
         />
       )}
+
+      {/* Subscription banner — visible only when something needs attention
+          (blocked, expired, or expiring within 14 days). Stays silent at
+          > 14 days so it doesn't become wallpaper the Admin tunes out. */}
+      {showExpiryBanner && tenant && (
+        (() => {
+          if (tenant.blockedAt) {
+            return (
+              <Alert
+                type="error"
+                showIcon
+                style={{ maxWidth: 720, marginBottom: 16 }}
+                message={t('admin.tenantProfile.subBlocked', { defaultValue: 'Firma je blokirana — kontaktirajte podršku za nastavak rada.' })}
+              />
+            );
+          }
+          if (daysToExpiry !== null && daysToExpiry < 0) {
+            return (
+              <Alert
+                type="error"
+                showIcon
+                style={{ maxWidth: 720, marginBottom: 16 }}
+                message={t('admin.tenantProfile.subExpired', {
+                  defaultValue: 'Pretplata je istekla {{date}}. Kontaktirajte podršku za nastavak rada.',
+                  date: dayjs(tenant.paidThrough!).format('DD.MM.YYYY.'),
+                })}
+              />
+            );
+          }
+          if (daysToExpiry !== null && daysToExpiry <= 7) {
+            return (
+              <Alert
+                type="warning"
+                showIcon
+                style={{ maxWidth: 720, marginBottom: 16 }}
+                message={t('admin.tenantProfile.subExpiringSoon', {
+                  defaultValue: 'Pretplata ističe za {{count}} dana ({{date}}). Pripremite uplatu.',
+                  count: daysToExpiry,
+                  date: dayjs(tenant.paidThrough!).format('DD.MM.YYYY.'),
+                })}
+              />
+            );
+          }
+          return (
+            <Alert
+              type="info"
+              showIcon
+              style={{ maxWidth: 720, marginBottom: 16 }}
+              message={t('admin.tenantProfile.subExpiringTwoWeeks', {
+                defaultValue: 'Pretplata ističe {{date}} ({{count}} dana).',
+                count: daysToExpiry ?? 0,
+                date: dayjs(tenant.paidThrough!).format('DD.MM.YYYY.'),
+              })}
+            />
+          );
+        })()
+      )}
+
       {/* Render the form immediately with the BE's CreateDefault values
           (7 / 3 / orange / red — mirrored from TenantSettings.CreateDefault)
           so the page is never blank. The settings query overwrites these
@@ -252,6 +331,68 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
             </Button>
           </Form.Item>
         </Form>
+
+      {/* Read-only billing ledger (Saša 18.06.2026): Admin sees their
+          company's recorded payments so they can verify the last
+          transaction registered. Editing stays SuperAdmin-only. */}
+      <div style={{ maxWidth: 720, marginTop: 8 }}>
+        <Divider orientation="left">{t('admin.tenantProfile.billingHistory', { defaultValue: 'Naplata' })}</Divider>
+        {tenant?.paidThrough && (
+          <Typography.Paragraph type="secondary" style={{ marginBottom: 12 }}>
+            {t('admin.tenantProfile.paidThroughLine', {
+              defaultValue: 'Pretplata pokriva period do {{date}}.',
+              date: dayjs(tenant.paidThrough).format('DD.MM.YYYY.'),
+            })}
+          </Typography.Paragraph>
+        )}
+        <Table
+          size="small"
+          dataSource={myPayments}
+          rowKey="id"
+          pagination={false}
+          locale={{ emptyText: t('admin.tenantProfile.noPayments', { defaultValue: 'Nema zabeleženih uplata.' }) }}
+          columns={[
+            {
+              title: t('admin.tenants.billing.paidAtColumn'),
+              dataIndex: 'paidAt',
+              width: 130,
+              render: (d: string) => dayjs(d).format('DD.MM.YYYY.'),
+            },
+            {
+              title: t('admin.tenants.billing.duration'),
+              width: 120,
+              render: (_: unknown, row: TenantPaymentDto) => {
+                const months = Math.max(1, Math.round(dayjs(row.periodEnd).diff(dayjs(row.periodStart), 'month', true)));
+                return <span style={{ whiteSpace: 'nowrap' }}>{formatMonths(months, i18n.language)}</span>;
+              },
+            },
+            {
+              title: t('admin.tenants.billing.amount'),
+              width: 130,
+              render: (_: unknown, row: TenantPaymentDto) =>
+                `${row.amount.toLocaleString('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${row.currency}`,
+            },
+            {
+              title: t('admin.tenants.billing.invoiceNumber'),
+              dataIndex: 'invoiceNumber',
+              width: 130,
+              render: (v: string | null) => v || <Typography.Text type="secondary">—</Typography.Text>,
+            },
+            {
+              title: t('admin.tenants.billing.notes'),
+              dataIndex: 'notes',
+              render: (v: string | null) =>
+                v
+                  ? (
+                      <Tooltip title={v}>
+                        <Typography.Text ellipsis style={{ maxWidth: 220, display: 'inline-block' }}>{v}</Typography.Text>
+                      </Tooltip>
+                    )
+                  : <Typography.Text type="secondary">—</Typography.Text>,
+            },
+          ]}
+        />
+      </div>
 
       {/* Click-to-enlarge — same modal pattern OrderAttachments uses for
           its image previews. Keeps the page preview small (120×80) but lets
