@@ -72,8 +72,21 @@ Bypass with `git commit --no-verify` only when reverting.
   `pnpm e2e` (headless) or `pnpm e2e:ui` (interactive). Tests assume a
   running stack on `localhost:5941` (dashboard) and `localhost:5030`
   (BE) — override via `PLAYWRIGHT_BASE_URL`. Test credentials default
-  to `admin@demo.com` / `Demo123!` / tenant `DEMO`; override via
-  `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` / `E2E_TENANT_CODE`.
+  to `admin@demo.com` / `Admin123!` / tenant `DEMO`; override via
+  `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` / `E2E_TENANT_CODE`. If
+  the admin password has been manually changed on your local DB:
+  `E2E_ADMIN_PASSWORD=<your-pw> pnpm e2e`.
+
+  **E2E in CI** (`.github/workflows/e2e.yml`): spins up Postgres +
+  BE + FE on every push to main + PR. Requires the repo secret
+  `BE_CHECKOUT_TOKEN` — a fine-grained GitHub PAT with `Contents:read`
+  on `NikolaMilanovic22/AlgreenMES`. Create it at GitHub → Settings →
+  Developer settings → Personal access tokens → Fine-grained tokens →
+  Generate new token; set resource owner to `NikolaMilanovic22`,
+  repository access to "Only select repositories" → `AlgreenMES`,
+  permissions to Repository → Contents: Read. Then add to the FE repo
+  at Settings → Secrets and variables → Actions → New repository
+  secret named `BE_CHECKOUT_TOKEN`.
 
 ## Environment Variables
 Set in `.env` at root or per-app:
