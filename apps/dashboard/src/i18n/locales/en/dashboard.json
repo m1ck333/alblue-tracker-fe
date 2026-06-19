@@ -286,7 +286,9 @@
     "rejectFailed": "Failed to reject change request",
     "approveConfirm": "Are you sure you want to approve this request?",
     "rejectConfirm": "Are you sure you want to reject this request?",
-    "responseNote": "Response"
+    "responseNote": "Response",
+    "requestType": "Request type",
+    "description": "Description"
   },
   "admin": {
     "users": {

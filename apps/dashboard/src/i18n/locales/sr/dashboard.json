@@ -286,7 +286,9 @@
     "rejectFailed": "Odbijanje zahteva za izmenu nije uspelo",
     "approveConfirm": "Da li ste sigurni da želite da odobrite ovaj zahtev?",
     "rejectConfirm": "Da li ste sigurni da želite da odbijete ovaj zahtev?",
-    "responseNote": "Odgovor"
+    "responseNote": "Odgovor",
+    "requestType": "Tip zahteva",
+    "description": "Opis"
   },
   "admin": {
     "users": {

@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+# Run our static checks BEFORE commit so the regression we shipped today
+# (defaultValue cleanup nuked locale keys) is caught at the keyboard, not
+# in QA. Keep this fast — anything slower than ~3s here will get bypassed
+# with --no-verify out of frustration.
+
+echo "→ Checking i18n keys…"
+node scripts/check-i18n-keys.mjs || exit 1
