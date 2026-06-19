@@ -58,6 +58,23 @@ pre-commit chain runs on every commit (~5s total):
 
 Bypass with `git commit --no-verify` only when reverting.
 
+## Tooling
+- **CI**: `.github/workflows/ci.yml` runs the same static checks + lint
+  + typecheck + dashboard/tablet builds on every push to main + PR.
+  Catches anything bypassed via `--no-verify`.
+- **Dependabot**: `.github/dependabot.yml` — weekly npm patch/minor PRs
+  grouped, immediate security advisories, monthly GHA updates.
+- **Bundle analyzer** (rollup-plugin-visualizer):
+  `pnpm analyze:dashboard` builds with `ANALYZE=1` and opens
+  `dist/stats.html` (interactive treemap of chunk contents).
+- **E2E** (Playwright): `e2e/*.spec.ts`. First time, run
+  `pnpm exec playwright install chromium` to fetch the browser. Then
+  `pnpm e2e` (headless) or `pnpm e2e:ui` (interactive). Tests assume a
+  running stack on `localhost:5941` (dashboard) and `localhost:5030`
+  (BE) — override via `PLAYWRIGHT_BASE_URL`. Test credentials default
+  to `admin@demo.com` / `Demo123!` / tenant `DEMO`; override via
+  `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` / `E2E_TENANT_CODE`.
+
 ## Environment Variables
 Set in `.env` at root or per-app:
 - `VITE_API_BASE_URL` - Backend API (default: http://localhost:5031/api)

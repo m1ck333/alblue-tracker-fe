@@ -26,3 +26,10 @@ TESTING_CHECKLIST.md
 !CLAUDE.md
 !HANDOFF.md
 _SASA_FEEDBACK_BATCH1.md
+
+# Playwright
+playwright-report/
+test-results/
+
+# Bundle analyzer output
+apps/dashboard/dist/stats.html

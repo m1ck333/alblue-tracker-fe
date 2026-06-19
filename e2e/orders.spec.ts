@@ -1,0 +1,43 @@
+import { test, expect } from '@playwright/test';
+
+// Order listing is the central page of the app — every coordinator/admin
+// lands here multiple times per shift. This test verifies the master
+// table reaches the network and renders, which exercises:
+//   - JWT auth + tenant filter on /api/orders
+//   - SignalR connection (optional — not asserted)
+//   - antd Table render against PagedResult<T>
+
+const TEST_TENANT = process.env.E2E_TENANT_CODE ?? 'DEMO';
+const TEST_EMAIL = process.env.E2E_ADMIN_EMAIL ?? 'admin@demo.com';
+const TEST_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? 'Demo123!';
+
+async function login(page: import('@playwright/test').Page) {
+  await page.goto('/login');
+  await page.getByPlaceholder(/email/i).fill(TEST_EMAIL);
+  await page.getByPlaceholder(/lozinka|password/i).fill(TEST_PASSWORD);
+  await page.getByPlaceholder(/firme|tenant|kod/i).fill(TEST_TENANT);
+  await page.getByRole('button', { name: /prijav|sign in|login/i }).click();
+  await page.waitForURL((url) => !url.pathname.endsWith('/login'), { timeout: 10_000 });
+}
+
+test('order list page loads', async ({ page }) => {
+  await login(page);
+  await page.goto('/orders');
+
+  // The page header is the most stable anchor — it's localized via
+  // common:labels.orders or similar and present even on empty data.
+  await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 5_000 });
+
+  // antd Table renders a <table> with at least the header row.
+  await expect(page.locator('table').first()).toBeVisible({ timeout: 10_000 });
+});
+
+test('admin can open Profil firme → Naplata tab', async ({ page }) => {
+  await login(page);
+  await page.goto('/admin/firma?tab=billing');
+
+  // The Naplata tab card with the subscription summary should render.
+  // We're not asserting specific content (depends on tenant payment
+  // state) — just that the page didn't blow up.
+  await expect(page.locator('body')).not.toContainText('admin.tenantProfile.', { timeout: 5_000 });
+});
