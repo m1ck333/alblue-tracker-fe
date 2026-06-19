@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { loginAsAdmin } from './helpers';
 
 // Order listing is the central page of the app — every coordinator/admin
 // lands here multiple times per shift. This test verifies the master
@@ -7,21 +8,8 @@ import { test, expect } from '@playwright/test';
 //   - SignalR connection (optional — not asserted)
 //   - antd Table render against PagedResult<T>
 
-const TEST_TENANT = process.env.E2E_TENANT_CODE ?? 'DEMO';
-const TEST_EMAIL = process.env.E2E_ADMIN_EMAIL ?? 'admin@demo.com';
-const TEST_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? 'Admin123!';
-
-async function login(page: import('@playwright/test').Page) {
-  await page.goto('/login');
-  await page.getByPlaceholder(/email/i).fill(TEST_EMAIL);
-  await page.getByPlaceholder(/lozinka|password/i).fill(TEST_PASSWORD);
-  await page.getByPlaceholder(/firme|tenant|kod/i).fill(TEST_TENANT);
-  await page.getByRole('button', { name: /prijav|sign in|login/i }).click();
-  await page.waitForURL((url) => !url.pathname.endsWith('/login'), { timeout: 10_000 });
-}
-
 test('order list page loads', async ({ page }) => {
-  await login(page);
+  await loginAsAdmin(page);
   await page.goto('/orders');
 
   // The page header is the most stable anchor — it's localized via
@@ -33,7 +21,7 @@ test('order list page loads', async ({ page }) => {
 });
 
 test('admin can open Profil firme → Naplata tab', async ({ page }) => {
-  await login(page);
+  await loginAsAdmin(page);
   await page.goto('/admin/firma?tab=billing');
 
   // The Naplata tab card with the subscription summary should render.
