@@ -6,7 +6,7 @@ import { test, expect } from '@playwright/test';
 
 const TEST_TENANT = process.env.E2E_TENANT_CODE ?? 'DEMO';
 const TEST_EMAIL = process.env.E2E_ADMIN_EMAIL ?? 'admin@demo.com';
-const TEST_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? 'Demo123!';
+const TEST_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? 'Admin123!';
 
 test.describe('auth', () => {
   test('unauthenticated user is redirected to /login', async ({ page }) => {
@@ -26,8 +26,9 @@ test.describe('auth', () => {
     // /orders depending on role. Either is fine — what we're verifying
     // is that we left /login and the app shell rendered.
     await expect(page).not.toHaveURL(/\/login/, { timeout: 10_000 });
-    // App shell renders the sidebar with the user menu.
-    await expect(page.getByText(TEST_EMAIL.split('@')[0], { exact: false })).toBeVisible({ timeout: 10_000 });
+    // App shell renders the sidebar with the Orders menu item — using a
+    // role+name lookup so it doesn't collide with role text elsewhere.
+    await expect(page.getByRole('menuitem', { name: /orders|narudžbine/i })).toBeVisible({ timeout: 10_000 });
   });
 
   test('invalid credentials surface the error toast', async ({ page }) => {

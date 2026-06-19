@@ -9,7 +9,7 @@ import { test, expect } from '@playwright/test';
 
 const TEST_TENANT = process.env.E2E_TENANT_CODE ?? 'DEMO';
 const TEST_EMAIL = process.env.E2E_ADMIN_EMAIL ?? 'admin@demo.com';
-const TEST_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? 'Demo123!';
+const TEST_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? 'Admin123!';
 
 async function login(page: import('@playwright/test').Page) {
   await page.goto('/login');
