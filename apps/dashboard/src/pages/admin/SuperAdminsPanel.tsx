@@ -49,11 +49,11 @@ export function SuperAdminsPanel() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['super-admins'] });
-      message.success(t('admin.systemAdmins.created', { defaultValue: 'Super administrator kreiran' }));
+      message.success(t('admin.systemAdmins.created'));
       setCreateOpen(false);
       form.resetFields();
     },
-    onError: (err) => message.error(getTranslatedError(err, t, t('admin.systemAdmins.createFailed', { defaultValue: 'Greška pri kreiranju' }))),
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.systemAdmins.createFailed'))),
   });
 
   const columns = [
@@ -64,7 +64,7 @@ export function SuperAdminsPanel() {
         <span>
           {email}
           {record.id === currentUserId && (
-            <Tag color="blue" style={{ marginLeft: 8 }}>{t('admin.systemAdmins.you', { defaultValue: 'Vi' })}</Tag>
+            <Tag color="blue" style={{ marginLeft: 8 }}>{t('admin.systemAdmins.you')}</Tag>
           )}
         </span>
       ),
@@ -94,15 +94,12 @@ export function SuperAdminsPanel() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <Typography.Paragraph type="secondary" style={{ marginBottom: 16 }}>
-        {t('admin.systemAdmins.help', {
-          defaultValue:
-            'Super administratori imaju pregled svih firmi (read-only), bez prava izmene podataka klijenata. Mogu kreirati nove super administratore i firme. Niko ne može menjati, brisati ili resetovati lozinku drugog super administratora — vlasnik to radi preko svog profila.',
-        })}
+        {t('admin.systemAdmins.help')}
       </Typography.Paragraph>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
-          {t('admin.systemAdmins.add', { defaultValue: 'Dodaj super administratora' })}
+          {t('admin.systemAdmins.add')}
         </Button>
       </div>
 
@@ -115,7 +112,7 @@ export function SuperAdminsPanel() {
       />
 
       <Drawer
-        title={t('admin.systemAdmins.add', { defaultValue: 'Dodaj super administratora' })}
+        title={t('admin.systemAdmins.add')}
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         width={Math.min(480, window.innerWidth)}

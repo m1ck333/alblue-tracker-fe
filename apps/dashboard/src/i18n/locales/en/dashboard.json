@@ -503,7 +503,9 @@
       }
     },
     "tenantProfile": {
-      "title": "Company profile"
+      "title": "Company profile",
+      "logoHelp": "The logo appears in the application header. Recommended: PNG with a transparent background, up to 2 MB.",
+      "deadlineHelp": "Number of days before the delivery deadline after which the system marks the order as warning / critical."
     },
     "firma": {
       "title": "Company",
@@ -533,6 +535,9 @@
       "autoLogoutAfterHours": "Auto-logout overtime (h)",
       "alarmBeforeLogoutMinutes": "Alarm before logout (min)",
       "autoLogoutRegularHours": "Auto-logout regular (h)"
+    },
+    "systemAdmins": {
+      "help": "System administrators have read-only access to all companies — no rights to edit client data. They can create new system administrators and companies. No one can edit, delete, or reset another system administrator's password — the owner manages that through their own profile."
     }
   },
   "notifications": {

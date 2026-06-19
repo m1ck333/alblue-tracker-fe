@@ -159,12 +159,12 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
     mutationFn: (values: { currentPassword: string; newPassword: string }) =>
       usersApi.changePassword(user!.id, values),
     onSuccess: () => {
-      message.success(t('profile.passwordChanged', { defaultValue: 'Lozinka uspešno promenjena' }));
+      message.success(t('profile.passwordChanged'));
       setChangePwOpen(false);
       pwForm.resetFields();
     },
     onError: (err) => message.error(getTranslatedError(err, t,
-      t('profile.passwordChangeFailed', { defaultValue: 'Greška pri menjanju lozinke' }))),
+      t('profile.passwordChangeFailed'))),
   });
 
   // Info group rendered as a real antd Menu so the flyout (collapsed) and
@@ -434,21 +434,21 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
       <Space direction="vertical" size={10} style={{ width: '100%' }}>
         <div>
           <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-            {t('profile.theme', { defaultValue: 'Theme' })}
+            {t('profile.theme')}
           </Text>
           <Segmented
             block
             value={themeMode}
             onChange={(v) => setThemeMode(v as 'light' | 'dark')}
             options={[
-              { label: t('profile.themeLight', { defaultValue: 'Light' }), value: 'light', icon: <SunOutlined /> },
-              { label: t('profile.themeDark', { defaultValue: 'Dark' }), value: 'dark', icon: <MoonOutlined /> },
+              { label: t('profile.themeLight'), value: 'light', icon: <SunOutlined /> },
+              { label: t('profile.themeDark'), value: 'dark', icon: <MoonOutlined /> },
             ]}
           />
         </div>
         <div>
           <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
-            <GlobalOutlined /> {t('profile.language', { defaultValue: 'Language' })}
+            <GlobalOutlined /> {t('profile.language')}
           </Text>
           <Segmented
             block
@@ -468,7 +468,7 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
         onClick={() => { setProfileOpen(false); onOverlayAction?.(); setChangePwOpen(true); }}
         style={{ marginBottom: 8 }}
       >
-        {t('profile.changePassword', { defaultValue: 'Promeni lozinku' })}
+        {t('profile.changePassword')}
       </Button>
       <Button
         block
@@ -485,7 +485,7 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
     <Drawer
       open={changePwOpen}
       onClose={() => { setChangePwOpen(false); pwForm.resetFields(); }}
-      title={t('profile.changePassword', { defaultValue: 'Promeni lozinku' })}
+      title={t('profile.changePassword')}
       width={Math.min(480, window.innerWidth)}
       extra={
         <Button
@@ -508,29 +508,29 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
       >
         <Form.Item
           name="currentPassword"
-          label={t('profile.currentPassword', { defaultValue: 'Trenutna lozinka' })}
-          rules={[{ required: true, message: t('profile.currentPasswordRequired', { defaultValue: 'Unesi trenutnu lozinku' }) }]}
+          label={t('profile.currentPassword')}
+          rules={[{ required: true, message: t('profile.currentPasswordRequired') }]}
         >
           <Input.Password autoComplete="current-password" autoFocus />
         </Form.Item>
         <Form.Item
           name="newPassword"
-          label={t('profile.newPassword', { defaultValue: 'Nova lozinka' })}
+          label={t('profile.newPassword')}
           rules={passwordRules(t)}
         >
           <Input.Password autoComplete="new-password" />
         </Form.Item>
         <Form.Item
           name="confirmPassword"
-          label={t('profile.confirmPassword', { defaultValue: 'Potvrdi novu lozinku' })}
+          label={t('profile.confirmPassword')}
           dependencies={['newPassword']}
           rules={[
-            { required: true, message: t('profile.confirmPasswordRequired', { defaultValue: 'Potvrdi novu lozinku' }) },
+            { required: true, message: t('profile.confirmPasswordRequired') },
             ({ getFieldValue }) => ({
               validator(_, value) {
                 if (!value || getFieldValue('newPassword') === value) return Promise.resolve();
                 return Promise.reject(new Error(
-                  t('profile.confirmPasswordMismatch', { defaultValue: 'Lozinke se ne poklapaju' })));
+                  t('profile.confirmPasswordMismatch')));
               },
             }),
           ]}
@@ -574,7 +574,7 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
       />
       {(() => {
         const bellRow = (
-          <Tooltip title={collapsed ? t('nav.notifications', { defaultValue: 'Notifications' }) : ''} placement="right">
+          <Tooltip title={collapsed ? t('nav.notifications') : ''} placement="right">
             <div
               style={rowStyle}
               onClick={isMobile ? () => setNotifOpen(true) : undefined}
@@ -584,7 +584,7 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
               <Badge count={count ?? 0} size="small" offset={[2, -2]}>
                 <BellOutlined style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)' }} />
               </Badge>
-              {!collapsed && <span>{t('nav.notifications', { defaultValue: 'Notifications' })}</span>}
+              {!collapsed && <span>{t('nav.notifications')}</span>}
             </div>
           </Tooltip>
         );
@@ -633,7 +633,7 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
         placement="rightBottom"
         arrow={false}
       >
-        <Tooltip title={collapsed ? user?.fullName ?? t('nav.profile', { defaultValue: 'Profile' }) : ''} placement="right">
+        <Tooltip title={collapsed ? user?.fullName ?? t('nav.profile') : ''} placement="right">
           <div
             style={rowStyle}
             onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
@@ -642,7 +642,7 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
             <UserOutlined style={{ fontSize: 16 }} />
             {!collapsed && (
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {user?.fullName ?? t('nav.profile', { defaultValue: 'Profile' })}
+                {user?.fullName ?? t('nav.profile')}
               </span>
             )}
           </div>

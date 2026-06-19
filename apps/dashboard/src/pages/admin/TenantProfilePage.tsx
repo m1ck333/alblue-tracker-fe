@@ -112,18 +112,18 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-tenant'] });
-      message.success(t('admin.tenantProfile.logoUploaded', { defaultValue: 'Logo sačuvan' }));
+      message.success(t('admin.tenantProfile.logoUploaded'));
     },
-    onError: (err) => message.error(getTranslatedError(err, t, t('admin.tenantProfile.logoUploadFailed', { defaultValue: 'Greška pri čuvanju logoa' }))),
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.tenantProfile.logoUploadFailed'))),
   });
 
   const deleteLogoMutation = useMutation({
     mutationFn: () => tenantsApi.deleteMyLogo().then((r) => r.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-tenant'] });
-      message.success(t('admin.tenantProfile.logoRemoved', { defaultValue: 'Logo uklonjen' }));
+      message.success(t('admin.tenantProfile.logoRemoved'));
     },
-    onError: (err) => message.error(getTranslatedError(err, t, t('admin.tenantProfile.logoUploadFailed', { defaultValue: 'Greška pri uklanjanju logoa' }))),
+    onError: (err) => message.error(getTranslatedError(err, t, t('admin.tenantProfile.logoUploadFailed'))),
   });
 
   // beforeUpload validates client-side, then kicks off our mutation (which
@@ -136,11 +136,11 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
     multiple: false,
     beforeUpload: (file) => {
       if (!ALLOWED_LOGO_TYPES.includes(file.type)) {
-        message.error(t('admin.tenantProfile.logoBadType', { defaultValue: 'Dozvoljeni formati: PNG, JPG, SVG' }));
+        message.error(t('admin.tenantProfile.logoBadType'));
         return Upload.LIST_IGNORE;
       }
       if (file.size > MAX_LOGO_BYTES) {
-        message.error(t('admin.tenantProfile.logoTooLarge', { defaultValue: 'Logo je veći od 2 MB' }));
+        message.error(t('admin.tenantProfile.logoTooLarge'));
         return Upload.LIST_IGNORE;
       }
       uploadMutation.mutate(file);
@@ -158,17 +158,17 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-tenant-settings'] });
-      message.success(t('admin.tenantProfile.saved', { defaultValue: 'Sačuvano' }));
+      message.success(t('admin.tenantProfile.saved'));
     },
     onError: (err) =>
-      message.error(getTranslatedError(err, t, t('admin.tenantProfile.saveFailed', { defaultValue: 'Greška pri čuvanju' }))),
+      message.error(getTranslatedError(err, t, t('admin.tenantProfile.saveFailed'))),
   });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       {!hideHeader && (
         <PageHeader
-          title={t('admin.tenantProfile.title', { defaultValue: 'Profil firme' })}
+          title={t('admin.tenantProfile.title')}
           subtitle={tenant ? <Typography.Text type="secondary">{tenant.name} · {tenant.code}</Typography.Text> : undefined}
         />
       )}
@@ -183,12 +183,12 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
         items={[
           {
             key: 'settings',
-            label: t('admin.tenantProfile.tabSettings', { defaultValue: 'Podešavanja' }),
+            label: t('admin.tenantProfile.tabSettings'),
             children: renderSettingsTab(),
           },
           {
             key: 'billing',
-            label: t('admin.tenantProfile.tabBilling', { defaultValue: 'Naplata' }),
+            label: t('admin.tenantProfile.tabBilling'),
             children: renderBillingTab(),
           },
         ]}
@@ -229,11 +229,9 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
           }}
           style={{ maxWidth: 520 }}
         >
-          <Divider orientation="left">{t('admin.tenantProfile.logoSection', { defaultValue: 'Logo firme' })}</Divider>
+          <Divider orientation="left">{t('admin.tenantProfile.logoSection')}</Divider>
           <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
-            {t('admin.tenantProfile.logoHelp', {
-              defaultValue: 'Logo se prikazuje u zaglavlju aplikacije. Preporučeno: PNG sa transparentnom pozadinom, do 2 MB.',
-            })}
+            {t('admin.tenantProfile.logoHelp')}
           </Typography.Text>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
             <div
@@ -259,7 +257,7 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
                 />
               ) : (
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                  {t('admin.tenantProfile.noLogo', { defaultValue: 'Nema logoa' })}
+                  {t('admin.tenantProfile.noLogo')}
                 </Typography.Text>
               )}
             </div>
@@ -267,30 +265,28 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
               <Upload {...uploadProps}>
                 <Button icon={<UploadOutlined />} loading={uploadMutation.isPending}>
                   {tenant?.logoUrl
-                    ? t('admin.tenantProfile.replaceLogo', { defaultValue: 'Zameni logo' })
-                    : t('admin.tenantProfile.uploadLogo', { defaultValue: 'Otpremi logo' })}
+                    ? t('admin.tenantProfile.replaceLogo')
+                    : t('admin.tenantProfile.uploadLogo')}
                 </Button>
               </Upload>
               {tenant?.logoUrl && (
                 <Popconfirm
-                  title={t('admin.tenantProfile.removeLogoConfirm', { defaultValue: 'Ukloniti logo?' })}
+                  title={t('admin.tenantProfile.removeLogoConfirm')}
                   onConfirm={() => deleteLogoMutation.mutate()}
                   okText={t('common:actions.confirm')}
                   cancelText={t('common:actions.cancel')}
                 >
                   <Button danger icon={<DeleteOutlined />} loading={deleteLogoMutation.isPending}>
-                    {t('admin.tenantProfile.removeLogo', { defaultValue: 'Ukloni logo' })}
+                    {t('admin.tenantProfile.removeLogo')}
                   </Button>
                 </Popconfirm>
               )}
             </div>
           </div>
 
-          <Divider orientation="left">{t('admin.tenantProfile.deadlineSection', { defaultValue: 'Rokovi narudžbina' })}</Divider>
+          <Divider orientation="left">{t('admin.tenantProfile.deadlineSection')}</Divider>
           <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
-            {t('admin.tenantProfile.deadlineHelp', {
-              defaultValue: 'Broj dana pre roka isporuke nakon kojih sistem označava narudžbinu kao upozorenje / kritičnu.',
-            })}
+            {t('admin.tenantProfile.deadlineHelp')}
           </Typography.Text>
           <div style={{ display: 'flex', gap: 16 }}>
             <Form.Item
@@ -311,7 +307,7 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
             </Form.Item>
           </div>
 
-          <Divider orientation="left">{t('admin.tenantProfile.colorsSection', { defaultValue: 'Boje upozorenja' })}</Divider>
+          <Divider orientation="left">{t('admin.tenantProfile.colorsSection')}</Divider>
           <div style={{ display: 'flex', gap: 16 }}>
             <Form.Item name="warningColor" label={t('admin.tenants.warningColor')}>
               <ColorPicker />
@@ -367,7 +363,7 @@ export function TenantProfilePage({ hideHeader = false }: TenantProfilePageProps
               <EmptyState
                 description={paymentsYearFilter
                   ? t('admin.tenants.billing.noPaymentsForYear')
-                  : t('admin.tenantProfile.noPayments', { defaultValue: 'Nema zabeleženih uplata.' })}
+                  : t('admin.tenantProfile.noPayments')}
                 action={paymentsYearFilter ? {
                   label: t('admin.tenants.clearFilters'),
                   icon: <ClearOutlined />,
@@ -413,7 +409,7 @@ function SubscriptionSummaryCard({ tenant, daysToExpiry, t, language }: Subscrip
     return (
       <Card style={{ marginBottom: 16 }}>
         <Typography.Text type="secondary">
-          {t('admin.tenantProfile.subscription.noneYet', { defaultValue: 'Trenutno nemate aktivnu pretplatu.' })}
+          {t('admin.tenantProfile.subscription.noneYet')}
         </Typography.Text>
       </Card>
     );
@@ -427,14 +423,14 @@ function SubscriptionSummaryCard({ tenant, daysToExpiry, t, language }: Subscrip
         <Row gutter={16}>
           <Col span={12}>
             <Statistic
-              title={t('admin.tenantProfile.subscription.expiredOn', { defaultValue: 'Pretplata je istekla' })}
+              title={t('admin.tenantProfile.subscription.expiredOn')}
               value={dateLabel}
               valueStyle={{ color: token.colorError }}
             />
           </Col>
           <Col span={12}>
             <Statistic
-              title={t('admin.tenantProfile.subscription.lapsedBy', { defaultValue: 'Pre' })}
+              title={t('admin.tenantProfile.subscription.lapsedBy')}
               value={formatDays(daysAgo, language)}
               valueStyle={{ color: token.colorError }}
             />
@@ -452,13 +448,13 @@ function SubscriptionSummaryCard({ tenant, daysToExpiry, t, language }: Subscrip
       <Row gutter={16}>
         <Col span={12}>
           <Statistic
-            title={t('admin.tenantProfile.subscription.activeUntil', { defaultValue: 'Pretplata aktivna do' })}
+            title={t('admin.tenantProfile.subscription.activeUntil')}
             value={dateLabel}
           />
         </Col>
         <Col span={12}>
           <Statistic
-            title={t('admin.tenantProfile.subscription.remaining', { defaultValue: 'Preostalo' })}
+            title={t('admin.tenantProfile.subscription.remaining')}
             value={formatDays(daysToExpiry ?? 0, language)}
             valueStyle={{ color: daysRemainingColor }}
           />

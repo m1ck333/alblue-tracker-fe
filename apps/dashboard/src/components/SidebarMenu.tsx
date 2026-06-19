@@ -141,7 +141,7 @@ export function SidebarMenu({ collapsed: _collapsed }: SidebarMenuProps) {
         {
           key: '/admin/company',
           icon: <BankOutlined />,
-          label: t('nav.firma', { defaultValue: 'Firma' }),
+          label: t('nav.firma'),
         },
         { key: '/admin/shifts', icon: <ClockCircleOutlined />, label: t('nav.shifts') },
       ].filter(Boolean),

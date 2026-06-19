@@ -979,9 +979,7 @@ export function OrderListPage() {
     const hasManualProcesses =
       !!watchedOrderTypeMeta?.allowsManualProcesses && manualProcessIds.length > 0;
     if (!hasItems && !hasManualProcesses) {
-      message.error(t('orders.emptyOrderError', {
-        defaultValue: 'Dodajte bar jednu stavku pre čuvanja narudžbine.',
-      }));
+      message.error(t('orders.emptyOrderError'));
       return;
     }
     try {

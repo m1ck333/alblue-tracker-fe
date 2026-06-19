@@ -503,7 +503,9 @@
       }
     },
     "tenantProfile": {
-      "title": "Profil firme"
+      "title": "Profil firme",
+      "logoHelp": "Logo se prikazuje u zaglavlju aplikacije. Preporučeno: PNG sa transparentnom pozadinom, do 2 MB.",
+      "deadlineHelp": "Broj dana pre roka isporuke nakon kojih sistem označava narudžbinu kao upozorenje / kritičnu."
     },
     "firma": {
       "title": "Firma",
@@ -533,6 +535,9 @@
       "autoLogoutAfterHours": "Auto-odjava prekovremeno (h)",
       "alarmBeforeLogoutMinutes": "Alarm pre odjave (min)",
       "autoLogoutRegularHours": "Auto-odjava redovan rad (h)"
+    },
+    "systemAdmins": {
+      "help": "Super administratori imaju pregled svih firmi (read-only), bez prava izmene podataka klijenata. Mogu kreirati nove super administratore i firme. Niko ne može menjati, brisati ili resetovati lozinku drugog super administratora — vlasnik to radi preko svog profila."
     }
   },
   "notifications": {
