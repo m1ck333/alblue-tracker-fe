@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Table, Input, Select, DatePicker, Typography, Tooltip } from 'antd';
+import { Table, Input, Select, DatePicker, Typography } from 'antd';
 import { ClearOutlined } from '@ant-design/icons';
 import { EmptyState } from '../../components/EmptyState';
 import { tenantsApi } from '@alblue/api-client';

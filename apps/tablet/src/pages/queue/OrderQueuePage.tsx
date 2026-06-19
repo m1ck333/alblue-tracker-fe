@@ -209,6 +209,11 @@ export function OrderQueuePage() {
         return () => clearTimeout(timer);
       }
     }
+    // visibleCount is intentionally NOT a dependency: this effect reacts
+    // to highlightId / mergedItems changes and READS the latest
+    // visibleCount to decide whether to bump it. Including it would
+    // re-run the effect every bump and re-trigger the highlight.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [highlightId, mergedItems]);
 
   if (isLoading) {

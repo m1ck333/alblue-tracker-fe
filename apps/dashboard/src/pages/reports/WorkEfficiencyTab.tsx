@@ -21,7 +21,6 @@ import {
 } from 'recharts';
 import { TableExportButton } from '../../components/TableExportButton';
 import type { ExportColumn } from '../../utils/exportTable';
-import { formatMinutes } from './reportsHelpers';
 
 const { RangePicker } = DatePicker;
 export function WorkEfficiencyTab() {
