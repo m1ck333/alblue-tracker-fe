@@ -316,7 +316,8 @@
       "loginHistory": "Istorija prijava",
       "loginHistoryEmpty": "Nema zabeleženih pokušaja prijave.",
       "loginSucceeded": "Uspešna prijava",
-      "loginFailed": "Neuspešan pokušaj"
+      "loginFailed": "Neuspešan pokušaj",
+      "tabTenantUsers": "Korisnici firme"
     },
     "processes": {
       "title": "Procesi",
@@ -505,7 +506,32 @@
     "tenantProfile": {
       "title": "Profil firme",
       "logoHelp": "Logo se prikazuje u zaglavlju aplikacije. Preporučeno: PNG sa transparentnom pozadinom, do 2 MB.",
-      "deadlineHelp": "Broj dana pre roka isporuke nakon kojih sistem označava narudžbinu kao upozorenje / kritičnu."
+      "deadlineHelp": "Broj dana pre roka isporuke nakon kojih sistem označava narudžbinu kao upozorenje / kritičnu.",
+      "colorsSection": "Boje upozorenja",
+      "deadlineSection": "Rokovi narudžbina",
+      "logoBadType": "Dozvoljeni formati: PNG, JPG, SVG",
+      "logoRemoved": "Logo uklonjen",
+      "logoSection": "Logo firme",
+      "logoTooLarge": "Logo je veći od 2 MB",
+      "logoUploadFailed": "Greška pri čuvanju logoa",
+      "logoUploaded": "Logo sačuvan",
+      "noLogo": "Nema logoa",
+      "noPayments": "Nema zabeleženih uplata.",
+      "removeLogo": "Ukloni logo",
+      "removeLogoConfirm": "Ukloniti logo?",
+      "replaceLogo": "Zameni logo",
+      "saveFailed": "Greška pri čuvanju",
+      "saved": "Sačuvano",
+      "subscription": {
+        "activeUntil": "Pretplata aktivna do",
+        "expiredOn": "Pretplata je istekla",
+        "lapsedBy": "Pre",
+        "noneYet": "Trenutno nemate aktivnu pretplatu.",
+        "remaining": "Preostalo"
+      },
+      "tabBilling": "Naplata",
+      "tabSettings": "Podešavanja",
+      "uploadLogo": "Otpremi logo"
     },
     "firma": {
       "title": "Firma",
@@ -537,7 +563,12 @@
       "autoLogoutRegularHours": "Auto-odjava redovan rad (h)"
     },
     "systemAdmins": {
-      "help": "Super administratori imaju pregled svih firmi (read-only), bez prava izmene podataka klijenata. Mogu kreirati nove super administratore i firme. Niko ne može menjati, brisati ili resetovati lozinku drugog super administratora — vlasnik to radi preko svog profila."
+      "help": "Super administratori imaju pregled svih firmi (read-only), bez prava izmene podataka klijenata. Mogu kreirati nove super administratore i firme. Niko ne može menjati, brisati ili resetovati lozinku drugog super administratora — vlasnik to radi preko svog profila.",
+      "add": "Dodaj super administratora",
+      "createFailed": "Greška pri kreiranju",
+      "created": "Super administrator kreiran",
+      "title": "Super administratori",
+      "you": "Vi"
     }
   },
   "notifications": {

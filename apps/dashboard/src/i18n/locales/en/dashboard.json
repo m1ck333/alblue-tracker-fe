@@ -316,7 +316,8 @@
       "loginHistory": "Login history",
       "loginHistoryEmpty": "No login attempts recorded.",
       "loginSucceeded": "Successful login",
-      "loginFailed": "Failed attempt"
+      "loginFailed": "Failed attempt",
+      "tabTenantUsers": "Company users"
     },
     "processes": {
       "title": "Processes",
@@ -505,7 +506,32 @@
     "tenantProfile": {
       "title": "Company profile",
       "logoHelp": "The logo appears in the application header. Recommended: PNG with a transparent background, up to 2 MB.",
-      "deadlineHelp": "Number of days before the delivery deadline after which the system marks the order as warning / critical."
+      "deadlineHelp": "Number of days before the delivery deadline after which the system marks the order as warning / critical.",
+      "colorsSection": "Warning colors",
+      "deadlineSection": "Order deadlines",
+      "logoBadType": "Allowed formats: PNG, JPG, SVG",
+      "logoRemoved": "Logo removed",
+      "logoSection": "Company logo",
+      "logoTooLarge": "Logo is larger than 2 MB",
+      "logoUploadFailed": "Failed to save the logo",
+      "logoUploaded": "Logo saved",
+      "noLogo": "No logo",
+      "noPayments": "No recorded payments.",
+      "removeLogo": "Remove logo",
+      "removeLogoConfirm": "Remove logo?",
+      "replaceLogo": "Replace logo",
+      "saveFailed": "Failed to save",
+      "saved": "Saved",
+      "subscription": {
+        "activeUntil": "Subscription active until",
+        "expiredOn": "Subscription expired",
+        "lapsedBy": "Lapsed by",
+        "noneYet": "No active subscription yet.",
+        "remaining": "Remaining"
+      },
+      "tabBilling": "Billing",
+      "tabSettings": "Settings",
+      "uploadLogo": "Upload logo"
     },
     "firma": {
       "title": "Company",
@@ -537,7 +563,12 @@
       "autoLogoutRegularHours": "Auto-logout regular (h)"
     },
     "systemAdmins": {
-      "help": "System administrators have read-only access to all companies — no rights to edit client data. They can create new system administrators and companies. No one can edit, delete, or reset another system administrator's password — the owner manages that through their own profile."
+      "help": "System administrators have read-only access to all companies — no rights to edit client data. They can create new system administrators and companies. No one can edit, delete, or reset another system administrator's password — the owner manages that through their own profile.",
+      "add": "Add system administrator",
+      "createFailed": "Failed to create",
+      "created": "System administrator created",
+      "title": "System administrators",
+      "you": "You"
     }
   },
   "notifications": {
