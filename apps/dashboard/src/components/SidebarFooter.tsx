@@ -25,7 +25,7 @@ import {
   EditOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationsApi, usersApi } from '@alblue/api-client';
 import { useAuthStore } from '@alblue/auth';
 import { useTranslation, useEnumTranslation } from '@alblue/i18n';
@@ -148,7 +148,6 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
   const screens = Grid.useBreakpoint();
   const isMobile = screens.lg === false;
   const [profileOpen, setProfileOpen] = useState(false);
-  const [page, setPage] = useState(1);
   const [changePwOpen, setChangePwOpen] = useState(false);
   const [pwForm] = Form.useForm();
   const { message } = App.useApp();
@@ -248,14 +247,31 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
     }
   }
 
-  const { data: pagedResult, isLoading } = useQuery({
-    queryKey: ['notifications', 'list', userId, page],
-    queryFn: () => notificationsApi.getAll({ userId: userId!, page, pageSize: PAGE_SIZE }).then((r) => r.data),
+  // Saša 19.06.2026: switched from page-keyed useQuery to useInfiniteQuery
+  // so "Load more" ACCUMULATES instead of replacing the visible page.
+  // Old behaviour wiped the list back to page N's 15 items, which made
+  // it impossible to scroll back up to earlier items the user had
+  // already seen.
+  const {
+    data: infiniteData,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['notifications', 'list', userId],
+    queryFn: ({ pageParam }) =>
+      notificationsApi.getAll({ userId: userId!, page: pageParam, pageSize: PAGE_SIZE }).then((r) => r.data),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const loaded = allPages.reduce((sum, p) => sum + p.items.length, 0);
+      return loaded < lastPage.totalCount ? allPages.length + 1 : undefined;
+    },
     enabled: !!userId && notifOpen,
   });
 
-  const notifications = pagedResult?.items ?? [];
-  const hasMore = pagedResult ? page * PAGE_SIZE < pagedResult.totalCount : false;
+  const notifications = infiniteData?.pages.flatMap((p) => p.items) ?? [];
+  const hasMore = !!hasNextPage;
 
   const invalidateAll = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -279,10 +295,7 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
   });
   const deleteAll = useMutation({
     mutationFn: () => notificationsApi.deleteAll(userId!),
-    onSuccess: () => {
-      setPage(1);
-      invalidateAll();
-    },
+    onSuccess: invalidateAll,
   });
 
   const notificationsContent = (
@@ -323,7 +336,7 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
         style={{ maxHeight: 400, overflowY: 'auto' }}
         loadMore={hasMore ? (
           <div style={{ textAlign: 'center', margin: '8px 0' }}>
-            <Button size="small" onClick={() => setPage((p) => p + 1)}>
+            <Button size="small" loading={isFetchingNextPage} onClick={() => fetchNextPage()}>
               {t('notifications.loadMore')}
             </Button>
           </div>
@@ -564,7 +577,7 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
           <Tooltip title={collapsed ? t('nav.notifications', { defaultValue: 'Notifications' }) : ''} placement="right">
             <div
               style={rowStyle}
-              onClick={isMobile ? () => { setNotifOpen(true); setPage(1); } : undefined}
+              onClick={isMobile ? () => setNotifOpen(true) : undefined}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
@@ -604,7 +617,7 @@ export function SidebarFooter({ collapsed, onOverlayAction }: SidebarFooterProps
             content={notificationsContent}
             trigger="click"
             open={notifOpen}
-            onOpenChange={(v) => { setNotifOpen(v); if (v) setPage(1); }}
+            onOpenChange={setNotifOpen}
             placement="rightBottom"
             arrow={false}
           >
