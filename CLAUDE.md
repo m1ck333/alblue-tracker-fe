@@ -39,18 +39,22 @@ pnpm check:colors               # Manually run hardcoded-color audit
 ## Pre-commit hooks
 `pnpm install` auto-installs husky (via the `prepare` script). The
 pre-commit chain runs on every commit (~5s total):
-1. **i18n keys** (`scripts/check-i18n-keys.mjs`) — every static `t('key')`
-   must exist in both `sr/` and `en/` dashboard.json. Catches the
-   defaultValue-cleanup regression that shipped raw keys on screen.
-2. **brand leaks** (`scripts/check-brand-leaks.mjs`) — fails on
-   user-visible `algreen` / `alblue` / `easy-mes` / `Skysoft`. Exempts
-   npm package imports, storage keys, sentry envs, deploy URL consts.
-3. **hardcoded colors** (`scripts/check-hardcoded-colors.mjs`) — fails on
-   hex / rgb / rgba literals in non-exempt `.tsx` files. Existing files
-   with documented exceptions are allow-listed in `EXEMPT_FILES`.
-4. **ESLint via lint-staged** — runs on changed `.ts`/`.tsx` only,
+1. **merge conflict markers** — inline grep in the hook; fails on any
+   staged `<<<<<<<` / `=======` / `>>>>>>>` line.
+2. **i18n keys** (`scripts/check-i18n-keys.mjs`) — every static `t('key')`
+   must exist in both `sr/` and `en/` dashboard.json.
+3. **locale placeholders** (`scripts/check-locale-placeholders.mjs`) —
+   `{{name}}` placeholders must match between sr/en for each key, and
+   no empty values.
+4. **brand leaks** (`scripts/check-brand-leaks.mjs`) — fails on
+   user-visible `algreen` / `alblue` / `easy-mes` / `Skysoft`.
+5. **hardcoded colors** (`scripts/check-hardcoded-colors.mjs`) — fails on
+   hex / rgb / rgba literals in non-exempt `.tsx` files.
+6. **file size** (`scripts/check-file-size.mjs`) — soft cap of 1500
+   lines per `.tsx`/`.ts`; OrderListPage is allow-listed.
+7. **ESLint via lint-staged** — runs on changed `.ts`/`.tsx` only,
    `--max-warnings=0`.
-5. **TypeScript typecheck** — full monorepo via `pnpm -r typecheck`.
+8. **TypeScript typecheck** — full monorepo via `pnpm -r typecheck`.
 
 Bypass with `git commit --no-verify` only when reverting.
 

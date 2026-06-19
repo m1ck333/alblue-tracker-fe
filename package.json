@@ -12,8 +12,10 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "check:i18n": "node scripts/check-i18n-keys.mjs",
+    "check:i18n-params": "node scripts/check-locale-placeholders.mjs",
     "check:brand": "node scripts/check-brand-leaks.mjs",
     "check:colors": "node scripts/check-hardcoded-colors.mjs",
+    "check:size": "node scripts/check-file-size.mjs",
     "prepare": "husky"
   },
   "lint-staged": {
