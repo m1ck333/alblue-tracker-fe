@@ -327,6 +327,7 @@ export function SalesDashboard() {
         okText={t('common:actions.save')}
         cancelText={t('common:actions.cancel')}
         confirmLoading={createCRMutation.isPending}
+        destroyOnHidden
       >
         <Form form={crForm} layout="vertical" scrollToFirstError={{ behavior: "smooth", block: "center" }} onFinish={(v) => createCRMutation.mutate(v)} onValuesChange={onCRValuesChange} style={{ marginTop: 16 }}>
           {crTargetOrder ? (
