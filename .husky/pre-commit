@@ -1,12 +1,21 @@
 #!/usr/bin/env sh
 # Run our static checks BEFORE commit so regressions are caught at the
 # keyboard, not in QA. Ordered fastest-to-slowest so quick failures
-# (i18n key missing) abort before TypeScript spins up. Total budget ~5s
-# on a warm machine — anything slower starts losing the dev to
-# --no-verify.
+# (i18n key missing, brand leak) abort before TypeScript/ESLint spin up.
+# Total budget ~5-8s on a warm machine — anything slower starts losing
+# the dev to --no-verify.
 
 echo "→ Checking i18n keys…"
 node scripts/check-i18n-keys.mjs || exit 1
+
+echo "→ Checking brand leaks…"
+node scripts/check-brand-leaks.mjs || exit 1
+
+echo "→ Checking hardcoded colors…"
+node scripts/check-hardcoded-colors.mjs || exit 1
+
+echo "→ ESLint on staged files…"
+pnpm exec lint-staged || exit 1
 
 echo "→ TypeScript check…"
 pnpm typecheck || exit 1

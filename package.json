@@ -12,7 +12,12 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "check:i18n": "node scripts/check-i18n-keys.mjs",
+    "check:brand": "node scripts/check-brand-leaks.mjs",
+    "check:colors": "node scripts/check-hardcoded-colors.mjs",
     "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": "eslint --max-warnings=0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.0.0",
