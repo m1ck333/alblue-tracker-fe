@@ -27,6 +27,14 @@ jobs:
     name: full-stack Playwright
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Opt-in gate. Job is skipped (not failed) until both are set up:
+    #   1. Repo VARIABLE `E2E_ENABLED` = "true"
+    #      (Settings → Secrets and variables → Actions → Variables tab)
+    #   2. Repo SECRET `BE_CHECKOUT_TOKEN` = fine-grained GitHub PAT with
+    #      Contents:read on NikolaMilanovic22/AlgreenMES.
+    # Without #1 the job is skipped; without #2 it'll fail at the
+    # "Checkout BE" step. CLAUDE.md has full setup instructions.
+    if: ${{ vars.E2E_ENABLED == 'true' }}
 
     services:
       postgres:

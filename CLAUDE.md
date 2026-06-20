@@ -78,15 +78,17 @@ Bypass with `git commit --no-verify` only when reverting.
   `E2E_ADMIN_PASSWORD=<your-pw> pnpm e2e`.
 
   **E2E in CI** (`.github/workflows/e2e.yml`): spins up Postgres +
-  BE + FE on every push to main + PR. Requires the repo secret
-  `BE_CHECKOUT_TOKEN` — a fine-grained GitHub PAT with `Contents:read`
-  on `NikolaMilanovic22/AlgreenMES`. Create it at GitHub → Settings →
-  Developer settings → Personal access tokens → Fine-grained tokens →
-  Generate new token; set resource owner to `NikolaMilanovic22`,
-  repository access to "Only select repositories" → `AlgreenMES`,
-  permissions to Repository → Contents: Read. Then add to the FE repo
-  at Settings → Secrets and variables → Actions → New repository
-  secret named `BE_CHECKOUT_TOKEN`.
+  BE + FE on every push to main + PR. Opt-in via two repo settings
+  (Settings → Secrets and variables → Actions):
+    1. **Variables** tab: add `E2E_ENABLED` with value `true`. Without
+       this, the job is skipped (shows as skipped in CI, not failed).
+    2. **Secrets** tab: add `BE_CHECKOUT_TOKEN` — a fine-grained GitHub
+       PAT with `Contents:read` on `NikolaMilanovic22/AlgreenMES`.
+       Create the PAT at GitHub → Settings → Developer settings →
+       Personal access tokens → Fine-grained tokens → Generate new
+       token; resource owner `NikolaMilanovic22`, repository access
+       "Only select repositories" → `AlgreenMES`, permissions
+       Repository → Contents: Read.
 
 ## Environment Variables
 Set in `.env` at root or per-app:
