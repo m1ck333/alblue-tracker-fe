@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { OrderStatus, OrderType, ProcessStatus } from '@alblue/shared-types';
+import { OrderStatus, ProcessStatus } from '@alblue/shared-types';
 import type { OrderDetailDto } from '@alblue/shared-types';
 
 // ─── Process status color mapping (matching Excel conditional formatting) ────
@@ -17,18 +17,22 @@ export const processStatusColors: Record<ProcessStatus, string> = {
 // bright green and clearly visible against any cell fill in both light/dark themes.
 export const READY_BORDER_COLOR = '#1B5E20';
 
-export const orderTypeColors: Record<OrderType, string> = {
-  [OrderType.Standard]: 'blue',
-  [OrderType.Repair]: 'orange',
-  [OrderType.Complaint]: 'red',
-  [OrderType.Rework]: 'purple',
+// Color maps for the 4 original seeded order type codes. Custom codes
+// (admin-added since 20.06.2026) fall back to neutral defaults so they
+// render without crashing. Admins can theme custom types via the
+// OrderTypes admin page in a future iteration.
+export const orderTypeColors: Record<string, string> = {
+  Standard: 'blue',
+  Repair: 'orange',
+  Complaint: 'red',
+  Rework: 'purple',
 };
 
-export const orderTypeTextColors: Record<OrderType, string> = {
-  [OrderType.Standard]: '#1677ff',
-  [OrderType.Repair]: '#d46b08',
-  [OrderType.Complaint]: '#cf1322',
-  [OrderType.Rework]: '#531dab',
+export const orderTypeTextColors: Record<string, string> = {
+  Standard: '#1677ff',
+  Repair: '#d46b08',
+  Complaint: '#cf1322',
+  Rework: '#531dab',
 };
 
 export const orderStatusTextColors: Record<OrderStatus, string> = {

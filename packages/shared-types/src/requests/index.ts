@@ -95,7 +95,7 @@ export interface CreateOrderRequest {
   orderNumber: string;
   deliveryDate: string;
   priority: number;
-  orderType: OrderType;
+  orderType: string;
   notes?: string;
   customWarningDays?: number;
   customCriticalDays?: number;

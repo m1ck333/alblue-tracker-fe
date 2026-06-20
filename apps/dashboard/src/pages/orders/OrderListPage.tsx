@@ -895,9 +895,9 @@ export function OrderListPage() {
           value={orderTypeFilter}
           onChange={(v) => setOrderTypeFilter(v)}
           style={{ width: 160 }}
-          options={Object.values(OrderType).map((ot) => ({
-            label: orderTypeByCode.get(String(ot).toUpperCase())?.name ?? tEnum('OrderType', ot),
-            value: ot,
+          options={(orderTypes ?? []).map((ot) => ({
+            label: ot.name,
+            value: ot.code,
           }))}
         />
         <Select
@@ -1129,9 +1129,9 @@ export function OrderListPage() {
                     label={t('orders.orderType')}
                     rules={[{ required: true }]}
                   >
-                    <Select options={Object.values(OrderType).map((ot) => ({
-                      label: orderTypeByCode.get(String(ot).toUpperCase())?.name ?? tEnum('OrderType', ot),
-                      value: ot,
+                    <Select options={(orderTypes ?? []).map((ot) => ({
+                      label: ot.name,
+                      value: ot.code,
                     }))} />
                   </Form.Item>
                 </Col>

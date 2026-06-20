@@ -121,7 +121,7 @@ export interface OrderDto {
   orderNumber: string;
   deliveryDate: string;
   priority: number;
-  orderType: OrderType;
+  orderType: string;
   status: OrderStatus;
   notes: string | null;
   customWarningDays: number | null;
@@ -146,7 +146,7 @@ export interface OrderDetailDto {
   orderNumber: string;
   deliveryDate: string;
   priority: number;
-  orderType: OrderType;
+  orderType: string;
   status: OrderStatus;
   notes: string | null;
   customWarningDays: number | null;
@@ -206,7 +206,7 @@ export interface OrderItemSpecialRequestDto {
 export interface OrderMasterViewDto {
   id: string;
   orderNumber: string;
-  orderType: OrderType;
+  orderType: string;
   status: OrderStatus;
   deliveryDate: string;
   priority: number;
