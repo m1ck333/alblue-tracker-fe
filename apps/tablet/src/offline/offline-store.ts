@@ -5,6 +5,7 @@ import { persist } from 'zustand/middleware';
 export type WorkflowActionType =
   | 'start-process'
   | 'stop-process'
+  | 'resume-process'
   | 'complete-process'
   | 'start-subprocess'
   | 'complete-subprocess';

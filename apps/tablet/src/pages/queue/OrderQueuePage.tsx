@@ -12,7 +12,13 @@ import { AttachmentViewer } from '../../components/AttachmentViewer';
 import { AttachmentIndicator } from '../../components/AttachmentIndicator';
 import { useTranslation, useEnumTranslation } from '@alblue/i18n';
 import { runWorkflowAction } from '../../offline/workflow-actions';
-import { applySubProcessTransition, type ActiveGroups } from '../../offline/optimistic';
+import {
+  applySubProcessTransition,
+  freezeProcessTimer,
+  resumeProcessTimer,
+  removeProcessFromActive,
+  type ActiveGroups,
+} from '../../offline/optimistic';
 
 function formatDuration(totalSeconds: number): string {
   if (totalSeconds < 60) return `${totalSeconds}s`;
@@ -551,17 +557,18 @@ function WorkPanel({
     setSuccess(result?.status === 'queued' ? t('work.savedOffline') : null);
   };
 
-  // Optimistically reflect a sub-process tap in the active view while it
-  // settles; snapshot for rollback if the server later rejects it.
-  const optimisticSubMutate = async (id: string, transition: 'start' | 'complete') => {
+  // Optimistically apply a change to the active-work cache while a tap settles
+  // (so offline actions reflect immediately), snapshotting for rollback if the
+  // server later rejects it.
+  const optimisticActive = async (apply: (old: ActiveGroups | undefined) => ActiveGroups | undefined) => {
     await queryClient.cancelQueries({ queryKey: ['tablet-active'] });
     const snapshot = queryClient.getQueriesData({ queryKey: ['tablet-active'] });
-    queryClient.setQueriesData<ActiveGroups>(
-      { queryKey: ['tablet-active'] },
-      (old) => applySubProcessTransition(old, id, transition, new Date().toISOString()),
-    );
+    queryClient.setQueriesData<ActiveGroups>({ queryKey: ['tablet-active'] }, (old) => apply(old));
     return { snapshot };
   };
+
+  const optimisticSubMutate = (id: string, transition: 'start' | 'complete') =>
+    optimisticActive((old) => applySubProcessTransition(old, id, transition, new Date().toISOString()));
 
   const rollbackSnapshot = (ctx?: { snapshot: [readonly unknown[], unknown][] }) => {
     ctx?.snapshot.forEach(([key, data]) => queryClient.setQueryData(key, data));
@@ -587,21 +594,28 @@ function WorkPanel({
       type: 'stop-process', targetId: orderItemProcessId, userId,
       call: (meta) => processWorkflowApi.stop(orderItemProcessId, { userId, ...meta }),
     }),
+    onMutate: () => optimisticActive((old) => freezeProcessTimer(old, orderItemProcessId, Date.now())),
     onSuccess: async (result) => {
       setError(null);
       noteResult(result);
       await invalidateAndWait(['tablet-active', 'tablet-queue', 'tablet-incoming']);
     },
-    onError: (err) => handleError(err, 'work.pauseFailed'),
+    onError: (err, _v, ctx) => { rollbackSnapshot(ctx); handleError(err, 'work.pauseFailed'); },
   });
 
   const resumeMutation = useMutation({
-    mutationFn: () => processWorkflowApi.resume(orderItemProcessId, { userId }),
-    onSuccess: async () => {
+    networkMode: 'always',
+    mutationFn: () => runWorkflowAction({
+      type: 'resume-process', targetId: orderItemProcessId, userId,
+      call: (meta) => processWorkflowApi.resume(orderItemProcessId, { userId, ...meta }),
+    }),
+    onMutate: () => optimisticActive((old) => resumeProcessTimer(old, orderItemProcessId, new Date().toISOString())),
+    onSuccess: async (result) => {
       setError(null);
+      noteResult(result);
       await invalidateAndWait(['tablet-active', 'tablet-queue', 'tablet-incoming']);
     },
-    onError: (err) => handleError(err, 'work.resumeFailed'),
+    onError: (err, _v, ctx) => { rollbackSnapshot(ctx); handleError(err, 'work.resumeFailed'); },
   });
 
   const completeMutation = useMutation({
@@ -610,13 +624,15 @@ function WorkPanel({
       type: 'complete-process', targetId: orderItemProcessId, userId,
       call: (meta) => processWorkflowApi.complete(orderItemProcessId, meta),
     }),
+    onMutate: () => optimisticActive((old) => removeProcessFromActive(old, orderItemProcessId)),
     onSuccess: async (result) => {
       setError(null);
       setShowCompleteConfirm(false);
       noteResult(result);
       await invalidateAndWait(['tablet-active', 'tablet-queue', 'tablet-incoming']);
     },
-    onError: (err) => {
+    onError: (err, _v, ctx) => {
+      rollbackSnapshot(ctx);
       setShowCompleteConfirm(false);
       handleError(err, 'work.completeFailed');
     },

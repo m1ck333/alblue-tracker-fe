@@ -15,6 +15,9 @@ async function replayAction(a: PendingWorkflowAction): Promise<void> {
     case 'stop-process':
       await processWorkflowApi.stop(a.targetId, { userId: a.userId, ...meta });
       break;
+    case 'resume-process':
+      await processWorkflowApi.resume(a.targetId, { userId: a.userId, ...meta });
+      break;
     case 'complete-process':
       await processWorkflowApi.complete(a.targetId, meta);
       break;

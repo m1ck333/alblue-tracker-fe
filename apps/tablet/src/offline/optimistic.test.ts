@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { SubProcessStatus } from '@alblue/shared-types';
 import type { ProcessGroupDto, TabletActiveWorkDto } from '@alblue/shared-types';
-import { applySubProcessTransition } from './optimistic';
+import {
+  applySubProcessTransition,
+  freezeProcessTimer,
+  resumeProcessTimer,
+  removeProcessFromActive,
+} from './optimistic';
 
 const NOW = '2026-06-29T10:00:00.000Z';
 
@@ -60,5 +65,46 @@ describe('applySubProcessTransition', () => {
 
   it('returns undefined groups unchanged', () => {
     expect(applySubProcessTransition(undefined, 's1', 'start', NOW)).toBeUndefined();
+  });
+});
+
+describe('freezeProcessTimer', () => {
+  it('stops the timer and freezes elapsed at accumulated + running session', () => {
+    const g = groups();
+    g[0].items[0].totalDurationMinutes = 100; // seconds (legacy name)
+    g[0].items[0].isTimerRunning = true;
+    g[0].items[0].currentLogStartedAt = '2026-06-29T10:00:00.000Z';
+    const nowMs = new Date('2026-06-29T10:00:30.000Z').getTime(); // +30s session
+
+    const item = freezeProcessTimer(g, 'oip1', nowMs)![0].items[0];
+    expect(item.isTimerRunning).toBe(false);
+    expect(item.currentLogStartedAt).toBeNull();
+    expect(item.totalDurationMinutes).toBe(130); // 100 + 30
+  });
+
+  it('leaves a non-targeted process untouched', () => {
+    const item = freezeProcessTimer(groups(), 'other-oip', Date.parse(NOW))![0].items[0];
+    expect(item.orderItemProcessId).toBe('oip1');
+  });
+});
+
+describe('resumeProcessTimer', () => {
+  it('restarts the timer from now', () => {
+    const item = resumeProcessTimer(groups(), 'oip1', NOW)![0].items[0];
+    expect(item.isTimerRunning).toBe(true);
+    expect(item.currentLogStartedAt).toBe(NOW);
+  });
+});
+
+describe('removeProcessFromActive', () => {
+  it('drops the completed process and prunes the now-empty group', () => {
+    expect(removeProcessFromActive(groups(), 'oip1')).toEqual([]);
+  });
+
+  it('keeps other items in the group', () => {
+    const g = groups();
+    g[0].items.push({ ...g[0].items[0], orderItemProcessId: 'oip2' });
+    const result = removeProcessFromActive(g, 'oip1')!;
+    expect(result[0].items.map((i) => i.orderItemProcessId)).toEqual(['oip2']);
   });
 });

@@ -192,7 +192,7 @@ export interface StopProcessWorkRequest extends OfflineActionMeta {
   userId: string;
 }
 
-export interface ResumeProcessWorkRequest {
+export interface ResumeProcessWorkRequest extends OfflineActionMeta {
   userId: string;
 }
 
