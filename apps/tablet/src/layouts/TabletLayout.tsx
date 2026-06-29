@@ -17,6 +17,7 @@ import { PullToRefresh } from '../components/PullToRefresh';
 
 import { useSignalRQueryInvalidation } from '../hooks/useSignalRQueryInvalidation';
 import { useWakeLock } from '../hooks/useWakeLock';
+import { useEnsureWorkSession } from '../hooks/useEnsureWorkSession';
 import { useOfflineSync } from '../offline/use-offline-sync';
 
 export function TabletLayout() {
@@ -25,6 +26,7 @@ export function TabletLayout() {
   const queryClient = useQueryClient();
   useSignalRQueryInvalidation();
   useWakeLock();
+  useEnsureWorkSession();
   useOfflineSync();
 
   // Listen for SW postMessage events
