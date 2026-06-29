@@ -124,7 +124,7 @@ function RoleHistorySection({ userId }: { userId: string }) {
 
 interface UsersPageProps {
   /** When true, suppress the top PageHeader — used when embedding as a
-   *  tab panel inside KorisniciPage so the parent owns the header. */
+   *  tab panel inside UserManagementPage so the parent owns the header. */
   hideHeader?: boolean;
 }
 

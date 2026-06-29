@@ -626,7 +626,7 @@ export function OrderListPage() {
           <Space size={4}>
             <span style={{ fontWeight: 500 }}>{text}</span>
             {record.attachmentCount > 0 && (
-              <Tooltip title={`${record.attachmentCount} ${record.attachmentCount === 1 ? 'dokument' : 'dokumenata'}`}>
+              <Tooltip title={t('orders.attachmentsCount', { count: record.attachmentCount })}>
                 <PaperClipOutlined style={{ color: token.colorPrimary, fontSize: 13 }} />
               </Tooltip>
             )}

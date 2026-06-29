@@ -151,7 +151,7 @@ Opt-in via repo settings (Settings → Secrets and variables → Actions):
 Things that change often — grep instead of relying on this file:
 - **Routes** → `apps/dashboard/src/App.tsx`, `apps/tablet/src/App.tsx`
 - **API services** → `packages/api-client/src/api/*.ts` (1:1 with BE controllers)
-- **SignalR event names** → `packages/signalr-client/src/events.ts`
+- **SignalR event names** → `packages/signalr-client/src/event-names.ts`
 - **Shared types/enums** → `packages/shared-types/src/`
 
 Tablet has no explicit check-in step (removed ~03.2026); work_session is
