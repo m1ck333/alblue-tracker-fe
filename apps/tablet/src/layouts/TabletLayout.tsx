@@ -10,12 +10,14 @@ import {
 import { tokenManager } from '@alblue/api-client';
 import { BottomNav } from '../components/BottomNav';
 import { OfflineBanner } from '../components/OfflineBanner';
+import { SyncFailedAlert } from '../components/SyncFailedAlert';
 import { AutoLogoutBanner } from '../components/AutoLogoutBanner';
 import { StatusBar } from '../components/StatusBar';
 import { PullToRefresh } from '../components/PullToRefresh';
 
 import { useSignalRQueryInvalidation } from '../hooks/useSignalRQueryInvalidation';
 import { useWakeLock } from '../hooks/useWakeLock';
+import { useOfflineSync } from '../offline/use-offline-sync';
 
 export function TabletLayout() {
   const tenantId = useAuthStore((s) => s.tenantId);
@@ -23,6 +25,7 @@ export function TabletLayout() {
   const queryClient = useQueryClient();
   useSignalRQueryInvalidation();
   useWakeLock();
+  useOfflineSync();
 
   // Listen for SW postMessage events
   useEffect(() => {
@@ -98,6 +101,7 @@ export function TabletLayout() {
       <StatusBar />
 
       <OfflineBanner />
+      <SyncFailedAlert />
       <AutoLogoutBanner />
       <PullToRefresh>
         <main className="p-4 pb-24">

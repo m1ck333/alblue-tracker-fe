@@ -26,6 +26,7 @@ if [ "$TARGET" = "tablet" ] || [ "$TARGET" = "all" ]; then
   echo "🔨 Building tablet ($SENTRY_RELEASE)..."
   VITE_API_BASE_URL=https://alblue-tablet.duckdns.org/api \
   VITE_SIGNALR_URL=https://alblue-tablet.duckdns.org/hubs/production \
+  VITE_OFFLINE_WRITES=${VITE_OFFLINE_WRITES:-false} \
   VITE_SENTRY_DSN="$SENTRY_DSN" \
   VITE_SENTRY_ENVIRONMENT="$SENTRY_ENV" \
   VITE_SENTRY_RELEASE="$SENTRY_RELEASE" \
