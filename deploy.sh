@@ -6,6 +6,11 @@ set -e
 SENTRY_DSN="https://315954545e637502fd5497b3090b5c9c@o4511398917177344.ingest.de.sentry.io/4511398994313296"
 SENTRY_ENV="alblue-staging"
 SENTRY_RELEASE=$(git rev-parse --short HEAD)
+# SENTRY_AUTH_TOKEN (secret — do NOT commit) enables source-map upload so
+# production error stack traces are readable instead of minified. Export it
+# before deploying: `export SENTRY_AUTH_TOKEN=...` (create at Sentry → Settings
+# → Auth Tokens; scopes: project:releases + org:read). If unset, the build
+# simply skips the upload and still succeeds.
 
 TARGET=${1:-all}
 
@@ -16,6 +21,7 @@ if [ "$TARGET" = "dashboard" ] || [ "$TARGET" = "all" ]; then
   VITE_SENTRY_DSN="$SENTRY_DSN" \
   VITE_SENTRY_ENVIRONMENT="$SENTRY_ENV" \
   VITE_SENTRY_RELEASE="$SENTRY_RELEASE" \
+  SENTRY_AUTH_TOKEN="${SENTRY_AUTH_TOKEN:-}" \
   pnpm --filter dashboard build
   echo "📦 Uploading dashboard..."
   rsync -az --delete apps/dashboard/dist/ root@46.101.166.137:/opt/alblue/dashboard/
@@ -30,6 +36,7 @@ if [ "$TARGET" = "tablet" ] || [ "$TARGET" = "all" ]; then
   VITE_SENTRY_DSN="$SENTRY_DSN" \
   VITE_SENTRY_ENVIRONMENT="$SENTRY_ENV" \
   VITE_SENTRY_RELEASE="$SENTRY_RELEASE" \
+  SENTRY_AUTH_TOKEN="${SENTRY_AUTH_TOKEN:-}" \
   pnpm --filter tablet build
   echo "📦 Uploading tablet..."
   rsync -az --delete apps/tablet/dist/ root@46.101.166.137:/opt/alblue/tablet/
