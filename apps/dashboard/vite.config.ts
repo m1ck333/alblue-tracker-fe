@@ -36,7 +36,7 @@ export default defineConfig({
             org: 'sky-hard',
             project: 'mes-api',
             authToken: sentryAuthToken,
-            url: 'https://de.sentry.io/',
+            // Region (de.sentry.io) + org are embedded in the org auth token.
             release: { name: process.env.VITE_SENTRY_RELEASE },
             sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.js.map'] },
             telemetry: false,
