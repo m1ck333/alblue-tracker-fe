@@ -21,7 +21,7 @@ function groups(): ProcessGroupDto<TabletActiveWorkDto>[] {
           quantity: 1, complexity: null, status: 'InProgress' as TabletActiveWorkDto['status'],
           specialRequestNames: [], completedProcessCount: 0, totalProcessCount: 1,
           startedAt: NOW, totalDurationMinutes: 0, isTimerRunning: false, currentLogStartedAt: null,
-          orderNotes: null, itemNotes: null,
+          orderNotes: null, itemNotes: null, attachmentCount: 0,
           subProcesses: [
             { id: 's1', subProcessId: 'sp1', status: SubProcessStatus.Pending, totalDurationMinutes: 0, isWithdrawn: false, isTimerRunning: false, currentLogStartedAt: null },
             { id: 's2', subProcessId: 'sp2', status: SubProcessStatus.Pending, totalDurationMinutes: 0, isWithdrawn: false, isTimerRunning: false, currentLogStartedAt: null },

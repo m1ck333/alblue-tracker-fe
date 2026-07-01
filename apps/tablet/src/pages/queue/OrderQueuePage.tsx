@@ -186,6 +186,7 @@ export function OrderQueuePage() {
             totalDurationMinutes: w.totalDurationMinutes ?? 0,
             orderNotes: w.orderNotes,
             itemNotes: w.itemNotes,
+            attachmentCount: w.attachmentCount,
           });
           seen.add(w.orderItemProcessId);
         }
@@ -424,7 +425,7 @@ function QueueCard({
             {item.totalDurationMinutes > 0 && !activeWork && (
               <span className="text-gray-500">⏱ {formatDuration(item.totalDurationMinutes)}</span>
             )}
-            <AttachmentIndicator orderId={item.orderId} orderItemId={item.orderItemId} />
+            <AttachmentIndicator orderId={item.orderId} orderItemId={item.orderItemId} count={item.attachmentCount} />
           </div>
           {item.specialRequestNames.length > 0 && (
             <div className="flex flex-wrap gap-1">
