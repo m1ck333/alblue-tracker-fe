@@ -73,7 +73,7 @@ legitimately diverge (logos, theme colors): Read both and Edit the diff.
 1. Merge conflict markers (`<<<<<<<` / `=======` / `>>>>>>>`)
 2. i18n key existence (every `t('key')` exists in both sr/en)
 3. i18n placeholder + empty-value match
-4. Brand leaks: no user-visible `algreen` / `alblue` / `easy-mes` / `Skysoft`
+4. Brand leaks: no user-visible `algreen` / `alblue` / `Skysoft`
 5. Hardcoded colors in `.tsx` (hex / rgb / rgba forbidden outside theme.ts)
 6. File-size soft cap: 1500 lines (`OrderListPage` allow-listed)
 7. ESLint via lint-staged on changed `.ts`/`.tsx` (max-warnings=0)

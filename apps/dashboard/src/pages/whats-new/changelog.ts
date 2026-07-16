@@ -19,8 +19,8 @@
  * business language. Rule of thumb: "would Sale or Bojan say this in
  * a meeting?" If no, rephrase.
  *
- * NEVER mention internal brand names (algreen / alblue / easy-mes /
- * etc.) in the user-visible text fields. The MES product is white-
+ * NEVER mention internal brand names (algreen / alblue / etc.)
+ * in the user-visible text fields. The MES product is white-
  * labeled; the in-app changelog must read as if it belongs to whoever
  * is looking at it.
  *
